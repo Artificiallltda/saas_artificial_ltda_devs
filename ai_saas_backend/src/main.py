@@ -6,20 +6,32 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from extensions import bcrypt, jwt, db, limiter, jwt_required, get_jwt_identity, create_access_token
 from utils import check_if_token_revoked, create_default_plans
-from routes import user_api, admin_api, auth_api, email_api, profile_api, project_api, generated_content_api, notification_api, plan_api, ai_generation_api, ai_generation_video_api, chat_api
+from routes import (
+    user_api, admin_api, auth_api, email_api, profile_api, project_api,
+    generated_content_api, notification_api, plan_api, ai_generation_api,
+    ai_generation_video_api, chat_api
+)
 from models import User, Plan
 import os, uuid
 
 load_dotenv()
 
 app = Flask(__name__)
+
+# =========================
+# Ambiente
+# =========================
+ENV = os.getenv("ENV", "dev").lower()
+DEV_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+# =========================
+# CORS (DESENVOLVIMENTO)
+# =========================
+# Ambiente local: habilita CORS para localhost:3000 e ajusta cookies para HTTP
 CORS(
     app,
-    supports_credentials=True,  
-    origins=[
-        "https://artificiall.ai",
-        "https://api.artificiall.ai"
-        ],  # frontend real
+    supports_credentials=True,
+    origins=DEV_ORIGINS,
     allow_headers=["Content-Type", "X-CSRF-Token", "Authorization"],
     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 )
@@ -28,47 +40,87 @@ CORS(
 def handle_options_request():
     if request.method == "OPTIONS":
         response = make_response()
-        response.headers["Access-Control-Allow-Origin"] = "https://artificiall.ai"
+        origin = request.headers.get("Origin")
+        if origin in DEV_ORIGINS:
+            response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-CSRF-Token, Authorization"
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.status_code = 200
         return response
 
-# Caminho do banco SQLite
-#basedir = os.path.abspath(os.path.dirname(__file__))
-#db_path = os.path.join(basedir, "app.db")
+@app.after_request
+def add_cors_headers(resp):
+    origin = request.headers.get("Origin")
+    if origin in DEV_ORIGINS:
+        resp.headers["Access-Control-Allow-Origin"] = origin
+        resp.headers["Access-Control-Allow-Credentials"] = "true"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type, X-CSRF-Token, Authorization"
+        resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    return resp
 
-# Configuração do banco
-#app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+# =========================
+# CORS/COOKIES (PRODUÇÃO)
+# =========================
+# Caso precisemos rodar em Produção, use este bloco no lugar do bloco de DEV acima:
+#
+# CORS(
+#     app,
+#     supports_credentials=True,
+#     origins=[
+#         "https://artificiall.ai",
+#         "https://api.artificiall.ai"
+#     ],
+#     allow_headers=["Content-Type", "X-CSRF-Token", "Authorization"],
+#     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+# )
+# @app.before_request
+# def handle_options_request_prod():
+#     if request.method == "OPTIONS":
+#         response = make_response()
+#         response.headers["Access-Control-Allow-Origin"] = "https://artificiall.ai"
+#         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+#         response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-CSRF-Token, Authorization"
+#         response.headers["Access-Control-Allow-Credentials"] = "true"
+#         response.status_code = 200
+#         return response
 
+# =========================
+# Config do Banco e JWT
+# =========================
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = os.getenv("SECRET_KEY")
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
+# Local de armazenamento do token (cookies HTTPOnly)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
-app.config["JWT_COOKIE_SECURE"] = True  # cookies só via HTTPS
 app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
 app.config["JWT_COOKIE_CSRF_PROTECT"] = True
 app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token_cookie"
-app.config["JWT_COOKIE_SAMESITE"] = "None"  # necessário para cross-site requests (frontend -> backend)
-app.config["JWT_COOKIE_DOMAIN"] = ".artificiall.ai"
 
-# Inicializa o SQLAlchemy
+# Padrão PRODUÇÃO (comentado aqui; ver overrides de DEV abaixo)
+# app.config["JWT_COOKIE_SECURE"] = True
+# app.config["JWT_COOKIE_SAMESITE"] = "None"
+# app.config["JWT_COOKIE_DOMAIN"] = ".artificiall.ai"
+
+# Overrides para DESENVOLVIMENTO (localhost sem HTTPS)
+app.config["JWT_COOKIE_SECURE"] = False
+app.config["JWT_COOKIE_SAMESITE"] = "Lax"
+app.config["JWT_COOKIE_DOMAIN"] = None
+
+# =========================
+# Extensões
+# =========================
 db.init_app(app)
-# Flask Migrate
 migrate = Migrate(app, db)
-
-# Inicializa o Bcrypt
 bcrypt.init_app(app)
-
-# Inicializa o JWT
 jwt.init_app(app)
-
 limiter.init_app(app)
 
-
+# =========================
+# Seed de admin e planos
+# =========================
 def create_default_admin():
     admin_email = os.getenv("ADMIN_EMAIL")
     admin_password = os.getenv("ADMIN_PASSWORD")
@@ -105,7 +157,9 @@ with app.app_context():
     create_default_plans()
     create_default_admin()
 
-# Configura blacklist com JWTManager
+# =========================
+# Tratadores de erro JWT/Limiter
+# =========================
 @jwt.token_in_blocklist_loader
 def check_if_token_revoked_callback(jwt_header, jwt_payload):
     return check_if_token_revoked(jwt_header, jwt_payload)
@@ -117,16 +171,20 @@ def ratelimit_handler(e):
 @app.errorhandler(RevokedTokenError)
 def handle_revoked_token(err):
     response = jsonify({"msg": str(err)})
-    response.status_code = 401  # Unauthorized
+    response.status_code = 401
     return response
 
-# Rota para servir imagens de perfil
+# =========================
+# Arquivos estáticos de upload
+# =========================
 @app.route("/static/uploads/<path:filename>")
 def serve_user_photo(filename):
     uploads_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "static", "uploads"))
     return send_from_directory(uploads_path, filename)
 
-# Registra blueprint
+# =========================
+# Blueprints (rotas)
+# =========================
 app.register_blueprint(user_api, url_prefix="/api/users")
 app.register_blueprint(admin_api, url_prefix="/api/admin")
 app.register_blueprint(auth_api, url_prefix="/api/auth")
@@ -140,7 +198,7 @@ app.register_blueprint(ai_generation_api, url_prefix="/api/ai")
 app.register_blueprint(ai_generation_video_api, url_prefix="/api/ai")
 app.register_blueprint(chat_api, url_prefix="/api/chats")
 
-print("🚀 CORS configurado para:", app.config.get("CORS_ALLOW_HEADERS"))
+print("🚀 Ambiente:", "DESENVOLVIMENTO" if ENV == "dev" else "PRODUÇÃO")
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8000, debug=True)

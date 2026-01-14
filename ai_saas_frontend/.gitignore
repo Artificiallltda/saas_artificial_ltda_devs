@@ -27,6 +27,13 @@ venv/
 *.sqlite3
 *.db
 
+# Virtualenv
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 # Testes
 coverage/
 htmlcov/
