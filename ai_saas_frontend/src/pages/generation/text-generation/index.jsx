@@ -65,12 +65,49 @@ function TextGeneration() {
           />
         </div>
 
-        <button
-          onClick={() => { setMainSidebarCollapsed((prev) => !prev); toggleSidebar(); }}
-          className={`absolute bottom-60 ${sidebarCollapsed ? "left-[0]" : "left-72"} z-40 h-16 w-6 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-r-xl shadow hover:brightness-105 transition-all duration-300`}
-          title={sidebarCollapsed ? "Exibir chat" : "Ocultar chat"}
-        >
-          {sidebarCollapsed ? <ChevronRight className="w-5 h-5 text-blue-500" /> : <ChevronLeft className="w-5 h-5 text-blue-500" />}
+         <button
+  onClick={() => {
+    setMainSidebarCollapsed((prev) => !prev);
+    toggleSidebar();
+  }}
+  className={`
+    group
+    absolute bottom-60 ${sidebarCollapsed ? "left-0" : "left-72"} z-40
+    h-16 w-10 min-w-[44px]
+    flex items-center justify-center
+    rounded-r-xl shadow-md
+    transition-all duration-500 ease-out
+
+    ${sidebarCollapsed
+      ? `
+        bg-white border border-gray-300
+        hover:bg-gray-100
+      `
+      : `
+        bg-blue-600 border border-blue-700
+        hover:bg-blue-700
+      `}
+
+    focus-visible:outline
+    focus-visible:outline-4
+    focus-visible:outline-blue-400
+  `}
+  aria-label={sidebarCollapsed ? "Expandir chat" : "Ocultar chat"}
+  title={sidebarCollapsed ? "Expandir chat" : "Ocultar chat"}
+>
+  {/* Ícone de seta */}
+  <span
+    className={`
+      text-2xl font-bold select-none
+      transition-transform duration-500 ease-out
+      ${sidebarCollapsed
+        ? "text-blue-600 translate-x-0"
+        : "text-white rotate-180 translate-x-0"}
+      group-hover:scale-110
+    `}
+  >
+    ❮
+  </span>
         </button>
 
         <div
