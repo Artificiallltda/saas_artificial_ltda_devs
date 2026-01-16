@@ -11,9 +11,10 @@ export const TEXT_MODELS = [
   { value: "gpt-5", label: "GPT-5", attachments: true, isGpt5: true },
   { value: "gpt-5-mini", label: "GPT-5 Mini", attachments: true, isGpt5: true },
   { value: "deepseek/deepseek-r1-0528:free", label: "DeepSeek R1 0528", attachments: false, isGpt5: false },
-  { value: "gemini-2.5-pro", label: "Gemini 2.5 Pro", attachments: true, isGpt5: true },
-  { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash", attachments: true, isGpt5: true },
-  { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite", attachments: true, isGpt5: false },
+  { value: "gemini-3-pro-preview", label: "Gemini 3.0", attachments: true, requiredFeature: "gemini_30" },
+  { value: "gemini-2.5-pro", label: "Gemini 2.5 Pro", attachments: true, requiredFeature: "gemini_25_pro" },
+  { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash", attachments: true, requiredFeature: "gemini_25_flash" },
+  { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite", attachments: true, requiredFeature: "gemini_25_flash_lite" },
 ];
 
 export const IMAGE_MODELS = [
