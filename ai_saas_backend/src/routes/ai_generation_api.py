@@ -64,6 +64,17 @@ def is_anthropic_model(model: str) -> bool:
 def is_perplexity_model(model: str) -> bool:
     return bool(model) and model.startswith("sonar")
 
+def resolve_perplexity_try_models(model: str) -> list[str]:
+    chain = [model]
+    if model == "sonar-reasoning-pro":
+        chain += ["sonar-reasoning", "sonar"]
+    elif model == "sonar-reasoning":
+        chain += ["sonar"]
+    elif model == "sonar-deep-research":
+        # deep-research pode exigir superfície/endpoint diferentes; fallback para sonar
+        chain += ["sonar-reasoning", "sonar"]
+    return chain
+
 def supports_vision(model: str) -> bool:
     res = model.startswith("gpt-4o") or model.startswith("o") or model.startswith("gpt-5") or is_gemini_model(model)
     print(f"[DEBUG] supports_vision({model}) -> {res}")
@@ -574,27 +585,50 @@ def generate_text():
                             generated_text = f"[Erro Anthropic {status}: {err_msg}]"
 
             elif is_perplexity_model(model):
-                endpoint = "https://api.perplexity.ai/chat/completions"
-                headers = {
-                    "Authorization": f"Bearer {PERPLEXITY_API_KEY}",
-                    "Content-Type": "application/json"
-                }
-                body = {
-                    "model": model,  # "sonar" | "sonar-reasoning" | "sonar-reasoning-pro" | "sonar-deep-research"
-                    "messages": build_messages_for_openai(session_messages, model),
-                    "temperature": temperature,
-                    "return_citations": True
-                }
-                try:
-                    response = make_request_with_retry(endpoint, headers, body, max_retries=5, backoff=3)
+                try_models = resolve_perplexity_try_models(model)
+                generated_text = ""
+                for mid in try_models:
+                    endpoint = "https://api.perplexity.ai/chat/completions"
+                    headers = {
+                        "Authorization": f"Bearer {PERPLEXITY_API_KEY}",
+                        "Content-Type": "application/json"
+                    }
+                    body = {
+                        "model": mid,  # "sonar" | "sonar-reasoning" | "sonar-reasoning-pro" | "sonar-deep-research"
+                        "messages": build_messages_for_openai(session_messages, mid),
+                        "temperature": temperature,
+                        "return_citations": True
+                    }
                     try:
-                        generated_text = response.json().get("choices", [{}])[0].get("message", {}).get("content", "[Sem retorno]")
-                    except Exception:
-                        print(f"[WARN] Resposta Perplexity não é JSON:\n{response.text[:1000]}")
-                        generated_text = "[Erro ao gerar resposta da IA]"
-                except Exception as pe:
-                    print(f"[ERROR] Falha na chamada Perplexity: {pe}")
-                    generated_text = "[Erro ao gerar resposta da IA]"
+                        response = make_request_with_retry(endpoint, headers, body, max_retries=5, backoff=3)
+                        status = getattr(response, "status_code", 0)
+                        if status == 200:
+                            try:
+                                generated_text = response.json().get("choices", [{}])[0].get("message", {}).get("content", "[Sem retorno]")
+                            except Exception:
+                                print(f"[WARN] Resposta Perplexity não é JSON:\n{response.text[:1000]}")
+                                generated_text = "[Erro ao gerar resposta da IA]"
+                            used_model = mid
+                            break
+                        else:
+                            # detecção de erro e fallback para próximo modelo
+                            err_text = ""
+                            try:
+                                err_json = response.json()
+                                err_text = str(err_json)[:500]
+                            except Exception:
+                                err_text = (getattr(response, "text", "") or "")[:500]
+                            print(f"[ERROR] Perplexity {status} ({mid}): {err_text}")
+                            if mid == try_models[-1]:
+                                generated_text = f"[Erro Perplexity {status}: {err_text}]"
+                            else:
+                                continue
+                    except Exception as pe:
+                        print(f"[ERROR] Falha na chamada Perplexity ({mid}): {pe}")
+                        if mid == try_models[-1]:
+                            generated_text = "[Erro ao gerar resposta da IA]"
+                        else:
+                            continue
 
             else:
                 endpoint = "https://api.openai.com/v1/chat/completions"
