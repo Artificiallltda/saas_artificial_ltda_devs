@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Layout from "../../../components/layout/Layout";
 import styles from "./projects.module.css";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, FolderPlus } from "lucide-react";
 import { toast } from "react-toastify";
 import useProjectsFetch from "../hooks/useProjectsFetch";
 import ProjectCard from "../components/ProjectCard";
@@ -12,6 +12,7 @@ import FiltersPanel from "../components/FiltersPanel";
 import { formatDate, formatDateTime } from "../../../utils/dateUtils";
 import SortMenu from "../components/SortMenu";
 import { apiFetch } from "../../../services/apiService";
+import { EmptyState } from "../../../components/EmptyState";
 
 export default function ProjectsList() {
   const {
@@ -34,6 +35,11 @@ export default function ProjectsList() {
   const [loadingProject, setLoadingProject] = useState(false);
   const [errorProject, setErrorProject] = useState("");
 
+  // 🔴 FUNÇÃO DEDICADA (IMPORTANTE)
+  const handleOpenCreateModal = () => {
+    setShowProjectModal(true);
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir este projeto?")) return;
     try {
@@ -50,6 +56,7 @@ export default function ProjectsList() {
       setErrorProject("O nome do projeto é obrigatório.");
       return;
     }
+
     setLoadingProject(true);
     setErrorProject("");
 
@@ -57,8 +64,12 @@ export default function ProjectsList() {
       await apiFetch(projectRoutes.create, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: projectName, description: projectDescription }),
+        body: JSON.stringify({
+          name: projectName,
+          description: projectDescription,
+        }),
       });
+
       toast.success("Projeto criado com sucesso!");
       await loadProjects();
       setShowProjectModal(false);
@@ -71,15 +82,17 @@ export default function ProjectsList() {
     }
   };
 
-
   return (
     <Layout>
       <h1 className={styles.title}>Meus Projetos</h1>
-      <p className="text-gray-600 mb-6">Gerencie seus projetos, edite detalhes ou adicione conteúdos.</p>
+      <p className="text-gray-600 mb-6">
+        Gerencie seus projetos, edite detalhes ou adicione conteúdos.
+      </p>
 
+      {/* Barra de ações */}
       <div className="flex items-center justify-between mb-4">
         <div className="relative max-w-md w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="search"
             placeholder="Buscar projetos..."
@@ -109,17 +122,36 @@ export default function ProjectsList() {
             filterDurMax=""
             setFilterDurMax={() => {}}
           />
-          <SortMenu activeTab="project" sortBy={sortBy} setSortBy={setSortBy} />
-          <button onClick={() => setShowProjectModal(true)} className={`${styles.btnBlack} ${styles.btnBlackStandard}`}>
-            <Plus className="w-4 h-4" /> <span className="text-sm">Novo Projeto</span>
+
+          <SortMenu
+            activeTab="project"
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+          />
+
+          <button
+            onClick={handleOpenCreateModal}
+            className={`${styles.btnBlack} ${styles.btnBlackStandard}`}
+          >
+            <Plus className="w-4 h-4" />
+            <span className="text-sm">Novo Projeto</span>
           </button>
         </div>
       </div>
 
+      {/* Conteúdo */}
       {loading ? (
         <p className="mt-6 text-sm">Carregando projetos...</p>
       ) : projects.length === 0 ? (
-        <p className="mt-6 text-gray-500 text-sm">Nenhum projeto encontrado.</p>
+        <div onClick={(e) => e.stopPropagation()}>
+          <EmptyState
+            icon={FolderPlus}
+            title="Você ainda não possui projetos"
+            description="Crie seu primeiro projeto para começar a gerar conteúdos com IA."
+            ctaLabel="Criar novo projeto"
+            onCtaClick={handleOpenCreateModal}
+          />
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {projects.map((project) => (

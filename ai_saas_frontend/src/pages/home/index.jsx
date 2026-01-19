@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import NewProjectModal from "../../components/modals/NewProjectModal";
 import { apiFetch } from "../../services/apiService";
 import { projectRoutes } from "../../services/apiRoutes";
+import { EmptyState } from "../../components/EmptyState";
 
 export default function Home() {
   const { user } = useAuth();
@@ -22,17 +23,17 @@ export default function Home() {
 
   const createProject = async ({ name, description }) => {
     try {
-      const data = await apiFetch(projectRoutes.create, {
+      await apiFetch(projectRoutes.create, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, description }),
       });
 
-      const newProjectId = data.id || data.project?.id;
-      if (!newProjectId) throw new Error("ID do projeto não encontrado");
-
       toast.success("Projeto criado com sucesso!");
-      navigate(`/workspace/projects/${newProjectId}/modify-content`, { replace: true });
+
+      // ✅ fluxo correto: volta para lista de projetos
+      navigate("/workspace/projects");
+
     } catch (err) {
       toast.error(err.message || "Erro ao criar projeto");
     }
@@ -41,11 +42,15 @@ export default function Home() {
   return (
     <Layout>
       <section className="space-y-6">
+        {/* Header */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className={styles.title}>Dashboard</h1>
-            <p className="text-gray-600">Bem-vindo à sua plataforma de IA generativa</p>
+            <p className="text-gray-600">
+              Bem-vindo à sua plataforma de IA generativa
+            </p>
           </div>
+
           <button
             onClick={() => setShowProjectModal(true)}
             className={`${styles.btnBlack} ${styles.btnBlackStandard}`}
@@ -61,9 +66,11 @@ export default function Home() {
             <div className={styles.statHeader}>
               <p className={styles.blockTitle}>Agentes Criados</p>
             </div>
-            <p className="text-2xl font-bold">{user?.tokens_available ?? 0}</p>
+            <p className="text-2xl font-bold">
+              {user?.tokens_available ?? 0}
+            </p>
             <p className={`${styles.statSubtext} text-xs`}>
-              Funcionalidade Futura!
+              Funcionalidade futura!
             </p>
           </div>
 
@@ -98,17 +105,25 @@ export default function Home() {
 
         {/* Ferramentas IA */}
         <div>
-          <h1 className={styles.subTitle}>Ferramentas de IA</h1>
+          <h2 className={styles.subTitle}>Ferramentas de IA</h2>
+
           <div className={styles.panelGrid}>
             <div className={styles.statCard}>
               <div>
                 <div className="bg-primary w-fit p-3 rounded-lg mb-4">
                   <FileText className="text-white w-6 h-6" />
                 </div>
-                <h3 className="font-semibold text-black mb-1">Geração de Texto</h3>
-                <p className={`${styles.statSubtext} text-sm`}>Crie conteúdo usando LLMs avançados</p>
+                <h3 className="font-semibold text-black mb-1">
+                  Geração de Texto
+                </h3>
+                <p className={`${styles.statSubtext} text-sm`}>
+                  Crie conteúdo usando LLMs avançados
+                </p>
               </div>
-              <Link to="/text-generation" className={`${styles.btnBlack} ${styles.btnBlackWide}`}>
+              <Link
+                to="/text-generation"
+                className={`${styles.btnBlack} ${styles.btnBlackWide}`}
+              >
                 Começar
               </Link>
             </div>
@@ -118,10 +133,17 @@ export default function Home() {
                 <div className="bg-accent-purple w-fit p-3 rounded-lg mb-4">
                   <Image className="text-white w-6 h-6" />
                 </div>
-                <h3 className="font-semibold text-black mb-1">Geração de Imagem</h3>
-                <p className={`${styles.statSubtext} text-sm`}>Gere imagens a partir de prompts</p>
+                <h3 className="font-semibold text-black mb-1">
+                  Geração de Imagem
+                </h3>
+                <p className={`${styles.statSubtext} text-sm`}>
+                  Gere imagens a partir de prompts
+                </p>
               </div>
-              <Link to="/image-generation" className={`${styles.btnBlack} ${styles.btnBlackWide}`}>
+              <Link
+                to="/image-generation"
+                className={`${styles.btnBlack} ${styles.btnBlackWide}`}
+              >
                 Começar
               </Link>
             </div>
@@ -131,10 +153,17 @@ export default function Home() {
                 <div className="bg-success w-fit p-3 rounded-lg mb-4">
                   <Video className="text-white w-6 h-6" />
                 </div>
-                <h3 className="font-semibold text-black mb-1">Geração de Vídeo</h3>
-                <p className={`${styles.statSubtext} text-sm`}>Crie vídeos com IA generativa</p>
+                <h3 className="font-semibold text-black mb-1">
+                  Geração de Vídeo
+                </h3>
+                <p className={`${styles.statSubtext} text-sm`}>
+                  Crie vídeos com IA generativa
+                </p>
               </div>
-              <Link to="/video-generation" className={`${styles.btnBlack} ${styles.btnBlackWide}`}>
+              <Link
+                to="/video-generation"
+                className={`${styles.btnBlack} ${styles.btnBlackWide}`}
+              >
                 Começar
               </Link>
             </div>
@@ -144,40 +173,46 @@ export default function Home() {
         {/* Projetos recentes */}
         <div>
           <h2 className={styles.subTitle}>Projetos Recentes</h2>
-          <div
-            className={`${styles.blockCard} divide-y divide-gray-300 cursor-pointer`}
-            onClick={() => navigate("/workspace/projects")}
-          >
-            {[...projects]
-              .reverse()
-              .slice(0, 3)
-              .map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-4 hover:bg-gray-50"
-                >
-                  <div>
-                    <p className="font-semibold text-black mb-1">{item.name}</p>
+
+          {projects.length === 0 ? (
+            <EmptyState
+              title="Nenhum projeto ainda"
+              description="Você ainda não criou nenhum projeto. Comece agora para gerar seu primeiro conteúdo com IA."
+              ctaLabel="Criar novo projeto"
+              onCtaClick={() => setShowProjectModal(true)}
+            />
+          ) : (
+            <div
+              className={`${styles.blockCard} divide-y divide-gray-300 cursor-pointer`}
+              onClick={() => navigate("/workspace/projects")}
+            >
+              {[...projects]
+                .reverse()
+                .slice(0, 3)
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-4 hover:bg-gray-50"
+                  >
+                    <div>
+                      <p className="font-semibold text-black mb-1">
+                        {item.name}
+                      </p>
+                      <p className={`${styles.statSubtext} text-sm`}>
+                        {item.description || "Sem descrição"}
+                      </p>
+                    </div>
                     <p className={`${styles.statSubtext} text-sm`}>
-                      {item.description || "Sem descrição"}
+                      {new Date(item.created_at).toLocaleDateString("pt-BR")}
                     </p>
                   </div>
-                  <p className={`${styles.statSubtext} text-sm`}>
-                    {new Date(item.created_at).toLocaleDateString("pt-BR")}
-                  </p>
-                </div>
-            ))}
-
-            {projects.length === 0 && (
-              <p className="text-sm text-gray-500 p-4">
-                Nenhum projeto ainda. Clique em “Novo Projeto” para começar!
-              </p>
-            )}
-          </div>
+                ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Modal isolado */}
+      {/* Modal Novo Projeto */}
       <NewProjectModal
         isOpen={showProjectModal}
         onClose={() => setShowProjectModal(false)}
