@@ -4,6 +4,7 @@ from flask_limiter.errors import RateLimitExceeded
 from flask_jwt_extended.exceptions import RevokedTokenError
 from flask_migrate import Migrate
 from dotenv import load_dotenv
+from pathlib import Path
 from extensions import bcrypt, jwt, db, limiter, jwt_required, get_jwt_identity, create_access_token
 from utils import check_if_token_revoked, create_default_plans
 from routes import (
