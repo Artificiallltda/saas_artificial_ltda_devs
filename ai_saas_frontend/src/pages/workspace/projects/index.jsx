@@ -13,7 +13,6 @@ import { formatDate, formatDateTime } from "../../../utils/dateUtils";
 import SortMenu from "../components/SortMenu";
 import { apiFetch } from "../../../services/apiService";
 import { EmptyState } from "../../../components/EmptyState";
-import { useLanguage } from "../../../context/LanguageContext";
 
 export default function ProjectsList() {
   const { t } = useLanguage();
@@ -72,7 +71,7 @@ export default function ProjectsList() {
         }),
       });
 
-      toast.success(t("projects.create.success"));
+      toast.success("Projeto criado com sucesso!");
       await loadProjects();
       setShowProjectModal(false);
       setProjectName("");
@@ -86,13 +85,13 @@ export default function ProjectsList() {
 
   return (
     <Layout>
-      <h1 className={styles.title}>{t("projects.title")}</h1>
+      <h1 className={styles.title}>Meus Projetos</h1>
       <p className="text-gray-600 mb-6">
-        {t("projects.subtitle")}
+        Gerencie seus projetos, edite detalhes ou adicione conteúdos.
       </p>
 
       {/* Barra de ações */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+      <div className="flex items-center justify-between mb-4">
         <div className="relative max-w-md w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
@@ -136,7 +135,7 @@ export default function ProjectsList() {
             className={`${styles.btnBlack} ${styles.btnBlackStandard}`}
           >
             <Plus className="w-4 h-4" />
-            <span className="text-sm">{t("projects.create.cta")}</span>
+            <span className="text-sm">Novo Projeto</span>
           </button>
         </div>
       </div>
@@ -148,9 +147,9 @@ export default function ProjectsList() {
         <div onClick={(e) => e.stopPropagation()}>
           <EmptyState
             icon={FolderPlus}
-            title={t("projects.empty.title")}
-            description={t("projects.empty.description")}
-            ctaLabel={t("projects.empty.cta")}
+            title="Você ainda não possui projetos"
+            description="Crie seu primeiro projeto para começar a gerar conteúdos com IA."
+            ctaLabel="Criar novo projeto"
             onCtaClick={handleOpenCreateModal}
           />
         </div>

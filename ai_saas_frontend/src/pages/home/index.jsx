@@ -31,7 +31,7 @@ export default function Home() {
         body: JSON.stringify({ name, description }),
       });
 
-      toast.success(t("dashboard.create_project.success"));
+      toast.success("Projeto criado com sucesso!");
 
       // ✅ fluxo correto: volta para lista de projetos
       navigate("/workspace/projects");
@@ -43,13 +43,13 @@ export default function Home() {
 
   return (
     <Layout>
-      <section className="px-4 sm:px-8 lg:px-16 xl:px-24 space-y-6 max-w-6xl mx-auto w-full">
+      <section className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className={styles.title}>{t("dashboard.title")}</h1>
+            <h1 className={styles.title}>Dashboard</h1>
             <p className="text-gray-600">
-              {t("dashboard.subtitle")}
+              Bem-vindo à sua plataforma de IA generativa
             </p>
           </div>
 
@@ -72,7 +72,7 @@ export default function Home() {
               {user?.tokens_available ?? 0}
             </p>
             <p className={`${styles.statSubtext} text-xs`}>
-              {t("dashboard.stats.future_feature")}
+              Funcionalidade futura!
             </p>
           </div>
 
@@ -107,7 +107,7 @@ export default function Home() {
 
         {/* Ferramentas IA */}
         <div>
-          <h2 className={styles.subTitle}>{t("dashboard.ai_tools.title")}</h2>
+          <h2 className={styles.subTitle}>Ferramentas de IA</h2>
 
           <div className={styles.panelGrid}>
             <div className={styles.statCard}>
@@ -116,17 +116,17 @@ export default function Home() {
                   <FileText className="text-white w-6 h-6" />
                 </div>
                 <h3 className="font-semibold text-black mb-1">
-                  {t("generation.text.title")}
+                  Geração de Texto
                 </h3>
                 <p className={`${styles.statSubtext} text-sm`}>
-                  {t("dashboard.ai_tools.text.description")}
+                  Crie conteúdo usando LLMs avançados
                 </p>
               </div>
               <Link
                 to="/text-generation"
                 className={`${styles.btnBlack} ${styles.btnBlackWide}`}
               >
-                {t("dashboard.ai_tools.start")}
+                Começar
               </Link>
             </div>
 
@@ -136,17 +136,17 @@ export default function Home() {
                   <Image className="text-white w-6 h-6" />
                 </div>
                 <h3 className="font-semibold text-black mb-1">
-                  {t("generation.image.title")}
+                  Geração de Imagem
                 </h3>
                 <p className={`${styles.statSubtext} text-sm`}>
-                  {t("dashboard.ai_tools.image.description")}
+                  Gere imagens a partir de prompts
                 </p>
               </div>
               <Link
                 to="/image-generation"
                 className={`${styles.btnBlack} ${styles.btnBlackWide}`}
               >
-                {t("dashboard.ai_tools.start")}
+                Começar
               </Link>
             </div>
 
@@ -156,17 +156,17 @@ export default function Home() {
                   <Video className="text-white w-6 h-6" />
                 </div>
                 <h3 className="font-semibold text-black mb-1">
-                  {t("generation.video.title")}
+                  Geração de Vídeo
                 </h3>
                 <p className={`${styles.statSubtext} text-sm`}>
-                  {t("dashboard.ai_tools.video.description")}
+                  Crie vídeos com IA generativa
                 </p>
               </div>
               <Link
                 to="/video-generation"
                 className={`${styles.btnBlack} ${styles.btnBlackWide}`}
               >
-                {t("dashboard.ai_tools.start")}
+                Começar
               </Link>
             </div>
           </div>
@@ -174,13 +174,13 @@ export default function Home() {
 
         {/* Projetos recentes */}
         <div>
-          <h2 className={styles.subTitle}>{t("dashboard.recent_projects.title")}</h2>
+          <h2 className={styles.subTitle}>Projetos Recentes</h2>
 
           {projects.length === 0 ? (
             <EmptyState
-              title={t("dashboard.recent_projects.empty.title")}
-              description={t("dashboard.recent_projects.empty.description")}
-              ctaLabel={t("dashboard.recent_projects.empty.cta")}
+              title="Nenhum projeto ainda"
+              description="Você ainda não criou nenhum projeto. Comece agora para gerar seu primeiro conteúdo com IA."
+              ctaLabel="Criar novo projeto"
               onCtaClick={() => setShowProjectModal(true)}
             />
           ) : (
@@ -201,7 +201,7 @@ export default function Home() {
                         {item.name}
                       </p>
                       <p className={`${styles.statSubtext} text-sm`}>
-                        {item.description || t("dashboard.recent_projects.no_description")}
+                        {item.description || "Sem descrição"}
                       </p>
                     </div>
                     <p className={`${styles.statSubtext} text-sm`}>
