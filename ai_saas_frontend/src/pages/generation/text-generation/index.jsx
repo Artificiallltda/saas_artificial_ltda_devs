@@ -65,54 +65,43 @@ function TextGeneration() {
           />
         </div>
 
-         <button
-  onClick={() => {
-    setMainSidebarCollapsed((prev) => !prev);
-    toggleSidebar();
-  }}
-  className={`
-    group
-    absolute bottom-60 ${sidebarCollapsed ? "left-0" : "left-72"} z-40
-    h-16 w-10 min-w-[44px]
-    flex items-center justify-center
-    rounded-r-xl shadow-md
-    transition-all duration-500 ease-out
-
-    ${sidebarCollapsed
-      ? `
-        bg-white border border-gray-300
-        hover:bg-gray-100
-      `
-      : `
-        bg-blue-600 border border-blue-700
-        hover:bg-blue-700
-      `}
-
-    focus-visible:outline
-    focus-visible:outline-4
-    focus-visible:outline-blue-400
-  `}
-  aria-label={sidebarCollapsed ? "Expandir chat" : "Ocultar chat"}
-  title={sidebarCollapsed ? "Expandir chat" : "Ocultar chat"}
->
-  {/* Ícone de seta */}
-  <span
-    className={`
-      text-2xl font-bold select-none
-      transition-transform duration-500 ease-out
-      ${sidebarCollapsed
-        ? "text-blue-600 translate-x-0"
-        : "text-white rotate-180 translate-x-0"}
-      group-hover:scale-110
-    `}
-  >
-    ❮
-  </span>
+        {/* Botão existente reposicionado como overlay fixo para não empurrar o conteúdo */}
+        <button
+          onClick={() => {
+            setMainSidebarCollapsed((prev) => !prev);
+            toggleSidebar();
+          }}
+          className={`
+            group
+            fixed top-[60%] ${sidebarCollapsed ? "left-0" : "left-72"} z-40
+            h-16 w-10 min-w-[44px]
+            flex items-center justify-center
+            rounded-r-xl shadow-md
+            transition-all duration-500 ease-out
+            ${sidebarCollapsed
+              ? "bg-white border border-gray-300 hover:bg-gray-100"
+              : "bg-blue-600 border border-blue-700 hover:bg-blue-700"}
+            focus-visible:outline focus-visible:outline-4 focus-visible:outline-blue-400
+          `}
+          aria-label={sidebarCollapsed ? "Expandir chat" : "Ocultar chat"}
+          title={sidebarCollapsed ? "Expandir chat" : "Ocultar chat"}
+          type="button"
+        >
+          <span
+            className={`
+              text-2xl font-bold select-none
+              transition-transform duration-500 ease-out
+              ${sidebarCollapsed ? "text-blue-600" : "text-white rotate-180"}
+              group-hover:scale-110
+            `}
+          >
+            ❮
+          </span>
         </button>
 
         <div
           className="flex-1 flex flex-col h-full p-6 transition-all duration-300"
-          style={{ marginLeft: sidebarCollapsed ? "0" : "18rem" }}
+          style={{ marginLeft: 0 }}
         >
           {imagesOpen && (
             <GeneratedFiles

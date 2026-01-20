@@ -126,10 +126,10 @@ export default function Header({
   }, [fetchNotifications]);
 
   return (
-    <header
-      className="flex items-center justify-between px-6 py-4 border-b bg-white w-full relative z-50"
-      ref={menuRef}
-    >
+      <header
+        className="flex items-center justify-between px-6 py-4 bg-white w-full relative z-50 border-0 border-b-0 shadow-none outline-none"
+        ref={menuRef}
+      >
       {/* ESQUERDA */}
       <div className="flex items-center gap-2 w-full max-w-md" ref={searchRef}>
         {/* BOTÃO MENU (MOBILE) */}
@@ -208,7 +208,7 @@ export default function Header({
 
         <button
           onClick={() => setMenuOpen(v => !v)}
-          className="w-8 h-8 rounded-full overflow-hidden border"
+          className="w-8 h-8 rounded-full overflow-hidden border-0 ring-1 ring-gray-200/70 hover:ring-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-shadow"
         >
           {perfilPhotoUrl ? (
             <img src={perfilPhotoUrl} className="w-full h-full object-cover" />
@@ -220,22 +220,22 @@ export default function Header({
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 top-full mt-2 w-48 bg-white border rounded-md shadow-lg text-sm z-50">
-            <ul>
+          <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-sm border border-gray-200/60 rounded-xl shadow-xl shadow-black/5 ring-1 ring-black/5 text-sm z-50 overflow-hidden">
+            <ul className="py-1">
               <li>
-                <Link to="/profile" className="flex gap-2 px-4 py-2 hover:bg-gray-100">
+                <Link to="/profile" className="flex gap-2 px-4 py-2 hover:bg-gray-50 focus:bg-gray-50 transition-colors outline-none">
                   <User className="w-4 h-4" /> Perfil
                 </Link>
               </li>
               <li>
-                <Link to="/settings" className="flex gap-2 px-4 py-2 hover:bg-gray-100">
+                <Link to="/settings" className="flex gap-2 px-4 py-2 hover:bg-gray-50 focus:bg-gray-50 transition-colors outline-none">
                   <Settings className="w-4 h-4" /> Configurações
                 </Link>
               </li>
               <li>
                 <button
                   onClick={logout}
-                  className="w-full text-left flex gap-2 px-4 py-2 hover:bg-red-100 text-red-600"
+                  className="w-full text-left flex gap-2 px-4 py-2 hover:bg-red-50 text-red-600 transition-colors outline-none"
                 >
                   <LogOut className="w-4 h-4" /> Sair
                 </button>

@@ -117,12 +117,15 @@ export default function Sidebar({
       </div>
 
       <div className="border-t border-blue-500 py-4 text-sm">
-        {!collapsed && (
-          <p className="text-white/60">
-            Plano: <strong className="text-white/80">{planName}</strong>
-          </p>
-        )}
-      </div>
+  {!collapsed && (
+    <div className="flex items-center justify-center">
+          <span className="mr-2 text-white/60">Plano</span>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/10 text-white/90 border border-white/20 shadow-sm backdrop-blur-[2px]">
+            {planName}
+          </span>
+        </div>
+      )}
+    </div>
     </aside>
   );
 }
