@@ -416,6 +416,11 @@ def generate_text():
         used_model = model
 
         generated_text = ""
+        # Acumuladores de uso de tokens (preenchidos quando o provedor devolver)
+        usage_prompt = None
+        usage_completion = None
+        usage_total = None
+        max_tokens_used = None
         try:
             if is_gemini_model(model):
                 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -548,7 +553,13 @@ def generate_text():
                 try:
                     response = make_request_with_retry(endpoint, headers, body, max_retries=5, backoff=3)
                     try:
-                        generated_text = response.json()["choices"][0]["message"]["content"]
+                        j = response.json()
+                        generated_text = j["choices"][0]["message"]["content"]
+                        u = j.get("usage") or {}
+                        usage_prompt = u.get("prompt_tokens")
+                        usage_completion = u.get("completion_tokens")
+                        usage_total = u.get("total_tokens")
+                        max_tokens_used = body.get("max_tokens")
                     except Exception:
                         print(f"[WARN] Resposta OpenRouter não é JSON:\n{response.text[:1000]}")
                         generated_text = "[Erro ao gerar resposta da IA]"
@@ -604,6 +615,14 @@ def generate_text():
                         if txt:
                             used_model = mid
                             generated_text = txt
+                            # usage (Anthropic usa input/output tokens)
+                            u = (data or {}).get("usage") or {}
+                            _in = u.get("input_tokens")
+                            _out = u.get("output_tokens")
+                            if _in is not None or _out is not None:
+                                usage_prompt = _in
+                                usage_completion = _out
+                                usage_total = (_in or 0) + (_out or 0)
                             break
                         else:
                             print(f"[WARN] Anthropic sem texto (model={mid}) payload={str(data)[:500]}")
@@ -641,7 +660,12 @@ def generate_text():
                         status = getattr(response, "status_code", 0)
                         if status == 200:
                             try:
-                                generated_text = response.json().get("choices", [{}])[0].get("message", {}).get("content", "[Sem retorno]")
+                                j = response.json()
+                                generated_text = j.get("choices", [{}])[0].get("message", {}).get("content", "[Sem retorno]")
+                                u = j.get("usage") or {}
+                                usage_prompt = u.get("prompt_tokens")
+                                usage_completion = u.get("completion_tokens")
+                                usage_total = u.get("total_tokens")
                             except Exception:
                                 print(f"[WARN] Resposta Perplexity não é JSON:\n{response.text[:1000]}")
                                 generated_text = "[Erro ao gerar resposta da IA]"
@@ -676,7 +700,13 @@ def generate_text():
                 try:
                     response = make_request_with_retry(endpoint, headers, body, max_retries=5, backoff=3)
                     try:
-                        generated_text = response.json()["choices"][0]["message"]["content"]
+                        j = response.json()
+                        generated_text = j["choices"][0]["message"]["content"]
+                        u = j.get("usage") or {}
+                        usage_prompt = u.get("prompt_tokens")
+                        usage_completion = u.get("completion_tokens")
+                        usage_total = u.get("total_tokens")
+                        max_tokens_used = body.get("max_tokens")
                     except Exception:
                         print(f"[WARN] Resposta OpenAI não é JSON:\n{response.text[:1000]}")
                         generated_text = "[Erro ao gerar resposta da IA]"
@@ -726,6 +756,11 @@ def generate_text():
                 role=SenderType.AI.value,
                 content=safe_text,
                 model_used=used_model,
+                temperature=None if uses_completion_tokens_for_openai(model) else temperature,
+                max_tokens=max_tokens_used,
+                prompt_tokens=usage_prompt,
+                completion_tokens=usage_completion,
+                total_tokens=usage_total,
                 created_at=datetime.utcnow()
             )
             db.session.add(ai_msg)
