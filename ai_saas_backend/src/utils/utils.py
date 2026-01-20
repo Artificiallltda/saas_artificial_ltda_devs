@@ -22,6 +22,8 @@ def create_default_plans():
         "attach_files": "Anexar arquivos",
         "limit_chats": "Limite de chats",
         "limit_messages": "Limite de mensagens por chat",
+        # Cota mensal de tokens por plano (número inteiro em tokens, armazenado como string)
+        "token_quota_monthly": "Cota mensal de tokens por usuário",
         "customization": "Personalização das respostas (temperatura)",
         "generate_image": "Geração de imagem",
         "generate_video": "Geração de vídeo",
@@ -66,6 +68,16 @@ def create_default_plans():
                 else:
                     allow = False
                 value = "true" if allow else "false"
+            elif key == "token_quota_monthly":
+                # Defina as cotas padrão (ajuste conforme sua política)
+                if plan.name == "Básico":
+                    value = str(300000)   # 300k tokens/mês
+                elif plan.name == "Pro":
+                    value = str(3000000)  # 3M tokens/mês
+                elif plan.name == "Premium":
+                    value = str(15000000) # 15M tokens/mês
+                else:
+                    value = "0"
             else:
                 # Mantém regra anterior para demais features
                 value = "false" if (plan.name == "Básico" and key == "generate_text") else "true"

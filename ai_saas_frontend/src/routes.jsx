@@ -32,6 +32,7 @@ import NotificationsList from "./pages/notifications";
 import AdminPanel from "./pages/admin";
 import AdminUsersList from "./pages/admin/users/AdminUsersList";
 import AdminCreateUser from "./pages/admin/users/AdminCreateUser";
+import AdminUsage from "./pages/admin/AdminUsage";
 
 function MainRoutes(){
   const { user, loading } = useAuth();
@@ -147,6 +148,16 @@ function MainRoutes(){
           <PrivateRoute>
             <AdminRoute>
               <AdminCreateUser />
+            </AdminRoute>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/admin/usage"
+        element={
+          <PrivateRoute>
+            <AdminRoute>
+              <AdminUsage />
             </AdminRoute>
           </PrivateRoute>
         }
