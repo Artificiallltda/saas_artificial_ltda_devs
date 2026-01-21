@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Layout from "../../components/layout/Layout";
+import { adminRoutes } from "../../services/apiRoutes";
 
 export default function AdminUsage() {
   const [rows, setRows] = useState([]);
@@ -21,9 +22,24 @@ export default function AdminUsage() {
       if (model) params.set("model", model);
       if (start) params.set("start", start);
       if (end) params.set("end", end);
-      const res = await fetch(`/api/admin/usage?${params.toString()}`, { credentials: "include" });
+  
+      const res = await fetch(adminRoutes.usage(params.toString()), {
+        credentials: "include",
+        cache: "no-store",
+      });
+  
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Falha ao carregar relatório (${res.status})`);
+      }
+  
+      const ct = res.headers.get("content-type") || "";
+      if (!ct.includes("application/json")) {
+        const text = await res.text();
+        throw new Error(text || "Resposta não é JSON");
+      }
+  
       const j = await res.json();
-      if (!res.ok) throw new Error(j?.error || "Falha ao carregar relatório");
       setRows(j.results || []);
     } catch (e) {
       setError(e.message || "Erro ao carregar dados");

@@ -40,6 +40,7 @@ export const adminRoutes = {
   createUser: () => `${API_BASE}/admin/users`,                      // POST → criar user
   updateUserPlan: (id) => `${API_BASE}/admin/users/${id}/plan`,     // PUT → atualizar plano
   updateUserStatus: (id) => `${API_BASE}/admin/users/${id}/status`, // PUT → atualizar role e is_active
+  usage: (qs = "") => `${API_BASE}/admin/usage${qs ? `?${qs}` : ""}`,
 };
 
 
