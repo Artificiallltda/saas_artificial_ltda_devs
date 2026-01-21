@@ -62,11 +62,7 @@ export default function Layout({ children }) {
           transition-[width] duration-300 ease-in-out
           ${sidebarCollapsed ? "w-20" : "w-64"}
 
-          ${
-            isTextGeneration
-              ? "relative"
-              : "fixed lg:relative z-50"
-          }
+          ${isTextGeneration ? "relative" : "fixed lg:relative z-50"}
 
           ${
             !isTextGeneration && !sidebarOpen
@@ -82,7 +78,7 @@ export default function Layout({ children }) {
         />
       </div>
 
-      {/* CONTEÚDO */}
+      {/* CONTEUDO */}
       <div className="flex-1 flex flex-col min-w-0">
         <Header
           onMenuClick={() => {
@@ -97,7 +93,7 @@ export default function Layout({ children }) {
         <main
           className={`
             flex-1 bg-gray-light
-            ${isTextGeneration ? "overflow-visible p-0" : "overflow-auto p-6"}
+            ${isTextGeneration ? "overflow-visible p-0" : "overflow-auto"}
           `}
         >
           {children}
