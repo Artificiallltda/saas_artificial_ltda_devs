@@ -4,16 +4,22 @@ from models import User, Plan, Feature, PlanFeature
 from flask_jwt_extended.exceptions import RevokedTokenError
 import redis
 
+
 def add_token_to_blacklist(jti, expires_in):
     redis_client.setex(jti, expires_in, "revoked")
+
 
 def check_if_token_revoked(jwt_header, jwt_payload):
     jti = jwt_payload["jti"]
     try:
         token_in_redis = redis_client.get(jti)
     except redis.exceptions.ConnectionError:
-        raise RevokedTokenError("Serviço de autenticação temporariamente indisponível.", jwt_data=jwt_payload)
+        raise RevokedTokenError(
+            "Serviço de autenticação temporariamente indisponível.",
+            jwt_data=jwt_payload,
+        )
     return token_in_redis is not None
+
 
 def create_default_plans():
     # Recursos disponíveis
@@ -34,6 +40,7 @@ def create_default_plans():
         "gemini_30": "Acesso ao Gemini 3.0",
     }
 
+    # Garante os registros de Feature
     feature_objs = {}
     for key, desc in features.items():
         f = Feature.query.filter_by(key=key).first()
@@ -43,10 +50,10 @@ def create_default_plans():
             db.session.flush()
         feature_objs[key] = f
 
-    # Planos
+    # Planos base
     plan_names = ["Básico", "Pro", "Premium"]
 
-    # Conjunto das chaves Gemini
+    # Conjunto das chaves Gemini (para gating por plano)
     GEMINI_KEYS = {"gemini_25_pro", "gemini_25_flash", "gemini_25_flash_lite", "gemini_30"}
 
     for name in plan_names:
@@ -58,6 +65,7 @@ def create_default_plans():
 
         for key, f in feature_objs.items():
             existing = PlanFeature.query.filter_by(plan_id=plan.id, feature_id=f.id).first()
+
             # Regras por plano (sempre aplicadas, atualizando se já existir)
             if key in GEMINI_KEYS:
                 if plan.name == "Básico":
@@ -68,16 +76,18 @@ def create_default_plans():
                 else:
                     allow = False
                 value = "true" if allow else "false"
+
             elif key == "token_quota_monthly":
-                # Defina as cotas padrão (ajuste conforme sua política)
+                # Cotas mensais corretas (em tokens)
                 if plan.name == "Básico":
-                    value = str(300000)   # 300k tokens/mês
-                elif plan.name == "Pro":
-                    value = str(3000000)  # 3M tokens/mês
+                    value = str(300000)        # 300k
                 elif plan.name == "Premium":
-                    value = str(15000000) # 15M tokens/mês
+                    value = str(3000000)       # 3M
+                elif plan.name == "Pro":
+                    value = str(15000000)      # 15M
                 else:
                     value = "0"
+
             else:
                 # Mantém regra anterior para demais features
                 value = "false" if (plan.name == "Básico" and key == "generate_text") else "true"
