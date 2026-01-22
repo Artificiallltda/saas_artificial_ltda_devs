@@ -23,7 +23,8 @@ import { useNotifications } from "../../context/NotificationContext";
 export default function Header({
   onMenuClick,
   onToggleCollapse,
-  sidebarCollapsed
+  sidebarCollapsed,
+  isTextGeneration = false
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -132,27 +133,55 @@ export default function Header({
       >
       {/* ESQUERDA */}
       <div className="flex items-center gap-2 w-full max-w-md" ref={searchRef}>
-        {/* BOTÃO MENU (MOBILE) */}
-        <button
-          onClick={onMenuClick}
-          className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
-          aria-label="Abrir menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        {/* BOTÃO MENU (MOBILE) - PARA SIDEBAR PRINCIPAL */}
+        {!isTextGeneration && (
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
+            aria-label="Abrir menu principal"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
 
-        {/* BOTÃO COLAPSAR (DESKTOP) */}
-        <button
-          onClick={onToggleCollapse}
-          className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition"
-          title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
-        >
-          {sidebarCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
+        {/* BOTÃO MENU (MOBILE) - PARA SIDEBAR DE CHAT (APENAS EM TEXT-GENERATION) */}
+        {isTextGeneration && (
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
+            aria-label="Abrir menu de chat"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+
+        {/* BOTÕES DE CONTROLE DA BARRA LATERAL */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onToggleCollapse}
+            className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition"
+            title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
+          </button>
+          
+          {/* Botão de alternar barra lateral de chat (visível apenas em text-generation) */}
+          {isTextGeneration && (
+            <button
+              onClick={() => window.toggleChatSidebar?.()}
+              className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition"
+              title="Alternar barra de chat"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 6H20M4 12H20M4 18H20" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           )}
-        </button>
+        </div>
 
         {/* SEARCH */}
         <div className="relative w-full">

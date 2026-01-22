@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styles from './video.module.css';
 import Layout from "../../../components/layout/Layout";
-import CustomSelect from '../../../components/common/CustomSelect';
-import { Download, Send, Loader2, Video as VideoIcon, Settings } from 'lucide-react';
+import { Download, Send, Loader2, Video as VideoIcon, Settings, ChevronDown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { aiRoutes, generatedContentRoutes, userRoutes } from '../../../services/apiRoutes';
 import { apiFetch } from '../../../services/apiService';
@@ -14,6 +13,28 @@ function VideoGeneration() {
   const [ratio, setRatio] = useState("16:9");
   const [loading, setLoading] = useState(false);
   const [generatedVideo, setGeneratedVideo] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const settingsRef = useRef(null);
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      role: 'assistant',
+      content: 'Olá! Sou o assistente de geração de vídeos. Descreva o vídeo que você gostaria de criar.'
+    }
+  ]);
+
+  // Fechar o dropdown de configurações ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setShowSettings(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -21,6 +42,14 @@ function VideoGeneration() {
       return;
     }
 
+    // Adiciona a mensagem do usuário ao chat
+    const userMessage = {
+      id: Date.now(),
+      role: 'user',
+      content: prompt
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
     setLoading(true);
     setGeneratedVideo(null);
 
@@ -29,8 +58,13 @@ function VideoGeneration() {
       const userPlan = userData?.plan?.name || "Básico";
 
       if (userPlan !== "Pro") {
+        const errorMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: 'A geração de vídeo está disponível apenas para usuários do plano Pro!'
+        };
+        setMessages(prev => [...prev, errorMessage]);
         toast.error("A geração de vídeo está disponível apenas para usuários do plano Pro!");
-        setLoading(false);
         return;
       }
 
@@ -45,13 +79,32 @@ function VideoGeneration() {
           method: "GET",
         });
         const blob = await videoRes.blob();
-        setGeneratedVideo(URL.createObjectURL(blob));
+        const videoUrl = URL.createObjectURL(blob);
+        setGeneratedVideo(videoUrl);
+        
+        // Adiciona o vídeo gerado ao chat
+        const assistantMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: 'Seu vídeo foi gerado com sucesso!',
+          video: videoUrl
+        };
+        setMessages(prev => [...prev, assistantMessage]);
       }
 
       toast.success("Vídeo gerado com sucesso!");
+      setPrompt(''); // Limpa o input após o envio
     } catch (err) {
       console.error(err);
       toast.error("Erro ao gerar vídeo!");
+      
+      // Adiciona mensagem de erro ao chat
+      const errorMessage = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: 'Desculpe, ocorreu um erro ao gerar o vídeo. Por favor, tente novamente.'
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setLoading(false);
     }
@@ -79,96 +132,153 @@ function VideoGeneration() {
 
   return (
     <Layout>
-      <section className={`${styles.section} space-y-6`}>
-        <div>
-          <h1 className={styles.title}>Geração de Vídeo</h1>
-          <p className="text-gray-600">Crie vídeos incríveis usando IA generativa</p>
+      <section className="flex flex-col h-[calc(100vh-80px)] bg-white">
+        {/* Header */}
+        <div className="border-b border-gray-200 px-6 py-4">
+          <h1 className="text-2xl font-semibold text-gray-900">Geração de Vídeo</h1>
+          <p className="text-sm text-gray-500">Crie vídeos incríveis usando IA generativa</p>
         </div>
 
-        <div className={styles.panelGrid}>
-          <div className={styles.statCard}>
-            <div className={styles.statHeader}>
-              <Settings className="w-5 h-5 text-black mr-2" />
-              <p className={styles.blockSubtitle}>Configurações</p>
+        {/* Chat Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-3xl rounded-2xl px-4 py-3 ${
+                  message.role === 'user'
+                    ? 'bg-blue-600 text-white rounded-br-none'
+                    : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                }`}
+              >
+                {message.content && <p className="whitespace-pre-wrap">{message.content}</p>}
+                {message.video && (
+                  <div className="mt-2">
+                    <video 
+                      src={message.video} 
+                      controls 
+                      className="max-h-96 rounded-lg shadow-md"
+                    />
+                    <button
+                      onClick={() => {
+                        fetch(message.video)
+                          .then((res) => res.blob())
+                          .then((blob) => {
+                            const a = document.createElement("a");
+                            const filename = `Artificiall-Video-${Date.now()}.mp4`;
+                            a.href = URL.createObjectURL(blob);
+                            a.download = filename;
+                            a.click();
+                            URL.revokeObjectURL(a.href);
+                          })
+                          .catch(() => toast.error("Falha ao baixar o vídeo"));
+                      }}
+                      className="mt-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      <Download className="w-4 h-4" />
+                      Baixar vídeo
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-
-            {/* Modelo */}
-            <div className="flex flex-col mb-2">
-              <label htmlFor="model" className={styles.blockTitle}>Modelo</label>
-              <CustomSelect
-                value={VIDEO_MODELS.find((m) => m.value === model)}
-                onChange={(s) => setModel(s.value)}
-                options={VIDEO_MODELS}
-                isSearchable={false}
-                placeholder="Selecione o modelo"
-              />
+          ))}
+          {loading && (
+            <div className="flex items-center gap-2 p-3 text-gray-500">
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
             </div>
+          )}
+        </div>
 
-            {/* Proporção */}
-            <div className="flex flex-col mb-2">
-              <label htmlFor="ratio" className={styles.blockTitle}>Proporção</label>
-              <CustomSelect
-                value={VIDEO_RATIOS.find((m) => m.value === ratio)}
-                onChange={(s) => setRatio(s.value)}
-                options={VIDEO_RATIOS}
-                isSearchable={false}
-                placeholder="Selecione a proporção"
-              />
+        {/* Input Area */}
+        <div className="border-t border-gray-200 p-4 bg-white relative">
+          <div className="relative">
+            {/* Settings Dropdown */}
+            <div className="absolute right-4 -top-14 z-10" ref={settingsRef}>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                <Settings className="w-4 h-4" />
+                Configurações
+                <ChevronDown className={`w-4 h-4 transition-transform ${showSettings ? 'transform rotate-180' : ''}`} />
+              </button>
+              
+              {showSettings && (
+                <div className="absolute right-0 bottom-full mb-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 p-3 space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
+                    <select
+                      value={model}
+                      onChange={(e) => setModel(e.target.value)}
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                    >
+                      {VIDEO_MODELS.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Proporção</label>
+                    <select
+                      value={ratio}
+                      onChange={(e) => setRatio(e.target.value)}
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                    >
+                      {VIDEO_RATIOS.map((r) => (
+                        <option key={r.value} value={r.value}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-
-          <div className={`${styles.statCard} flex flex-col flex-1`}>
-            <p className={styles.blockSubtitle}>Prompt</p>
-            <p className={`${styles.statSubtext} text-sm`}>
-              Descreva o vídeo que você gostaria de gerar
-            </p>
-            <textarea
-              placeholder="Ex: Uma cena futurista com carros voadores passando por uma cidade iluminada à noite..."
-              rows={5}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="w-full pl-4 pr-4 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md mt-6"
-            />
-            <div className="flex justify-between items-center mt-6">
-              <p className={`${styles.statSubtext} text-sm`}>{prompt.length} caracteres</p>
+            
+            <div className="flex items-end gap-2">
+              <div className="flex-1 relative">
+                <textarea
+                  placeholder="Descreva o vídeo que você gostaria de gerar..."
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey && !loading) {
+                      e.preventDefault();
+                      handleGenerate();
+                    }
+                  }}
+                  rows={1}
+                  className="w-full px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  style={{ minHeight: '48px', maxHeight: '200px' }}
+                />
+                <div className="absolute right-2 bottom-2 flex items-center space-x-1">
+                  <span className="text-xs text-gray-400">{prompt.length}/1000</span>
+                </div>
+              </div>
+              
               <button
                 onClick={handleGenerate}
-                disabled={loading}
-                className={`${styles.btn} ${styles.btnStandard} flex items-center gap-2`}
+                disabled={loading || !prompt.trim()}
+                className={`p-3 rounded-xl ${
+                  loading || !prompt.trim()
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                } transition-colors`}
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                <span className="text-sm">{loading ? "Gerando..." : "Gerar Vídeo"}</span>
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
               </button>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.panelGrid}>
-          <div className={`${styles.statCard} flex flex-col flex-1 col-start-2`}>
-            <p className={styles.blockSubtitle}>Vídeo Gerado</p>
-            <p className={`${styles.statSubtext} text-sm m-4`}>Seu vídeo criado pela IA</p>
-            <div className="flex flex-col flex-1 justify-center items-center text-center min-h-[35vh] space-y-4">
-              {generatedVideo ? (
-                <div className="flex flex-col items-center space-y-4">
-                  <video
-                    controls
-                    src={generatedVideo}
-                    className="max-h-96 rounded-md shadow-md"
-                  />
-                  <button
-                    onClick={handleDownload}
-                    className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow-md transition"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Baixar Vídeo</span>
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <VideoIcon className="w-16 h-16 text-gray-300" />
-                  <p className="text-gray-500">O vídeo gerado aparecerá aqui</p>
-                </>
-              )}
             </div>
           </div>
         </div>

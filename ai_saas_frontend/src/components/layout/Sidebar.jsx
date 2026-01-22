@@ -54,24 +54,19 @@ export default function Sidebar({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       className={`
-        bg-primary px-4
+        bg-white px-4
         flex flex-col justify-between
         transition-[width,transform] duration-300 ease-in-out
-
-        /* DESKTOP */
-        relative
+        h-full
         ${collapsed ? "w-20" : "w-64"}
-
-        /* MOBILE DRAWER */
-        fixed inset-y-0 left-0 z-50 lg:relative
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0
       `}
     >
-      <div>
+      <div className="flex-1 overflow-y-auto py-2">
         {!collapsed && (
           <img
-            src="/static/artificiall/white_Hor_RGB.png"
+            src="/static/artificiall/dark_Hor_RGB.png"
             alt="Logo"
             className="w-full px-2 py-6"
           />
@@ -87,13 +82,13 @@ export default function Sidebar({
                 onClick={onClose}
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-lg
-                  hover:bg-white/10 transition
-                  ${isActive ? "bg-primary-dark/40 text-white" : ""}
+                  hover:bg-gray-100 transition
+                  ${isActive ? "bg-gray-200 text-gray-900" : "text-gray-700"}
                 `}
               >
-                <Icon className="w-5 h-5 text-white/90" />
+                <Icon className="w-5 h-5 text-gray-600" />
                 {!collapsed && (
-                  <span className="text-white/90">{label}</span>
+                  <span className="text-gray-700">{label}</span>
                 )}
               </Link>
             );
@@ -103,11 +98,11 @@ export default function Sidebar({
             <Link
               to="/admin"
               onClick={onClose}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
             >
-              <ShieldCheck className="w-5 h-5 text-white/90" />
+              <ShieldCheck className="w-5 h-5 text-gray-600" />
               {!collapsed && (
-                <span className="text-white/90">
+                <span className="text-gray-700">
                   Painel Administrativo
                 </span>
               )}
@@ -116,11 +111,11 @@ export default function Sidebar({
         </nav>
       </div>
 
-      <div className="border-t border-blue-500 py-4 text-sm">
+      <div className="border-t border-gray-300 py-4 text-sm">
   {!collapsed && (
     <div className="flex items-center justify-center">
-          <span className="mr-2 text-white/60">Plano</span>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/10 text-white/90 border border-white/20 shadow-sm backdrop-blur-[2px]">
+          <span className="mr-2 text-gray-600">Plano</span>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-300 shadow-sm">
             {planName}
           </span>
         </div>

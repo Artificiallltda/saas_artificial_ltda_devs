@@ -14,7 +14,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-client_gemini = genai.Client(api_key=GEMINI_API_KEY)
+client_gemini = None
+if GEMINI_API_KEY:
+    try:
+        client_gemini = genai.Client(api_key=GEMINI_API_KEY)
+    except Exception:
+        pass
 
 ai_generation_video_api = Blueprint("ai_generation_video_api", __name__)
 
@@ -38,6 +43,9 @@ def generate_video():
 
     if not prompt:
         return jsonify({"error": "Campo 'prompt' é obrigatório"}), 400
+
+    if not client_gemini:
+        return jsonify({"error": "GEMINI_API_KEY não configurada"}), 500
 
     try:
         filename = f"{uuid.uuid4()}.mp4"
