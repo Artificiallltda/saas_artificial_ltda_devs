@@ -112,4 +112,3 @@ function MessageContent({ content, isUserMessage = false }) {
 }
 
 export default React.memo(MessageContent);
-

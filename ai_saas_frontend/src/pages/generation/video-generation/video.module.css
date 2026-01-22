@@ -39,15 +39,9 @@
 }
 
 .panelGrid {
-  @apply grid gap-4 md:gap-5;
-  grid-template-columns: 1fr;
+  @apply grid gap-5;
+  grid-template-columns: 1fr 2fr;
   align-items: start;
-}
-
-@media (min-width: 768px) {
-  .panelGrid {
-    grid-template-columns: 1fr 2fr;
-  }
 }
 
 .atentionCard {
@@ -55,7 +49,7 @@
 }
 
 .statCard {
-  @apply bg-white p-4 md:p-6 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:shadow-md;
+  @apply bg-white p-6 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:shadow-md;
 }
 
 .statHeader {

@@ -3,19 +3,12 @@ import { useLocation } from "react-router-dom";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
-export default function Layout({ children, mainSidebarCollapsed }) {
+export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(mainSidebarCollapsed || false); // desktop
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // desktop
   const location = useLocation();
 
   const isTextGeneration = location.pathname.startsWith("/text-generation");
-
-  // Usar mainSidebarCollapsed se fornecido
-  useEffect(() => {
-    if (mainSidebarCollapsed !== undefined) {
-      setSidebarCollapsed(mainSidebarCollapsed);
-    }
-  }, [mainSidebarCollapsed]);
 
   // Fecha drawer ao virar desktop
   useEffect(() => {
@@ -49,7 +42,11 @@ export default function Layout({ children, mainSidebarCollapsed }) {
   }, [sidebarOpen, isTextGeneration]);
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div
+      className={`flex ${
+        isTextGeneration ? "min-h-screen" : "h-screen overflow-hidden"
+      }`}
+    >
       {/* OVERLAY MOBILE */}
       {!isTextGeneration && sidebarOpen && (
         <div
@@ -58,45 +55,52 @@ export default function Layout({ children, mainSidebarCollapsed }) {
         />
       )}
 
-      {/* SIDEBAR PRINCIPAL - VISÍVEL QUANDO NÃO RECOLHIDO */}
-      {(!isTextGeneration || !sidebarCollapsed) && (
-        <div
-          className={`
-            bg-white
-            transition-[width] duration-300 ease-in-out
-            ${sidebarCollapsed ? "w-20" : "w-64"}
-            fixed lg:relative z-50 h-screen overflow-y-auto
-            ${!sidebarOpen ? "-translate-x-full lg:translate-x-0" : "translate-x-0"}
-          `}
-        >
-          <Sidebar
-            collapsed={sidebarCollapsed}
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-          />
-        </div>
-      )}
+      {/* SIDEBAR (NUNCA FIXO NO TEXT-GENERATION) */}
+      <div
+        className={`
+          bg-primary
+          transition-[width] duration-300 ease-in-out
+          ${sidebarCollapsed ? "w-20" : "w-64"}
+
+          ${
+            isTextGeneration
+              ? "relative"
+              : "fixed lg:relative z-50"
+          }
+
+          ${
+            !isTextGeneration && !sidebarOpen
+              ? "-translate-x-full lg:translate-x-0"
+              : "translate-x-0"
+          }
+        `}
+      >
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          isOpen={!isTextGeneration && sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+      </div>
 
       {/* CONTEÚDO */}
-      <div className="flex-1 flex flex-col w-full">
+      <div className="flex-1 flex flex-col min-w-0">
         <Header
           onMenuClick={() => {
-            if (isTextGeneration) {
-              // Para text-generation, precisamos de uma lógica diferente
-              // Vamos passar uma função que o componente text-generation vai usar
-              if (window.toggleChatSidebar) {
-                window.toggleChatSidebar();
-              }
-            } else {
+            if (!isTextGeneration) {
               setSidebarOpen((v) => !v);
             }
           }}
           onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
           sidebarCollapsed={sidebarCollapsed}
-          isTextGeneration={isTextGeneration}
         />
-        <main className="flex-1 overflow-y-auto bg-gray-50 w-full">
-          <div className="w-full h-full">{children}</div>
+
+        <main
+          className={`
+            flex-1 bg-gray-light
+            ${isTextGeneration ? "overflow-visible p-0" : "overflow-auto p-6"}
+          `}
+        >
+          {children}
         </main>
       </div>
     </div>
