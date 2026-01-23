@@ -2,24 +2,23 @@
 @import "../../styles/theme.css";
 @import "../../styles/base.css";
 
+/* =======================
+   BOTÕES
+======================= */
+
 .btnBlack {
-  background-color: #1a1a1a;
-  color: white;
-  border: none;
+  background-color: var(--button-bg);
+  color: var(--button-text);
+  border: 1px solid var(--border);
   cursor: pointer;
   font-weight: 500;
   border-radius: 8px;
-  transition: background-color 0.25s ease;
+  transition: opacity 0.25s ease, background-color 0.25s ease;
   outline: none;
 }
 
 .btnBlack:hover {
-  @apply bg-neutral-800;
-}
-
-.btnBlack:focus,
-.btnBlack:focusVisible {
-  outline: none;
+  opacity: 0.9;
 }
 
 .btnBlackStandard {
@@ -30,34 +29,56 @@
   @apply block w-full max-w-full px-4 py-2 mt-4 text-center text-sm;
 }
 
+/* =======================
+   TEXTOS
+======================= */
+
 .title {
-  @apply text-3xl font-bold text-gray-900;
+  @apply text-3xl font-bold;
+  color: var(--heading-color);
 }
 
 .subTitle {
-  @apply text-xl font-semibold text-gray-900 mb-6;
+  @apply text-xl font-semibold mb-6;
+  color: var(--text);
 }
 
+/* ✅ “Geração de Texto/Imagem/Vídeo” (título do card) */
 .blockTitle {
-  @apply text-sm text-black font-medium;
+  @apply text-sm font-medium;
+  color: var(--text); /* LIGHT: preto/escuro | DARK: branco */
 }
+
+/* ✅ descrição do card */
+.statSubtext {
+  @apply text-sm;
+  color: var(--text-muted); /* LIGHT: cinza escuro | DARK: cinza claro */
+}
+
+/* =======================
+   GRID / CARDS
+======================= */
 
 .panelGrid {
   @apply grid grid-cols-1 md:grid-cols-3 gap-5;
 }
 
 .statCard {
-  @apply bg-white p-6 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:shadow-md;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  @apply p-6 rounded-lg shadow-sm transition-colors duration-200;
 }
 
 .blockCard {
-  @apply bg-white py-6 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:shadow-md;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  @apply py-6 rounded-lg shadow-sm transition-colors duration-200;
+}
+
+.blockCard:hover {
+  background: var(--surface-2);
 }
 
 .statHeader {
   @apply flex justify-between items-center mb-6;
-}
-
-.statSubtext {
-  @apply text-gray-medium;
 }

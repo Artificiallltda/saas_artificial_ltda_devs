@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { MoreVertical, Edit2, Trash2, Archive, CornerUpLeft } from "lucide-react";
+import {
+  MoreVertical,
+  Edit2,
+  Trash2,
+  Archive,
+  CornerUpLeft,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import { chatRoutes } from "../../../../services/apiRoutes";
 import { apiFetch } from "../../../../services/apiService";
@@ -34,8 +40,10 @@ export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
     const dropdownHeight = 120;
     const viewportHeight = window.innerHeight;
 
-    let top;
-    top = rect.bottom + dropdownHeight > viewportHeight ? rect.top - dropdownHeight - 4 : rect.bottom + 4;
+    const top =
+      rect.bottom + dropdownHeight > viewportHeight
+        ? rect.top - dropdownHeight - 4
+        : rect.bottom + 4;
 
     setDropdownPos({ top, left: rect.right - 144 });
     setOpen((prev) => !prev);
@@ -43,7 +51,7 @@ export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
 
   const handleRename = async () => {
     try {
-      const data = await apiFetch(`${chatRoutes.list}${chat.id}`, {
+      await apiFetch(`${chatRoutes.list}${chat.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: newTitle }),
@@ -87,18 +95,82 @@ export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
     }
   };
 
+  const dropdown = open ? (
+    <div
+      className="
+        chat-dropdown w-36 z-[1000] rounded-md shadow-lg
+        bg-white dark:bg-neutral-950
+        border border-gray-200 dark:border-neutral-800
+        text-gray-900 dark:text-neutral-100
+        overflow-hidden
+      "
+      style={{ position: "fixed", top: dropdownPos.top, left: dropdownPos.left }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={() => {
+          setRenaming(true);
+          setOpen(false);
+        }}
+        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-neutral-900 w-full text-left text-sm transition"
+        type="button"
+      >
+        <Edit2 className="w-4 h-4" /> Renomear
+      </button>
+
+      <button
+        onClick={handleArchiveToggle}
+        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-neutral-900 w-full text-left text-sm transition"
+        type="button"
+      >
+        {chat.archived ? (
+          <>
+            <CornerUpLeft className="w-4 h-4" /> Desarquivar
+          </>
+        ) : (
+          <>
+            <Archive className="w-4 h-4" /> Arquivar
+          </>
+        )}
+      </button>
+
+      <button
+        onClick={handleDelete}
+        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-neutral-900 w-full text-left text-sm text-red-500 transition"
+        type="button"
+      >
+        <Trash2 className="w-4 h-4" /> Excluir
+      </button>
+    </div>
+  ) : null;
+
   return (
     <div
-      className={`group flex items-center justify-between px-3 py-2 mb-1 rounded-md text-sm truncate ${
-        selected ? "bg-[var(--color-primary)] text-white" : "hover:bg-gray-100 text-gray-800"
-      }`}
+      className={`
+        group flex items-center justify-between px-3 py-2 mb-1 rounded-md text-sm truncate
+        transition
+        ${
+          selected
+            ? "bg-[var(--color-primary)] text-white"
+            : "hover:bg-gray-100 dark:hover:bg-neutral-900 text-gray-800 dark:text-neutral-200"
+        }
+      `}
       title={chat.title}
     >
-      <div className="flex items-center w-full rounded-md group" onClick={() => loadChat(chat.id)}>
+      <div
+        className="flex items-center w-full rounded-md group"
+        onClick={() => loadChat(chat.id)}
+      >
         <div className="flex-1 min-w-0 cursor-default">
           {renaming ? (
             <input
-              className="w-full text-sm rounded-md border border-gray-300 focus:outline-none"
+              className="
+                w-full text-sm rounded-md px-2 py-1
+                bg-white dark:bg-neutral-950
+                text-gray-900 dark:text-neutral-100
+                border border-gray-300 dark:border-neutral-800
+                focus:outline-none focus:ring-2 focus:ring-blue-500/40
+              "
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRename()}
@@ -110,52 +182,26 @@ export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
         </div>
 
         <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button ref={buttonRef} className="p-1 rounded cursor-pointer" onClick={toggleDropdown}>
-            <MoreVertical className={`w-4 h-4 ${selected ? "text-white" : "text-gray-500"}`} />
+          <button
+            ref={buttonRef}
+            className="p-1 rounded hover:bg-white/10 dark:hover:bg-neutral-800 transition"
+            onClick={toggleDropdown}
+            type="button"
+            aria-label="Abrir menu do chat"
+          >
+            <MoreVertical
+              className={`w-4 h-4 ${
+                selected ? "text-white" : "text-gray-500 dark:text-neutral-400"
+              }`}
+            />
           </button>
         </div>
       </div>
 
       {open &&
         createPortal(
-          <div
-            className="chat-dropdown bg-white border border-gray-200 rounded-md shadow-lg w-36 z-[1000]"
-            style={{ position: "fixed", top: dropdownPos.top, left: dropdownPos.left }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => {
-                setRenaming(true);
-                setOpen(false);
-              }}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left text-sm"
-            >
-              <Edit2 className="w-4 h-4" /> Renomear
-            </button>
-
-            <button
-              onClick={handleArchiveToggle}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left text-sm"
-            >
-              {chat.archived ? (
-                <>
-                  <CornerUpLeft className="w-4 h-4" /> Desarquivar
-                </>
-              ) : (
-                <>
-                  <Archive className="w-4 h-4" /> Arquivar
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={handleDelete}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left text-sm text-red-500"
-            >
-              <Trash2 className="w-4 h-4" /> Excluir
-            </button>
-          </div>,
-          document.body
+          dropdown,
+          typeof document !== "undefined" ? document.body : null
         )}
     </div>
   );

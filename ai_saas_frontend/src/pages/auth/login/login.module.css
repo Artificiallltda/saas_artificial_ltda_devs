@@ -2,84 +2,113 @@
 @import "../../../styles/theme.css";
 @import "../../../styles/base.css";
 
+/* =========================
+   Botões
+   ========================= */
 .btn {
-  background-color: var(--color-theme);
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--on-primary);
   border: none;
   cursor: pointer;
   font-weight: 500;
   border-radius: 8px;
-  transition: background-color 0.25s ease;
+  transition: opacity 0.2s ease, background-color 0.25s ease;
   outline: none;
   margin-bottom: 0.5rem;
 }
 
 .btn:hover {
-  background-color: var(--color-theme-dark);
+  opacity: 0.92;
 }
 
-.btn:focus,
-.btn:focusVisible {
-  outline: none;
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .btnStandard {
-  @apply px-3 py-2 inline-flex items-center gap-4;
+  @apply px-3 py-2 inline-flex items-center gap-2;
 }
 
 .btnWide {
   @apply block w-full max-w-full px-4 py-2 mt-4 text-center text-sm;
 }
 
+/* =========================
+   Página
+   ========================= */
+/* Light: branco / Dark: escuro */
 .pageBackground {
-  background-color: #3A74B8;
+  background-color: var(--bg);
   @apply min-h-screen flex items-center justify-center;
 }
 
+/* =========================
+   Links
+   ========================= */
 .linkSuccess {
   color: var(--color-success);
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: opacity 0.2s ease, color 0.3s ease;
 }
 
 .linkSuccess:hover {
-  color: var(--color-theme); /* cor para hover */
+  color: var(--color-primary);
+  opacity: 0.95;
 }
 
-/* Variante "wide", tipo um botão */
+/* Variante "wide" */
 .linkSuccessWide {
   @apply text-sm font-semibold px-1 rounded inline-block;
-  color: var(--color-gray-dark);
+  color: var(--text);
   cursor: pointer;
   user-select: none;
 }
 
+/* =========================
+   Títulos / textos
+   ========================= */
 .title {
-  @apply text-xl font-bold text-gray-900 text-center;
-}
-
-.statCard {
-  @apply bg-white p-6 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:shadow-md;
-  @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+  @apply text-xl font-bold text-center;
+  color: var(--heading-color);
 }
 
 .statSubtext {
-  @apply text-gray-medium text-sm text-center;
+  color: var(--text-muted);
+  @apply text-sm text-center;
 }
 
 .error {
-  @apply text-red-800 text-sm py-2 text-center max-w-xs w-full mx-auto;
+  @apply text-sm py-2 text-center max-w-xs w-full mx-auto;
+  color: #ef4444; /* red-500 */
 }
 
+/* =========================
+   Card principal (Login)
+   ========================= */
+/* Card acompanha tema */
 .loginCard {
-  @apply flex w-full max-w-3xl min-h-[400px] bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300;
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  @apply flex w-full max-w-3xl min-h-[400px] rounded-lg shadow-lg overflow-hidden;
 }
 
 .loginLeft {
   background: var(--color-theme-gradient);
-  @apply flex flex-col justify-center items-center p-6 w-1/2 text-white;
+  @apply flex flex-col justify-center items-center p-6 w-1/2;
+  color: #fff;
 }
 
 .loginRight {
   @apply flex flex-col justify-center items-center p-8 w-1/2;
+}
+
+/* (Opcional) se você usa algum "statCard" antigo aqui */
+.statCard {
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  @apply p-6 rounded-lg shadow-sm;
+  @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
 }

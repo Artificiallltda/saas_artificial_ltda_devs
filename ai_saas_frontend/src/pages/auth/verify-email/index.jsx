@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import styles from "./emailVerification.module.css";
-import { Link } from "react-router-dom";
 import { Mail, ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import { emailRoutes } from "../../../services/apiRoutes";
@@ -29,9 +28,7 @@ function EmailVerification() {
     try {
       const res = await fetch(emailRoutes.requestEmailCode, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
 
@@ -57,30 +54,41 @@ function EmailVerification() {
           <ArrowLeft className="w-4 h-4 mr-1" />
           Login
         </Link>
+
         <h1 className={styles.title}>Verificação de Email</h1>
+
         <form onSubmit={handleSubmit}>
           <div className="w-full my-4">
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--icon-muted)] w-4 h-4" />
+
               <input
                 type="email"
                 name="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`w-full pl-10 py-2 rounded-lg border text-black text-sm shadow-sm focus:outline-none focus:shadow-md ${
-                  emailError ? "border-red-400" : "border-gray-300"
+                className={`w-full pl-10 py-2 rounded-lg border text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/40 ${
+                  emailError ? "border-red-400" : "border-[var(--border)]"
                 }`}
+                style={{
+                  background: "var(--input-bg)",
+                  color: "var(--input-text)",
+                  borderColor: emailError ? undefined : "var(--border)",
+                }}
                 required
               />
             </div>
-            {emailError && <p className="text-sm text-red-500 mt-1">{emailError}</p>}
+
+            {emailError && (
+              <p className="text-sm text-red-500 mt-1">{emailError}</p>
+            )}
           </div>
 
           <button
             type="submit"
             className={`${styles.btn} ${styles.btnWide}`}
-            disabled={!email || emailError || loading}
+            disabled={!email || !!emailError || loading}
           >
             {loading ? "Enviando..." : "Enviar código"}
           </button>

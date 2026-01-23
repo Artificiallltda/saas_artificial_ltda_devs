@@ -136,13 +136,13 @@ export default function Settings() {
         >
           {user ? (
             <>
-              <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">Plano atual:</strong> {user.plan?.name || "Não informado"}
+              <p className="text-sm text-[var(--text-muted)]">
+                <strong className="font-semibold text-sm text-[var(--text)]">Plano atual:</strong> {user.plan?.name || "Não informado"}
               </p>
               <div className="flex mt-8">
                 <Link
                   to="/subscription"
-                  className="flex items-center gap-1 px-4 py-2 text-sm rounded-md bg-black text-white hover:opacity-90 transition ml-auto"
+                  className="flex items-center gap-1 px-4 py-2 text-sm rounded-md bg-[var(--color-primary)] text-white hover:opacity-90 transition ml-auto"
                 >
                   Detalhes do Plano <FileText className="w-4 h-4" />
                 </Link>
@@ -161,20 +161,20 @@ export default function Settings() {
         >
           {user ? (
             <>
-              <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">Nome:</strong> {user.full_name || "N/A"}
+              <p className="text-sm text-[var(--text-muted)]">
+                <strong className="font-semibold text-sm text-[var(--text)]">Nome:</strong> {user.full_name || "N/A"}
               </p>
-              <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">E-mail:</strong> {user.email || "N/A"}
+              <p className="text-sm text-[var(--text-muted)]">
+                <strong className="font-semibold text-sm text-[var(--text)]">E-mail:</strong> {user.email || "N/A"}
               </p>
-              <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">Conteúdos gerados:</strong> {contents.length}
+              <p className="text-sm text-[var(--text-muted)]">
+                <strong className="font-semibold text-sm text-[var(--text)]">Conteúdos gerados:</strong> {contents.length}
               </p>
-              <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">Projetos gerados:</strong> {projects.length}
+              <p className="text-sm text-[var(--text-muted)]">
+                <strong className="font-semibold text-sm text-[var(--text)]">Projetos gerados:</strong> {projects.length}
               </p>
-              <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">Conta criada em:</strong>{" "}
+              <p className="text-sm text-[var(--text-muted)]">
+                <strong className="font-semibold text-sm text-[var(--text)]">Conta criada em:</strong>{" "}
                 {new Date(user.created_at).toLocaleDateString("pt-BR")}
               </p>
             </>

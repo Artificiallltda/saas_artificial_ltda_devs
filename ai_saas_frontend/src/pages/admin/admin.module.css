@@ -3,7 +3,8 @@
 @import "../../styles/base.css";
 
 .title {
-  @apply text-3xl font-bold text-gray-900 mb-8;
+  @apply text-3xl font-bold mb-8;
+  color: var(--heading-color);
 }
 
 /* Cards base */

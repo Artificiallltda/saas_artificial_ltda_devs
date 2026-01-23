@@ -47,38 +47,64 @@ export default function SecurityModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-brightness-50">
-      <div className="bg-white rounded-lg p-9 w-full max-w-md shadow-lg relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60">
+      <div
+        className="
+          relative w-full max-w-md rounded-xl p-9 shadow-xl
+          bg-white dark:bg-neutral-900
+          border border-neutral-200 dark:border-neutral-800
+          text-neutral-900 dark:text-neutral-100
+        "
+      >
         <button
-          className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100"
+          className="
+            absolute top-3 right-3 p-1.5 rounded-full
+            hover:bg-gray-100 dark:hover:bg-neutral-800
+            transition
+          "
           onClick={onClose}
+          aria-label="Fechar"
+          type="button"
         >
-          <X className="w-5 h-5 text-gray-500" />
+          <X className="w-5 h-5 text-gray-500 dark:text-neutral-400" />
         </button>
 
-        <h2 className="text-lg font-semibold text-gray-900">
-          Verificação de Segurança
-        </h2>
-        <p className="text-sm text-gray-600 mb-4">
+        <h2 className="text-lg font-semibold">Verificação de Segurança</h2>
+        <p className="text-sm text-gray-600 dark:text-neutral-400 mb-4">
           Enviamos um código para seu e-mail. Digite para continuar.
         </p>
 
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex justify-between items-center mb-3 gap-3">
           <div className="relative w-3/5">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
             <input
               type="text"
               placeholder="Código de segurança"
               value={securityCode}
               onChange={(e) => setSecurityCode(e.target.value)}
-              className="w-full pl-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
+              className="
+                w-full pl-10 py-2 rounded-lg border text-sm
+                bg-white dark:bg-neutral-950
+                text-neutral-900 dark:text-neutral-100
+                border-gray-300 dark:border-neutral-800
+                placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                focus:outline-none focus:ring-2 focus:ring-blue-500/40
+              "
             />
           </div>
 
           <button
             onClick={handleVerifyClick}
             disabled={loading}
-            className="bg-black text-white py-2 px-4 rounded-md text-sm hover:opacity-90 transition disabled:opacity-50"
+            className="
+              px-4 py-2 rounded-md text-sm font-medium
+              bg-neutral-900 text-white
+              hover:opacity-90 transition
+              disabled:opacity-50
+              dark:bg-white dark:text-neutral-900
+              whitespace-nowrap
+            "
+            type="button"
           >
             {loading ? "Verificando..." : "Verificar"}
           </button>
@@ -91,7 +117,13 @@ export default function SecurityModal({
         <button
           onClick={handleResendClick}
           disabled={!canResend || loading}
-          className="w-full mt-4 text-sm text-blue-600 hover:underline disabled:opacity-50"
+          className="
+            w-full mt-4 text-sm
+            text-blue-600 dark:text-blue-400
+            hover:underline
+            disabled:opacity-50
+          "
+          type="button"
         >
           {canResend ? "Reenviar código" : `Reenviar em ${resendCooldown}s`}
         </button>

@@ -3,7 +3,8 @@
 @import "../../styles/base.css";
 
 .title {
-  @apply text-3xl font-bold text-gray-900 mb-8;
+  @apply text-3xl font-bold mb-6;
+  color: var(--heading-color);
 }
 
 .panelGrid {
@@ -11,7 +12,10 @@
 }
 
 .modernCard {
-  @apply bg-white rounded-xl border border-gray-200 shadow-lg p-8 cursor-pointer flex flex-col items-center text-center transition-transform duration-300 hover:scale-[1.03] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black;
+  @apply rounded-xl shadow-lg p-8 cursor-pointer flex flex-col items-center text-center transition-transform duration-300 hover:scale-[1.03] hover:shadow-xl focus:outline-none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
 }
 
 .modernCardPlan {
@@ -37,11 +41,11 @@
 }
 
 .iconPlan {
-  color: #cbbf77; /* dourado */
+  color: #cbbf77; /* dourado (kept) */
 }
 
 .iconAccount {
-  color: #4f46e5; /* azul indigo */
+  color: var(--color-primary); /* use theme primary color */
 }
 
 .iconDanger {
@@ -52,16 +56,15 @@
   @apply text-lg font-semibold mb-2;
 }
 
-.modernCard {
-  color: #111827; /* texto preto padrão */
-}
+
 
 .modernCardDanger .cardTitle {
   color: white;
 }
 
 .cardDescription {
-  @apply text-gray-600 text-sm max-w-xs;
+  @apply text-sm max-w-xs;
+  color: var(--text-muted);
 }
 
 .modernCardDanger .cardDescription {

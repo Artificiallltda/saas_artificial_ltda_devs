@@ -100,8 +100,8 @@ export default function Subscription() {
             onClick={() => setShowUpgradeModal(true)}
             onKeyDown={(e) => e.key === "Enter" && setShowUpgradeModal(true)}
           >
-            <div className={styles.iconWrapper}>
-              <TrendingUp size={40} color="#facc15" />
+            <div className={styles.iconWrapper} style={{ color: 'var(--on-primary)' }}>
+              <TrendingUp size={40} style={{ color: 'var(--on-primary)' }} />
             </div>
             <h2 className={styles.cardTitle}>Melhorar Plano</h2>
             <p className={styles.description}>

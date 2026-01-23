@@ -55,7 +55,8 @@
 }
 
 .title {
-  @apply text-xl font-bold text-gray-900 text-center;
+  @apply text-xl font-bold text-center;
+  color: var(--heading-color);
 }
 
 .statCard {
@@ -64,7 +65,7 @@
 }
 
 .statSubtext {
-  @apply text-gray-medium text-sm text-center;
+  @apply text-black text-sm text-center;
 }
 
 .error {

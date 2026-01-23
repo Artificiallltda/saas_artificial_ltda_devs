@@ -185,8 +185,8 @@ export default function EditPhotoPanel() {
               type="submit"
               disabled={!photoFile || loading}
               className={`w-full py-2 rounded-md text-white ${
-                photoFile && !loading ? "bg-black hover:bg-gray-800" : "bg-gray-400 cursor-not-allowed"
-              } transition`}
+                  photoFile && !loading ? "bg-[var(--color-primary)] hover:brightness-95" : "bg-gray-400 cursor-not-allowed"
+                } transition`}
             >
               {loading ? "Salvando..." : "Salvar Foto"}
             </button>

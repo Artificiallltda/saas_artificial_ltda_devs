@@ -1,9 +1,15 @@
 import React, { useRef, useEffect } from "react";
 import { Send, Paperclip, X, Square } from "lucide-react";
 import { toast } from "react-toastify";
-import { useAuth } from "../../../../context/AuthContext"; // hook do contexto
+import { useAuth } from "../../../../context/AuthContext";
 
-const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "application/pdf"];
+const allowedTypes = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "application/pdf",
+];
 
 export default function ChatInput({
   input,
@@ -15,10 +21,10 @@ export default function ChatInput({
   setFiles,
   attachmentsAllowed,
 }) {
-  const { user } = useAuth(); // pega o usuário direto do AuthContext
+  const { user } = useAuth();
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
-  const maxHeight = 160; // altura máxima do textarea
+  const maxHeight = 160;
 
   // Mapeia as features do plano para key → boolean
   const featuresMap = (user?.plan?.features || []).reduce((acc, pf) => {
@@ -27,29 +33,32 @@ export default function ChatInput({
   }, {});
 
   // Verifica permissão de anexar arquivos
-  const finalAttachmentsAllowed  = !!featuresMap["attach_files"] && attachmentsAllowed;
+  const finalAttachmentsAllowed = !!featuresMap["attach_files"] && attachmentsAllowed;
 
   const handleFileChange = (e) => {
-    if (!finalAttachmentsAllowed ) {
+    if (!finalAttachmentsAllowed) {
       toast.warning("Seu plano atual não permite anexar arquivos.");
       return;
     }
     const newFiles = Array.from(e.target.files);
-    const filtered = newFiles.filter(f => allowedTypes.includes(f.type));
+    const filtered = newFiles.filter((f) => allowedTypes.includes(f.type));
     if (filtered.length < newFiles.length) {
-      toast.warning("Alguns arquivos foram ignorados, apenas jpeg, png, gif e pdf são aceitos");
+      toast.warning(
+        "Alguns arquivos foram ignorados, apenas jpeg, png, gif e pdf são aceitos"
+      );
     }
-    setFiles(prev => [...prev, ...filtered]);
+    setFiles((prev) => [...prev, ...filtered]);
   };
 
   const removeFile = (index) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, maxHeight) + "px";
+      textareaRef.current.style.height =
+        Math.min(textareaRef.current.scrollHeight, maxHeight) + "px";
     }
   }, [input]);
 
@@ -61,14 +70,29 @@ export default function ChatInput({
           {files.map((file, i) => (
             <div
               key={i}
-              className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm"
+              className="
+                flex items-center gap-2 px-3 py-1 rounded-full text-sm
+                bg-gray-100 text-gray-700
+                dark:bg-neutral-950 dark:text-neutral-200
+                border border-transparent dark:border-neutral-800
+              "
             >
               {file.type.startsWith("image/") ? (
-                <img src={URL.createObjectURL(file)} alt={file.name} className="w-12 h-12 object-cover rounded" />
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={file.name}
+                  className="w-12 h-12 object-cover rounded"
+                />
               ) : (
-                <span>{file.name}</span>
+                <span className="truncate max-w-[220px]">{file.name}</span>
               )}
-              <button onClick={() => removeFile(i)} className="text-red-500 hover:text-red-700">
+
+              <button
+                onClick={() => removeFile(i)}
+                className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                type="button"
+                aria-label="Remover arquivo"
+              >
                 <X size={14} />
               </button>
             </div>
@@ -81,11 +105,21 @@ export default function ChatInput({
         {/* Botão de anexos */}
         <button
           type="button"
-          onClick={() => finalAttachmentsAllowed  && fileInputRef.current.click()}
-          className={`p-3 rounded-xl hover:bg-gray-100 transition shadow ${!finalAttachmentsAllowed  ? "opacity-50 cursor-not-allowed" : ""}`}
-          title={finalAttachmentsAllowed  ? "Anexar arquivo" : "Melhore seu plano para utilizar este recurso!"}
+          onClick={() => finalAttachmentsAllowed && fileInputRef.current.click()}
+          className={`
+            p-3 rounded-xl transition shadow-sm
+            hover:bg-gray-100 dark:hover:bg-neutral-800
+            bg-white dark:bg-neutral-900
+            border border-gray-200 dark:border-neutral-800
+            ${!finalAttachmentsAllowed ? "opacity-50 cursor-not-allowed" : ""}
+          `}
+          title={
+            finalAttachmentsAllowed
+              ? "Anexar arquivo"
+              : "Melhore seu plano para utilizar este recurso!"
+          }
         >
-          <Paperclip className="w-6 h-6 text-gray-600" />
+          <Paperclip className="w-6 h-6 text-gray-600 dark:text-neutral-300" />
         </button>
 
         <input
@@ -95,7 +129,7 @@ export default function ChatInput({
           multiple
           hidden
           accept=".jpeg,.jpg,.png,.gif,.pdf"
-          disabled={!finalAttachmentsAllowed } // desabilita input se não permitido
+          disabled={!finalAttachmentsAllowed}
         />
 
         {/* Textarea */}
@@ -113,7 +147,14 @@ export default function ChatInput({
             }
           }}
           rows={1}
-          className="flex-1 resize-none px-5 py-3 rounded-3xl bg-gray-50 text-gray-900 placeholder-gray-400 overflow-y-auto shadow-sm focus:outline-none focus:shadow-md"
+          className="
+            flex-1 resize-none px-5 py-3 rounded-3xl
+            bg-gray-50 text-gray-900 placeholder-gray-400
+            dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500
+            border border-gray-200 dark:border-neutral-800
+            overflow-y-auto shadow-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-500/40
+          "
           style={{ maxHeight: maxHeight + "px" }}
         />
 
@@ -121,14 +162,26 @@ export default function ChatInput({
         {loading ? (
           <button
             onClick={handleStop}
-            className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-3xl flex items-center justify-center transition"
+            className="
+              p-3 rounded-3xl flex items-center justify-center transition
+              bg-red-600 hover:bg-red-700 text-white
+              focus:outline-none focus:ring-2 focus:ring-red-500/40
+            "
+            type="button"
+            aria-label="Parar"
           >
             <Square className="w-6 h-6" />
           </button>
         ) : (
           <button
             onClick={handleSend}
-            className="p-3 bg-[var(--color-primary)] hover:bg-blue-500 text-white rounded-3xl flex items-center justify-center transition"
+            className="
+              p-3 rounded-3xl flex items-center justify-center transition
+              bg-[var(--color-primary)] hover:bg-blue-500 text-white
+              focus:outline-none focus:ring-2 focus:ring-blue-500/40
+            "
+            type="button"
+            aria-label="Enviar"
           >
             <Send className="w-6 h-6" />
           </button>

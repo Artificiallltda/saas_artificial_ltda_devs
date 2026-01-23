@@ -1,123 +1,116 @@
 @import "tailwindcss";
 @import "./theme.css";
 
+/* =======================
+   BASE GLOBAL
+======================= */
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-gray-dark);
+}
+
+html.dark body {
+  background: #0a0a0a; /* neutral-950 */
+  color: #fafafa;
+}
+
+/* =======================
+   FONTE
+======================= */
+
 .font-primary {
   font-family: var(--font-primary);
 }
 
-/* Tipografia */
-.h1 {
-  font-size: var(--font-size-h1);
-  font-weight: var(--font-weight-h1);
-}
+/* =======================
+   TIPOGRAFIA
+======================= */
 
-.h2 {
-  font-size: var(--font-size-h2);
-  font-weight: var(--font-weight-h2);
-}
+.h1 { font-size: var(--font-size-h1); font-weight: var(--font-weight-h1); }
+.h2 { font-size: var(--font-size-h2); font-weight: var(--font-weight-h2); }
+.h3 { font-size: var(--font-size-h3); font-weight: var(--font-weight-h3); }
 
-.h3 {
-  font-size: var(--font-size-h3);
-  font-weight: var(--font-weight-h3);
-}
+.body-large { font-size: var(--font-size-body-large); font-weight: var(--font-weight-body-large); }
+.body-medium { font-size: var(--font-size-body-medium); font-weight: var(--font-weight-body-medium); }
+.caption { font-size: var(--font-size-caption); font-weight: var(--font-weight-caption); }
 
-.body-large {
-  font-size: var(--font-size-body-large);
-  font-weight: var(--font-weight-body-large);
-}
+/* =======================
+   CORES PRIMÁRIAS
+======================= */
 
-.body-medium {
-  font-size: var(--font-size-body-medium);
-  font-weight: var(--font-weight-body-medium);
-}
-
-.caption {
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-caption);
-}
-
-/* Cores primárias */
 .bg-primary {
   background-color: var(--color-primary);
   color: var(--color-white);
 }
 
-.text-primary {
-  color: var(--color-primary);
-}
+.text-primary { color: var(--color-primary); }
+.text-primary-dark { color: var(--color-primary-dark); }
+.text-accent-purple { color: var(--color-accent-purple); }
 
-.text-primary-dark {
-  color: var(--color-primary-dark);
-}
+/* =======================
+   CINZAS
+======================= */
 
-.text-accent-purple {
-  color: var(--color-accent-purple);
-}
-
-/* Cores secundárias */
 .bg-gray-light {
   background-color: var(--color-gray-light);
 }
 
-.text-gray-dark {
-  color: var(--color-gray-dark);
+html.dark .bg-gray-light {
+  background-color: #0f0f0f;
 }
 
-.text-gray-medium {
-  color: var(--color-gray-medium);
-}
+.text-gray-dark { color: var(--color-gray-dark); }
+.text-black { color: var(--color-black); }
 
-/* Status */
-.bg-success {
-  background-color: var(--color-success);
-  color: var(--color-white);
-}
+html.dark .text-gray-dark { color: #171d2a; }
+html.dark .text-black { color: #131519; }
 
-.bg-error {
-  background-color: var(--color-error);
-  color: var(--color-white);
-}
+/* =======================
+   STATUS
+======================= */
 
-.bg-warning {
-  background-color: var(--color-warning);
-  color: var(--color-white);
-}
+.bg-success { background-color: var(--color-success); color: var(--color-white); }
+.bg-error { background-color: var(--color-error); color: var(--color-white); }
+.bg-warning { background-color: var(--color-warning); color: var(--color-white); }
 
-/* Espaçamentos exemplo */
-.p-micro {
-  padding: var(--spacing-micro);
-}
+/* =======================
+   ESPAÇAMENTOS
+======================= */
 
-.p-small {
-  padding: var(--spacing-small);
-}
+.p-micro { padding: var(--spacing-micro); }
+.p-small { padding: var(--spacing-small); }
+.p-medium { padding: var(--spacing-medium); }
+.p-large { padding: var(--spacing-large); }
+.p-xlarge { padding: var(--spacing-xlarge); }
+.p-section { padding: var(--spacing-section); }
 
-.p-medium {
-  padding: var(--spacing-medium);
-}
+/* =======================
+   CARDS
+======================= */
 
-.p-large {
-  padding: var(--spacing-large);
-}
-
-.p-xlarge {
-  padding: var(--spacing-xlarge);
-}
-
-.p-section {
-  padding: var(--spacing-section);
-}
-
-/* Borda e sombra para Cards */
 .card {
   background-color: var(--color-white);
   border-radius: 12px;
   padding: var(--spacing-large);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
-  border: 1px solid #E5E7EB; /* cinza claro */
+  border: 1px solid #E5E7EB;
 }
 
-/* Botões */
+html.dark .card {
+  background-color: #0f0f0f;
+  border-color: #262626;
+  box-shadow: none;
+}
+
+/* =======================
+   BOTÕES
+======================= */
+
 .btn-primary {
   background-color: var(--color-primary);
   color: var(--color-white);
@@ -144,7 +137,15 @@
   cursor: pointer;
 }
 
-/* Inputs */
+html.dark .btn-tertiary {
+  background-color: #1a1a1a;
+  color: #fafafa;
+}
+
+/* =======================
+   INPUTS
+======================= */
+
 .input-base {
   border-radius: 8px;
   border: 1px solid var(--color-gray-light);
@@ -152,6 +153,7 @@
   font-family: var(--font-primary);
   font-size: var(--font-size-body-large);
   color: var(--color-gray-dark);
+  background-color: #ffffff;
 }
 
 .input-base::placeholder {
@@ -164,37 +166,66 @@
   box-shadow: 0 0 0 3px rgb(37 99 235 / 0.3);
 }
 
+html.dark .input-base {
+  background-color: #0a0a0a;
+  color: #fafafa;
+  border-color: #262626;
+}
+
+html.dark .input-base::placeholder {
+  color: #737373;
+}
+
+/* =======================
+   ANIMAÇÕES
+======================= */
+
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px);}
-  to { opacity: 1; transform: translateY(0);}
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fadeIn {
   animation: fadeIn 0.2s ease forwards;
 }
 
-/* Scrollbar para toda a aplicação */
+/* =======================
+   SCROLLBAR
+======================= */
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #ffffff; /* cor de fundo do track */
+  background: #ffffff;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #1e40af; /* azul, pode usar var(--color-primary) */
+  background-color: var(--color-primary);
   border-radius: 9999px;
-  border: 2px solid #ffffff; /* dá espaço em volta da thumb */
+  border: 2px solid #ffffff;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #2563eb; /* azul mais claro ao passar mouse */
+  background-color: var(--color-primary-dark);
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  border: 2px solid #0a0a0a;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #1e40af #ffffff;
+  scrollbar-color: var(--color-primary) #ffffff;
+}
+
+html.dark * {
+  scrollbar-color: var(--color-primary) #0a0a0a;
 }

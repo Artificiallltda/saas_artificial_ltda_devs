@@ -129,7 +129,7 @@ export default function EditEmail() {
             <button
               onClick={handleRequestCode}
               disabled={!email || loadingCode}
-              className="bg-black text-white py-2 px-4 rounded-md text-sm hover:opacity-90 transition"
+              className="bg-[var(--color-primary)] text-[var(--on-primary)] py-2 px-4 rounded-md text-sm hover:opacity-90 transition"
             >
               {loadingCode ? "Enviando..." : "Verificar"}
             </button>

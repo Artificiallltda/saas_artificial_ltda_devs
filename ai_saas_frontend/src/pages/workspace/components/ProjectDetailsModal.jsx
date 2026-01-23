@@ -32,7 +32,8 @@ export default function ProjectDetailsModal({ project, onClose, formatDateTime }
           </Link>
           <Link
             to={`/workspace/projects/${project.id}/modify-content`}
-            className="flex items-center gap-1 px-4 py-2 text-sm rounded-md bg-black text-white hover:opacity-90 transition"
+            className="flex items-center gap-1 px-4 py-2 text-sm rounded-md transition"
+            style={{ background: 'var(--color-primary)', color: 'var(--on-primary)' }}
           >
             <PlusCircle className="w-4 h-4" /> Ajustar Conteúdos
           </Link>

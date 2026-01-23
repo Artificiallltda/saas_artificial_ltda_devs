@@ -47,3 +47,4 @@ wrapt==1.17.2
 WTForms==3.2.1
 Flask-Migrate==4.0.4
 
+requests==2.32.3

@@ -45,7 +45,7 @@ export default function ProjectModal({ onClose, onCreate, name, setName, descrip
           <button
             onClick={onCreate}
             disabled={loading}
-            className="bg-black text-white py-2 px-4 rounded-md text-sm hover:opacity-90 transition"
+            className="bg-[var(--color-primary)] text-[var(--on-primary)] py-2 px-4 rounded-md text-sm hover:opacity-90 transition"
           >
             {loading ? "Criando..." : "Criar Projeto"}
           </button>

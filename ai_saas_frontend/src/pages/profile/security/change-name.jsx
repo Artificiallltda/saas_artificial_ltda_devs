@@ -116,7 +116,7 @@ export default function EditName() {
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="bg-black text-white py-2 px-4 rounded-md text-sm hover:opacity-90 transition"
+                  className="bg-[var(--color-primary)] text-[var(--on-primary)] py-2 px-4 rounded-md text-sm hover:opacity-90 transition"
                   disabled={!form.full_name || loading}
                 >
                   {loading ? "Salvando..." : "Salvar"}

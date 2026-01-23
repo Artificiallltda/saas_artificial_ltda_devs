@@ -2,49 +2,77 @@
 @import "../../../styles/theme.css";
 @import "../../../styles/base.css";
 
+/* =========================
+   Botões
+   ========================= */
 .btn {
-  background-color: var(--color-theme);
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--on-primary);
   border: none;
   cursor: pointer;
   font-weight: 500;
   border-radius: 8px;
-  transition: background-color 0.25s ease;
+  transition: opacity 0.2s ease, background-color 0.25s ease;
   outline: none;
 }
 
 .btn:hover {
-  background-color: var(--color-theme-dark);
+  opacity: 0.92;
 }
 
-.btn:focus,
-.btn:focusVisible {
-  outline: none;
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .btnStandard {
-  @apply px-3 py-2 inline-flex items-center gap-4;
+  @apply px-3 py-2 inline-flex items-center gap-2;
 }
 
 .btnWide {
   @apply block w-full max-w-full px-4 py-2 mt-4 text-center text-sm;
 }
 
+/* =========================
+   Página
+   ========================= */
+/* Light: fundo branco / Dark: fundo escuro */
 .pageBackground {
-  background-color: #3A74B8;
+  background-color: var(--bg);
   @apply min-h-screen flex items-center justify-center;
 }
 
-.title {
-  @apply text-xl font-bold text-gray-900 text-center;
-}
-
+/* =========================
+   Card
+   ========================= */
+/* Card acompanha o tema */
 .statCard {
-  @apply bg-white p-6 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:shadow-md;
+  background-color: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+
+  @apply p-6 rounded-lg shadow-sm;
   @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
   @apply w-[520px] max-w-[90%];
 }
 
+/* =========================
+   Textos
+   ========================= */
+.title {
+  @apply text-xl font-bold text-center;
+  color: var(--heading-color);
+}
+
+/* =========================
+   Link "Login"
+   ========================= */
 .loginLink {
-  @apply flex items-center text-sm text-gray-700 px-2 py-1 rounded-md hover:bg-gray-200 hover:text-black transition w-fit mb-4;
+  color: var(--text-muted);
+  @apply flex items-center text-sm px-2 py-1 rounded-md transition w-fit mb-4;
+}
+
+.loginLink:hover {
+  background-color: var(--surface-2);
+  color: var(--text);
 }

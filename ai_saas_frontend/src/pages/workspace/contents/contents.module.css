@@ -31,11 +31,13 @@
 }
 
 .title {
-  @apply text-3xl font-bold text-gray-900;
+  @apply text-3xl font-bold;
+  color: var(--heading-color);
 }
 
 .subTitle {
-  @apply text-xl font-semibold text-gray-900 mb-6;
+  @apply text-xl font-semibold mb-6;
+  color: var(--text);
 }
 
 .blockTitle {

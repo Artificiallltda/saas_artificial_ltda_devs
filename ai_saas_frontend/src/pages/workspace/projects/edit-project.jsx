@@ -124,7 +124,7 @@ export default function EditProject() {
             <button
               onClick={handleSave}
               disabled={saving || !name.trim()}
-              className="bg-black text-white py-2 px-4 rounded-md text-sm hover:opacity-90 transition disabled:opacity-50"
+              className="bg-[var(--color-primary)] text-[var(--on-primary)] py-2 px-4 rounded-md text-sm hover:opacity-90 transition disabled:opacity-50"
             >
               {saving ? "Salvando..." : "Salvar Alterações"}
             </button>

@@ -3,7 +3,8 @@
 @import "../../styles/base.css";
 
 .title {
-  @apply text-3xl font-bold text-gray-900 mb-8;
+  @apply text-3xl font-bold mb-8;
+  color: var(--heading-color);
 }
 
 .panelGrid {
@@ -12,7 +13,10 @@
 
 /* Cards base */
 .modernCard {
-  @apply bg-white rounded-xl border border-gray-200 shadow-lg p-8 cursor-pointer flex flex-col items-center text-center transition-transform duration-300 hover:scale-[1.03] hover:shadow-xl;
+  @apply rounded-xl shadow-lg p-8 cursor-pointer flex flex-col items-center text-center transition-transform duration-300 hover:scale-[1.03] hover:shadow-xl;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
 }
 
 /* Cores dos ícones e bordas */
@@ -61,7 +65,8 @@
 }
 
 .returnLink {
-  @apply flex items-center text-sm text-gray-700 px-2 py-1 rounded-md hover:bg-gray-200 hover:text-black transition w-fit mb-4;
+  @apply flex items-center text-sm px-2 py-1 rounded-md transition w-fit mb-4;
+  color: var(--text-muted);
 }
 
 .inputWrapper {
@@ -69,23 +74,36 @@
 }
 
 .inputIcon {
-  @apply absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4;
+  @apply absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4;
+  color: var(--placeholder);
 }
 
 .inputField {
-  @apply w-full pl-10 py-2 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-black;
+  @apply w-full pl-10 py-2 rounded-lg text-sm shadow-sm;
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--border);
+}
+.inputField:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .statCard {
-  @apply w-full bg-white rounded-xl border border-gray-200 shadow-md p-6 space-y-4;
+   @apply w-full rounded-xl shadow-md p-6 space-y-4;
+   background: var(--surface);
+   border: 1px solid var(--border);
+   color: var(--text);
 }
 
 .statSubtext {
-  @apply text-sm text-gray-600;
+   @apply text-sm;
+   color: var(--text-muted);
 }
 
 .blockTitle {
-  @apply text-sm font-medium text-gray-800;
+   @apply text-sm font-medium;
+   color: var(--text);
 }
 
 .actionButton {
@@ -93,7 +111,10 @@
 }
 
 .primaryButton {
-  @apply bg-black text-white hover:opacity-90;
+  @apply rounded-md;
+  background: var(--color-primary);
+  color: var(--on-primary);
+  transition: filter .15s ease-in-out;
 }
 
 .successButton {

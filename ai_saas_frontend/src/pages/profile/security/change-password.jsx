@@ -188,7 +188,7 @@ export default function EditPassword() {
             <div className="flex justify-end mt-4">
               <button
                 type="submit"
-                className="bg-black text-white py-2 px-4 rounded-md text-sm hover:opacity-90 transition"
+                className="bg-[var(--color-primary)] text-[var(--on-primary)] py-2 px-4 rounded-md text-sm hover:opacity-90 transition"
                 disabled={!isFormValid || loading}
               >
                 {loading ? "Salvando..." : "Salvar"}

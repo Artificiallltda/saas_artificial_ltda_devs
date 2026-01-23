@@ -1,25 +1,28 @@
-@theme {
-  /* Cores Primárias */
+/* src/styles/theme.css */
+
+/* =========================
+   LIGHT (padrão)
+   ========================= */
+:root {
+  /* ===== Branding (seus tokens) ===== */
   --color-primary: #185cfc;
-  --color-theme: #54B8F0;
-  --color-theme-bg: #3A74B8;
-  --color-theme-dark: #1C2C8C;
-  --color-theme-gradient: linear-gradient(90deg, #54B8F0 0%, #1C2C8C 100%);
-  --color-accent-purple: #7C3AED;
+  --color-theme: #54b8f0;
+  --color-theme-bg: #3a74b8;
+  --color-theme-dark: #1c2c8c;
+  --color-theme-gradient: linear-gradient(90deg, #54b8f0 0%, #1c2c8c 100%);
+  --color-accent-purple: #7c3aed;
 
-  /* Cores Secundárias */
-  --color-gray-dark: #1F2937;
-  --color-gray-medium: #6B7280;
-  --color-gray-light: #F9FAFB;
-  --color-white: #FFFFFF;
+  --color-gray-dark: #1f2937;
+  --color-gray-medium: #6b7280;
+  --color-gray-light: #f9fafb;
+  --color-white: #ffffff;
 
-  /* Cores de Status */
-  --color-success: #10B981;
-  --color-error: #EF4444;
-  --color-warning: #F59E0B;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
 
   /* Tipografia */
-  --font-primary: 'Inter', sans-serif;
+  --font-primary: "Inter", sans-serif;
 
   --font-size-h1: 32px;
   --font-weight-h1: 700;
@@ -46,4 +49,132 @@
   --spacing-large: 24px;
   --spacing-xlarge: 32px;
   --spacing-section: 48px;
+
+  /* =========================
+     Tokens do TEMA (Light/Dark)
+     Use estes no app
+     ========================= */
+  --bg: #ffffff;                  /* fundo global */
+  --surface: #ffffff;             /* cards, header, modals */
+  --surface-2: #f6f7fb;           /* áreas suaves */
+  --border: rgba(31, 41, 55, 0.14);
+
+  --text: #0f172a;                /* texto principal */
+  --text-muted: #475569;          /* texto secundário */
+
+  --icon: #0f172a;                /* ícone principal */
+  --icon-muted: #64748b;          /* ícone secundário */
+
+  /* “on-*” ajuda muito em botões e badges */
+  --on-surface: var(--text);
+  --on-primary: #ffffff;
+
+  /* Inputs */
+  --input-bg: #ffffff;
+  --input-text: #0f172a;
+  --placeholder: #94a3b8;
+
+  /* Botões */
+  --button-bg: #ffffff;
+  --button-text: #0f172a;
+
+  /* Foco (acessibilidade) */
+  --focus-ring: 0 0 0 3px rgba(24, 92, 252, 0.35);
+
+  /* Ajuda o browser a renderizar controles no tema certo */
+  color-scheme: light;
+  /* Heading color: defaults to text, but switches to primary in dark mode */
+  --heading-color: var(--text);
+}
+
+/* =========================
+  DARK (quando html[data-theme="dark"] ou html.dark)
+  ========================= */
+html.dark, html[data-theme="dark"] {
+  --bg: #0b1220;
+  --surface: #121b2e;
+  --surface-2: #0f172a;
+  --border: rgba(255, 255, 255, 0.16);
+
+  --text: #f8fafc;
+  --text-muted: #cbd5e1;
+
+  --icon: #f8fafc;
+  --icon-muted: #cbd5e1;
+
+  --on-surface: var(--text);
+  --on-primary: #ffffff;
+
+  --input-bg: #0f172a;
+  --input-text: #f8fafc;
+  --placeholder: #94a3b8;
+
+  --button-bg: #0f172a;
+  --button-text: #f8fafc;
+
+  --focus-ring: 0 0 0 3px rgba(96, 165, 250, 0.45);
+
+  --color-primary: #60a5fa;
+
+  color-scheme: dark;
+  /* make headings blue in dark mode */
+  --heading-color: var(--color-primary);
+}
+
+
+/* =========================
+   Base global
+   ========================= */
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-primary);
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Links e seleção (opcional) */
+a { color: var(--color-primary); }
+::selection { background: rgba(24, 92, 252, 0.18); }
+
+/* =========================
+   Garantias de visibilidade
+   (muito útil no seu caso)
+   ========================= */
+
+/* Inputs e textarea sempre legíveis */
+input, textarea, select {
+  background: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--placeholder);
+}
+
+/* SVGs/ícones herdam cor (se seu SVG usa currentColor) */
+svg { color: inherit; }
+
+/* Ensure lucide / SVG icons render with currentColor stroke and visible layout */
+svg.lucide, svg[data-icon] {
+  stroke: currentColor !important;
+  fill: none !important;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Global heading/title rule: use --heading-color for major titles across pages */
+h1, h2, h3, .title, .subTitle, .blockTitle, .cardTitle {
+  color: var(--heading-color);
+}
+
+/* Tint Artificiall PNG logos to theme blue */
+.artificiall-logo {
+  /* base: make logo dark then tint with hue-rotate/sepia */
+  filter: brightness(0) saturate(100%) invert(36%) sepia(65%) saturate(600%) hue-rotate(180deg) brightness(95%);
 }
