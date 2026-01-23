@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Layout from "../../../components/layout/Layout";
-import { User, LockKeyhole, Mail, UserCircle, ArrowLeft, Layers } from "lucide-react";
+import { User, LockKeyhole, Mail, UserCircle, ArrowLeft, Layers, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 import CustomSelect from "../../../components/common/CustomSelect";
 import { adminRoutes, plansRoutes } from "../../../services/apiRoutes";
@@ -22,6 +22,8 @@ export default function AdminCreateUser() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W).{8,}$/;
@@ -114,84 +116,122 @@ export default function AdminCreateUser() {
         <form onSubmit={handleSubmit}>
           {/* Nome */}
           <div className="relative mb-4">
-            <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+              <UserCircle className="text-gray-400 w-4 h-4" />
+            </div>
             <input
               type="text"
               name="full_name"
               placeholder="Nome completo"
               value={form.full_name}
               onChange={handleChange}
-              className="w-full pl-10 py-2 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
+              className="w-full h-11 pl-10 pr-10 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
               required
             />
           </div>
 
           {/* Username */}
           <div className="relative mb-4">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+              <User className="text-gray-400 w-4 h-4" />
+            </div>
             <input
               type="text"
               name="username"
               placeholder="Username"
               value={form.username}
               onChange={handleChange}
-              className="w-full pl-10 py-2 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
+              className="w-full h-11 pl-10 pr-10 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
               required
             />
           </div>
 
           {/* Email */}
-          <div className="relative mb-4">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full pl-10 py-2 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
-              required
-            />
-            {emailError && <p className="text-sm text-red-500 mt-1 ml-10">{emailError}</p>}
+          <div className="mb-3">
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                <Mail className="text-gray-400 w-4 h-4" />
+              </div>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={handleChange}
+                className="w-full h-11 pl-10 pr-10 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
+                required
+              />
+            </div>
+            <p className="h-5 ml-10 text-xs text-red-500 mt-1">{emailError || "\u00A0"}</p>
           </div>
 
           {/* Senha */}
-          <div className="relative mb-4">
-            <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="password"
-              name="password"
-              placeholder="Senha"
-              value={form.password}
-              onChange={handleChange}
-              className={`w-full pl-10 py-2 rounded-lg border text-black text-sm shadow-sm focus:outline-none focus:shadow-md ${
-                passwordError ? "border-red-400" : "border-gray-300"
-              }`}
-              required
-            />
-            {passwordError && <p className="text-sm text-red-500 mt-1 ml-10">{passwordError}</p>}
+          <div className="mb-3">
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                <LockKeyhole className="text-gray-400 w-4 h-4" />
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Senha"
+                value={form.password}
+                onChange={handleChange}
+                className={`w-full h-11 pl-10 pr-10 rounded-lg border text-black text-sm shadow-sm focus:outline-none focus:shadow-md ${
+                  passwordError ? "border-red-400" : "border-gray-300"
+                }`}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="h-5 ml-10 text-xs text-red-500 mt-1">{passwordError || "\u00A0"}</p>
           </div>
 
           {/* Confirmar senha */}
-          <div className="relative mb-4">
-            <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirmar senha"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              className="w-full pl-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
-              required
-            />
-            {form.password && form.confirmPassword && form.password !== form.confirmPassword && (
-              <p className="text-sm text-red-500 mt-1 ml-10">As senhas não coincidem</p>
-            )}
+          <div className="mb-3">
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                <LockKeyhole className="text-gray-400 w-4 h-4" />
+              </div>
+              <input
+                type={showConfirm ? "text" : "password"}
+                name="confirmPassword"
+                placeholder="Confirmar senha"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                className="w-full h-11 pl-10 pr-10 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((v) => !v)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+                aria-label={showConfirm ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="h-5 ml-10 text-xs text-red-500 mt-1">
+              {(form.password && form.confirmPassword && form.password !== form.confirmPassword)
+                ? "As senhas não coincidem"
+                : "\u00A0"}
+            </p>
           </div>
 
           {/* Plano */}
           <div className="relative mb-4">
-            <Layers className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+              <Layers className="text-gray-400 w-4 h-4" />
+            </div>
             <CustomSelect
               value={plans.find((p) => p.id === form.plan_id) || null}
               onChange={(selected) => setForm((prev) => ({ ...prev, plan_id: selected?.id || "" }))}
