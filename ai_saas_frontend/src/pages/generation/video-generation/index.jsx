@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './video.module.css';
 import Layout from "../../../components/layout/Layout";
-import { Download, Send, Loader2, Video as VideoIcon, Settings, ChevronDown } from 'lucide-react';
+import { Download, Send, Loader2, Video as VideoIcon, Settings, ChevronDown, X, Paperclip } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { aiRoutes, generatedContentRoutes, userRoutes } from '../../../services/apiRoutes';
 import { apiFetch } from '../../../services/apiService';
@@ -14,6 +14,8 @@ function VideoGeneration() {
   const [loading, setLoading] = useState(false);
   const [generatedVideo, setGeneratedVideo] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [referenceImage, setReferenceImage] = useState(null);
+  const fileInputRef = useRef(null);
   const settingsRef = useRef(null);
   const [messages, setMessages] = useState([
     {
@@ -35,6 +37,34 @@ function VideoGeneration() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('❌ Apenas imagens (.png, .jpg, .jpeg, .webp) são permitidas como referência.');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast.error('❌ A imagem deve ter no máximo 5MB.');
+      return;
+    }
+
+    setReferenceImage(file);
+  };
+
+  const removeReferenceImage = () => {
+    setReferenceImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -68,10 +98,18 @@ function VideoGeneration() {
         return;
       }
 
+      const formData = new FormData();
+      formData.append('prompt', prompt);
+      formData.append('model_used', model);
+      formData.append('ratio', ratio);
+      
+      if (referenceImage) {
+        formData.append('reference_image', referenceImage);
+      }
+
       const res = await apiFetch(aiRoutes.generateVideo, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, model_used: model, ratio }),
+        body: formData,
       });
 
       if (res?.video?.id) {
@@ -94,6 +132,10 @@ function VideoGeneration() {
 
       toast.success("Vídeo gerado com sucesso!");
       setPrompt(''); // Limpa o input após o envio
+      setReferenceImage(null); // Limpa a imagem de referência
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (err) {
       console.error(err);
       toast.error("Erro ao gerar vídeo!");
@@ -196,6 +238,28 @@ function VideoGeneration() {
 
         {/* Input Area */}
         <div className="border-t border-gray-200 p-4 bg-white relative">
+          {/* Reference Image Preview */}
+          {referenceImage && (
+            <div className="mb-2 flex items-center gap-2 p-2 bg-gray-50 rounded-lg max-w-[calc(100%-200px)]">
+              <img 
+                src={URL.createObjectURL(referenceImage)} 
+                alt="Referência" 
+                className="w-10 h-10 object-cover rounded-lg border border-gray-200 flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-700 truncate">Imagem de referência</p>
+                <p className="text-xs text-gray-500 truncate">{referenceImage.name}</p>
+              </div>
+              <button
+                onClick={removeReferenceImage}
+                className="p-1 text-red-500 hover:text-red-700 transition-colors flex-shrink-0"
+                title="Remover imagem"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+          
           <div className="relative">
             {/* Settings Dropdown */}
             <div className="absolute right-4 -top-14 z-10" ref={settingsRef}>
@@ -243,7 +307,25 @@ function VideoGeneration() {
               )}
             </div>
             
-            <div className="flex items-end gap-2">
+            <div className="flex items-center gap-2">
+              {/* Clip Icon */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                className="p-3 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center -mt-1"
+                title="Anexar imagem de referência"
+              >
+                <Paperclip className="w-5 h-5 text-gray-600" />
+              </button>
+              
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept=".png,.jpg,.jpeg,.webp"
+                className="hidden"
+              />
+              
               <div className="flex-1 relative">
                 <textarea
                   placeholder="Descreva o vídeo que você gostaria de gerar..."

@@ -1,6 +1,7 @@
 import os
 import uuid
 import time
+import base64
 from io import BytesIO
 from datetime import datetime
 from flask import Blueprint, request, jsonify
@@ -36,10 +37,35 @@ def generate_video():
     if not user:
         return jsonify({"error": "Usuário inválido"}), 404
 
-    data = request.get_json() or {}
-    prompt = data.get("prompt", "").strip()
-    model_used = data.get("model_used", "veo-3.0-fast-generate-001")
-    aspect_ratio = data.get("ratio", "16:9")
+    # Verifica se é FormData (com imagem) ou JSON (sem imagem)
+    content_type = request.content_type or ""
+    reference_image_path = None
+    
+    if content_type.startswith("multipart/form-data"):
+        # Recebe dados como FormData
+        prompt = request.form.get("prompt", "").strip()
+        model_used = request.form.get("model_used", "veo-3.0-fast-generate-001")
+        aspect_ratio = request.form.get("ratio", "16:9")
+        
+        # Processa imagem de referência se enviada
+        reference_image_file = request.files.get("reference_image")
+        if reference_image_file and reference_image_file.filename:
+            # Validação do tipo de arquivo
+            allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+            if reference_image_file.mimetype not in allowed_types:
+                return jsonify({"error": "Apenas imagens (.png, .jpg, .jpeg, .webp) são permitidas como referência."}), 400
+            
+            # Salva imagem de referência
+            ref_filename = f"ref_{uuid.uuid4().hex}_{reference_image_file.filename}"
+            reference_image_path = os.path.join(UPLOAD_DIR, ref_filename)
+            reference_image_file.save(reference_image_path)
+            print(f"[INFO] Imagem de referência salva para vídeo: {reference_image_path}")
+    else:
+        # Recebe dados como JSON (comportamento antigo)
+        data = request.get_json() or {}
+        prompt = data.get("prompt", "").strip()
+        model_used = data.get("model_used", "veo-3.0-fast-generate-001")
+        aspect_ratio = data.get("ratio", "16:9")
 
     if not prompt:
         return jsonify({"error": "Campo 'prompt' é obrigatório"}), 400
@@ -50,14 +76,45 @@ def generate_video():
     try:
         filename = f"{uuid.uuid4()}.mp4"
         save_path = os.path.join(VIDEO_UPLOAD_DIR, filename)
+        
+        # Constrói o prompt final com contexto da imagem de referência
+        if reference_image_path:
+            final_prompt = f"Use esta imagem de referência como base para estilo, composição e elementos do vídeo: {prompt}"
+            print(f"[DEBUG] Gerando vídeo com imagem de referência: {reference_image_path}")
+        else:
+            final_prompt = prompt
+            
         print(f"[DEBUG] Gerando vídeo com modelo {model_used}, ratio {aspect_ratio}...")
 
-        # Cria operação assíncrona
-        operation = client_gemini.models.generate_videos(
-            model=model_used,
-            prompt=prompt,
-            config=types.GenerateVideosConfig(aspect_ratio=aspect_ratio)
-        )
+        # Se tiver imagem de referência, faz upload e usa na geração
+        if reference_image_path:
+            try:
+                # Faz upload da imagem de referência
+                ref_image_file = client_gemini.files.upload(file=reference_image_path)
+                print(f"[INFO] Imagem de referência enviada para Gemini: {ref_image_file.name}")
+                
+                # Cria operação assíncrona com imagem de referência
+                operation = client_gemini.models.generate_videos(
+                    model=model_used,
+                    prompt=final_prompt,
+                    reference_image=ref_image_file,
+                    config=types.GenerateVideosConfig(aspect_ratio=aspect_ratio)
+                )
+            except Exception as e:
+                print(f"[WARN] Falha ao usar imagem de referência na geração de vídeo: {e}")
+                # Fallback para geração normal sem imagem
+                operation = client_gemini.models.generate_videos(
+                    model=model_used,
+                    prompt=final_prompt,
+                    config=types.GenerateVideosConfig(aspect_ratio=aspect_ratio)
+                )
+        else:
+            # Cria operação assíncrona sem imagem de referência
+            operation = client_gemini.models.generate_videos(
+                model=model_used,
+                prompt=final_prompt,
+                config=types.GenerateVideosConfig(aspect_ratio=aspect_ratio)
+            )
 
         # Aguarda conclusão da operação
         while not operation.done:
