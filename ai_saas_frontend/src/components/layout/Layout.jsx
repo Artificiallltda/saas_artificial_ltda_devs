@@ -29,6 +29,18 @@ export default function Layout({ children, mainSidebarCollapsed }) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Expor controles globais para o mobile (usado em text-generation)
+  useEffect(() => {
+    window.openMainSidebar = () => setSidebarOpen(true);
+    window.closeMainSidebar = () => setSidebarOpen(false);
+    window.toggleMainSidebar = () => setSidebarOpen(v => !v);
+    return () => {
+      delete window.openMainSidebar;
+      delete window.closeMainSidebar;
+      delete window.toggleMainSidebar;
+    };
+  }, []);
+
   // ESC fecha drawer
   useEffect(() => {
     const onKey = (e) => {
@@ -51,46 +63,42 @@ export default function Layout({ children, mainSidebarCollapsed }) {
   return (
     <div className="flex min-h-screen w-full">
       {/* OVERLAY MOBILE */}
-      {!isTextGeneration && sidebarOpen && (
+      {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* SIDEBAR PRINCIPAL - VISÍVEL QUANDO NÃO RECOLHIDO */}
-      {(!isTextGeneration || !sidebarCollapsed) && (
-        <div
-          className={`
-            bg-white
-            transition-[width] duration-300 ease-in-out
-            ${sidebarCollapsed ? "w-20" : "w-64"}
-            fixed lg:relative z-50 h-screen overflow-y-auto
-            ${!sidebarOpen ? "-translate-x-full lg:translate-x-0" : "translate-x-0"}
-          `}
-        >
-          <Sidebar
-            collapsed={sidebarCollapsed}
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-          />
-        </div>
-      )}
+      {/* SIDEBAR PRINCIPAL */}
+      <div
+        className={`
+          bg-white
+          transition-[width] duration-300 ease-in-out
+          ${sidebarCollapsed ? "w-20" : "w-64"}
+          fixed lg:relative z-50 h-screen overflow-y-auto
+          ${!sidebarOpen ? "-translate-x-full lg:translate-x-0" : "translate-x-0"}
+        `}
+      >
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+      </div>
 
       {/* CONTEÚDO */}
       <div className="flex-1 flex flex-col w-full">
         <Header
-          onMenuClick={() => {
-            if (isTextGeneration) {
-              // Para text-generation, precisamos de uma lógica diferente
-              // Vamos passar uma função que o componente text-generation vai usar
-              if (window.toggleChatSidebar) {
-                window.toggleChatSidebar();
+          onMenuClick={() =>
+            setSidebarOpen((v) => {
+              const next = !v;
+              if (next && isTextGeneration) {
+                window.closeChatSidebar?.();
               }
-            } else {
-              setSidebarOpen((v) => !v);
-            }
-          }}
+              return next;
+            })
+          }
           onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
           sidebarCollapsed={sidebarCollapsed}
           isTextGeneration={isTextGeneration}

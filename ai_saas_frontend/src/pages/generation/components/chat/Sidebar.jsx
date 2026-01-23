@@ -30,14 +30,20 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
   };
 
   return (
-    <div className="w-72 bg-white border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0 pt-16 overflow-y-auto">
-      {/* Ações */}
-      <div className="flex flex-col gap-3 p-3 mt-[4rem] md:mt-[5rem] w-full">
-        <div className="w-full flex flex-col space-y-3 px-0">
+    <div
+      className="relative w-full bg-white border-r border-gray-200 flex flex-col h-full pt-4 overflow-y-auto z-30"
+      data-chat-sidebar=""
+    >
+      {/* Botão de Toggle - Móvel */}
+     
+      
+      {/* Conteúdo da Sidebar */}
+      <div className="flex flex-col gap-3 p-4 w-full">
+        <div className="w-full flex flex-col space-y-3">
           {/* Gerações */}
           <button
             onClick={() => setImagesOpen(true)}
-            className="w-full flex flex-col items-center py-3 rounded-lg bg-gray-50 text-gray-900 hover:bg-gray-100 transition-colors mx-0"
+            className="w-full flex flex-col items-center py-3 rounded-lg bg-gray-50 text-gray-900 hover:bg-gray-100 transition-colors"
           >
             <File className="w-5 h-5 mb-1" />
             <span className="text-sm font-medium">Gerações</span>
@@ -111,7 +117,7 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
       </div>
 
       {/* Lista de Chats Ativos */}
-      <h2 className="font-semibold text-gray-700 mb-2 text-sm">Chats</h2>
+      <h2 className="font-semibold text-gray-700 mb-2 text-sm px-4">Chats</h2>
       <div className="flex-1 overflow-y-auto pr-1">
         {active.length === 0 && <p className="text-sm text-gray-400 px-3">Nenhum chat</p>}
         {active.map((c) => (

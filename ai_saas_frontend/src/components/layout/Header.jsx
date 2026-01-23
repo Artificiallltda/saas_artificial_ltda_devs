@@ -7,6 +7,7 @@ import {
   Folder,
   FileText,
   Menu,
+  MessageSquare,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
@@ -144,22 +145,36 @@ export default function Header({
           </button>
         )}
 
-        {/* BOTÃO MENU (MOBILE) - PARA SIDEBAR DE CHAT (APENAS EM TEXT-GENERATION) */}
+        {/* BOTÕES (MOBILE) – TEXTO: PRINCIPAL + CHAT */}
         {isTextGeneration && (
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
-            aria-label="Abrir menu de chat"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          <>
+            <button
+              onClick={onMenuClick}
+              className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
+              aria-label="Abrir menu principal"
+              title="Menu principal"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => {
+                window.closeMainSidebar?.();
+                window.toggleChatSidebar?.();
+              }}
+              className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
+              aria-label="Abrir menu de chats"
+              title="Menu de chats"
+            >
+              <MessageSquare className="w-5 h-5" />
+            </button>
+          </>
         )}
 
-        {/* BOTÕES DE CONTROLE DA BARRA LATERAL */}
-        <div className="flex items-center gap-1">
+        {/* BOTÃO COLAPSAR – ESCONDER NO MOBILE PARA EVITAR 3º CONTROLE */}
+        <div className="hidden md:flex items-center">
           <button
             onClick={onToggleCollapse}
-            className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition"
+            className="p-2 rounded-md hover:bg-gray-100 transition"
             title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
           >
             {sidebarCollapsed ? (
@@ -168,19 +183,6 @@ export default function Header({
               <ChevronLeft className="w-4 h-4" />
             )}
           </button>
-          
-          {/* Botão de alternar barra lateral de chat (visível apenas em text-generation) */}
-          {isTextGeneration && (
-            <button
-              onClick={() => window.toggleChatSidebar?.()}
-              className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition"
-              title="Alternar barra de chat"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 6H20M4 12H20M4 18H20" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          )}
         </div>
 
         {/* SEARCH */}
