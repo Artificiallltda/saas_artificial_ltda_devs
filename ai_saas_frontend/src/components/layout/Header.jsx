@@ -7,6 +7,7 @@ import {
   Folder,
   FileText,
   Menu,
+  MessageSquare,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
@@ -23,7 +24,8 @@ import { useNotifications } from "../../context/NotificationContext";
 export default function Header({
   onMenuClick,
   onToggleCollapse,
-  sidebarCollapsed
+  sidebarCollapsed,
+  isTextGeneration = false
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -132,27 +134,56 @@ export default function Header({
       >
       {/* ESQUERDA */}
       <div className="flex items-center gap-2 w-full max-w-md" ref={searchRef}>
-        {/* BOTÃO MENU (MOBILE) */}
-        <button
-          onClick={onMenuClick}
-          className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
-          aria-label="Abrir menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        {/* BOTÃO MENU (MOBILE) - PARA SIDEBAR PRINCIPAL */}
+        {!isTextGeneration && (
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
+            aria-label="Abrir menu principal"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
 
-        {/* BOTÃO COLAPSAR (DESKTOP) */}
-        <button
-          onClick={onToggleCollapse}
-          className="hidden lg:flex p-2 rounded-md hover:bg-gray-100 transition"
-          title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
-        >
-          {sidebarCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
-          )}
-        </button>
+        {/* BOTÕES (MOBILE) – TEXTO: PRINCIPAL + CHAT */}
+        {isTextGeneration && (
+          <>
+            <button
+              onClick={onMenuClick}
+              className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
+              aria-label="Abrir menu principal"
+              title="Menu principal"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => {
+                window.closeMainSidebar?.();
+                window.toggleChatSidebar?.();
+              }}
+              className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition"
+              aria-label="Abrir menu de chats"
+              title="Menu de chats"
+            >
+              <MessageSquare className="w-5 h-5" />
+            </button>
+          </>
+        )}
+
+        {/* BOTÃO COLAPSAR – ESCONDER NO MOBILE PARA EVITAR 3º CONTROLE */}
+        <div className="hidden md:flex items-center">
+          <button
+            onClick={onToggleCollapse}
+            className="p-2 rounded-md hover:bg-gray-100 transition"
+            title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
+          </button>
+        </div>
 
         {/* SEARCH */}
         <div className="relative w-full">

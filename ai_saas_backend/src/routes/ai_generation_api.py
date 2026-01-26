@@ -865,17 +865,48 @@ def generate_image():
     if not user:
         return jsonify({"error": "Usuário inválido"}), 403
 
-    data = request.get_json() or {}
-    prompt = data.get("prompt")
-    model = data.get("model", "gpt-image-1")  # modelo enviado do frontend
-    style = data.get("style", "auto")
-    ratio = data.get("ratio", "1024:1024")  # ex: "1:1", "16:9", "9:16"
-    quality = data.get("quality", "auto")
+    # Verifica se é FormData (com imagem) ou JSON (sem imagem)
+    content_type = request.content_type or ""
+    reference_image_path = None
+    
+    if content_type.startswith("multipart/form-data"):
+        # Recebe dados como FormData
+        prompt = request.form.get("prompt", "").strip()
+        model = request.form.get("model", "gpt-image-1")
+        style = request.form.get("style", "auto")
+        ratio = request.form.get("ratio", "1024:1024")
+        quality = request.form.get("quality", "auto")
+        
+        # Processa imagem de referência se enviada
+        reference_image_file = request.files.get("reference_image")
+        if reference_image_file and reference_image_file.filename:
+            # Validação do tipo de arquivo
+            allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+            if reference_image_file.mimetype not in allowed_types:
+                return jsonify({"error": "Apenas imagens (.png, .jpg, .jpeg, .webp) são permitidas como referência."}), 400
+            
+            # Salva imagem de referência
+            ref_filename = f"ref_{uuid.uuid4().hex}_{reference_image_file.filename}"
+            reference_image_path = os.path.join(UPLOAD_DIR, ref_filename)
+            reference_image_file.save(reference_image_path)
+            print(f"[INFO] Imagem de referência salva: {reference_image_path}")
+    else:
+        # Recebe dados como JSON (comportamento antigo)
+        data = request.get_json() or {}
+        prompt = data.get("prompt", "").strip()
+        model = data.get("model", "gpt-image-1")
+        style = data.get("style", "auto")
+        ratio = data.get("ratio", "1024:1024")
+        quality = data.get("quality", "auto")
 
     if not prompt:
         return jsonify({"error": "Prompt é obrigatório"}), 400
     
-    if style != "auto":
+    # Constrói o prompt final com contexto da imagem de referência
+    if reference_image_path:
+        final_prompt = f"Use esta imagem de referência como base para estilo, composição e elementos: {prompt}"
+        print(f"[INFO] Usando imagem de referência: {reference_image_path}")
+    elif style != "auto":
         final_prompt = f"O estilo da imagem deve ser: {style}. {prompt}"
     else:
         final_prompt = prompt
@@ -896,7 +927,51 @@ def generate_image():
             if quality and quality != "auto":
                 kwargs["quality"] = quality
 
-            response = client.images.generate(**kwargs)
+            # Se tiver imagem de referência, adiciona como input para modelos que suportam
+            if reference_image_path and model.startswith("gpt-4"):
+                try:
+                    # Converte imagem para base64
+                    with open(reference_image_path, "rb") as f:
+                        image_data = base64.b64encode(f.read()).decode('utf-8')
+                    
+                    # Cria mensagem com imagem
+                    messages = [
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": final_prompt},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/{reference_image_path.split('.')[-1]};base64,{image_data}"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                    
+                    # Usa chat completions com visão em vez de images.generate
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        max_tokens=1000
+                    )
+                    
+                    # Extrai descrição da imagem gerada pelo modelo
+                    image_description = response.choices[0].message.content
+                    
+                    # Gera imagem baseada na descrição
+                    kwargs["prompt"] = f"Based on the reference image, generate: {image_description}"
+                    response = client.images.generate(**kwargs)
+                    
+                except Exception as e:
+                    print(f"[WARN] Falha ao usar imagem de referência com {model}: {e}")
+                    # Fallback para geração normal sem imagem
+                    kwargs["prompt"] = final_prompt
+                    response = client.images.generate(**kwargs)
+            else:
+                # Geração normal sem imagem de referência
+                response = client.images.generate(**kwargs)
 
             if hasattr(response.data[0], "b64_json") and response.data[0].b64_json:
                 image_data = base64.b64decode(response.data[0].b64_json)
@@ -913,14 +988,45 @@ def generate_image():
             config_map = map_aspectratio_gemini(ratio)
             if not gemini_client:
                 return jsonify({"error": "GEMINI_API_KEY ausente"}), 500
-            response = gemini_client.models.generate_images(
-                model=model,
-                prompt=final_prompt,
-                config=types.GenerateImagesConfig(
-                    number_of_images=1,
-                    aspect_ratio=config_map["aspectRatio"],
+            
+            # Para Gemini Imagen, usa imagem de referência se disponível
+            if reference_image_path:
+                try:
+                    # Faz upload da imagem de referência
+                    ref_image_file = gemini_client.files.upload(file=reference_image_path)
+                    print(f"[INFO] Imagem de referência enviada para Gemini: {ref_image_file.name}")
+                    
+                    # Gera imagem com referência
+                    response = gemini_client.models.generate_images(
+                        model=model,
+                        prompt=final_prompt,
+                        reference_image=ref_image_file,
+                        config=types.GenerateImagesConfig(
+                            number_of_images=1,
+                            aspect_ratio=config_map["aspectRatio"],
+                        )
+                    )
+                except Exception as e:
+                    print(f"[WARN] Falha ao usar imagem de referência com Gemini: {e}")
+                    # Fallback para geração normal
+                    response = gemini_client.models.generate_images(
+                        model=model,
+                        prompt=final_prompt,
+                        config=types.GenerateImagesConfig(
+                            number_of_images=1,
+                            aspect_ratio=config_map["aspectRatio"],
+                        )
+                    )
+            else:
+                # Geração normal sem imagem de referência
+                response = gemini_client.models.generate_images(
+                    model=model,
+                    prompt=final_prompt,
+                    config=types.GenerateImagesConfig(
+                        number_of_images=1,
+                        aspect_ratio=config_map["aspectRatio"],
+                    )
                 )
-            )
             generated_image = response.generated_images[0].image
             generated_image.save(save_path)
             final_ratio = config_map["aspectRatio"]
