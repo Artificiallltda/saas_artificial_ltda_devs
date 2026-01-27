@@ -43,19 +43,19 @@
 }
 
 .panelGrid {
-  @apply grid grid-cols-1 md:grid-cols-3 gap-5;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5;
 }
 
 .statCard {
-  @apply bg-white p-6 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:shadow-md;
+  @apply bg-white px-4 py-4 sm:px-6 sm:py-6 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:shadow-md;
 }
 
 .blockCard {
-  @apply bg-white py-6 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:shadow-md;
+  @apply bg-white px-4 py-4 sm:px-6 sm:py-6 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:shadow-md;
 }
 
 .statHeader {
-  @apply flex justify-between items-center mb-6;
+  @apply flex justify-between items-center mb-4 sm:mb-6;
 }
 
 .statSubtext {
