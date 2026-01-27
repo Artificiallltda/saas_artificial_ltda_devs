@@ -4,9 +4,12 @@ import styles from "./register.module.css";
 import { User, LockKeyhole, Mail, Image as ImageIcon, UserCircle, ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import { authRoutes } from "../../../services/apiRoutes";
+import { useLanguage } from "../../../context/LanguageContext";
+import { backendMessageKeyMap } from "../../../i18n";
 
 function Register() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     full_name: "",
     username: "",
@@ -34,14 +37,14 @@ function Register() {
 
   useEffect(() => {
     if (form.email && !emailRegex.test(form.email)) {
-      setEmailError("E-mail inválido");
+      setEmailError(t("auth.register.invalid_email"));
     } else {
       setEmailError("");
     }
 
     if (form.password && !passwordRegex.test(form.password)) {
       setPasswordError(
-        "A senha deve ter pelo menos 8 caracteres, uma maiúscula, uma minúscula, um número e um caractere especial"
+        t("auth.register.password_requirements")
       );
     } else {
       setPasswordError("");
@@ -68,51 +71,51 @@ function Register() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const formData = new FormData();
-    for (const key in form) {
-      formData.append(key, form[key]);
-    }
-    if (photoFile) {
-      formData.append("perfil_photo", photoFile);
-    }
-
-    const res = await fetch(authRoutes.register, {
-      method: "POST",
-      body: formData,
-    });
-
-    let data = null;
     try {
-      data = await res.clone().json();
-    } catch {
-    }
+      const formData = new FormData();
+      for (const key in form) {
+        formData.append(key, form[key]);
+      }
+      if (photoFile) {
+        formData.append("perfil_photo", photoFile);
+      }
 
-    if (!res.ok) {
-      const errorMsg = data?.error || "Erro inesperado no servidor";
-      throw new Error(errorMsg);
-    }
+      const res = await fetch(authRoutes.register, {
+        method: "POST",
+        body: formData,
+      });
 
-    toast.success("Usuário cadastrado com sucesso!");
-    navigate("/login");
-  } catch (err) {
-    toast.error(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+      let data = null;
+      try {
+        data = await res.clone().json();
+      } catch {}
+
+      if (!res.ok) {
+        const backendMsg = data?.error || t("auth.register.server_error");
+        const key = backendMessageKeyMap[backendMsg];
+        throw new Error(key ? t(key) : backendMsg);
+      }
+
+      toast.success(t("auth.register.success"));
+      navigate("/login");
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className={styles.pageBackground}>
       <section className={styles.statCard}>
         <Link to="/login" className={styles.loginLink}>
           <ArrowLeft className="w-4 h-4 mr-1" />
-          Login
+          {t("auth.common.back_to_login")}
         </Link>
-        <h1 className={styles.title}>Cadastro</h1>
+        <h1 className={styles.title}>{t("auth.register.title")}</h1>
         <form onSubmit={handleSubmit}>
           <div className="w-full my-4">
             <div className="relative">
@@ -120,7 +123,7 @@ function Register() {
               <input
                 type="text"
                 name="full_name"
-                placeholder="Nome completo"
+                placeholder={t("auth.register.full_name.placeholder")}
                 value={form.full_name}
                 onChange={handleChange}
                 className="w-full pl-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -135,7 +138,7 @@ function Register() {
               <input
                 type="text"
                 name="username"
-                placeholder="Username"
+                placeholder={t("auth.register.username.placeholder")}
                 value={form.username}
                 onChange={handleChange}
                 className="w-full pl-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -150,7 +153,7 @@ function Register() {
               <input
                 type="email"
                 name="email"
-                placeholder="Email"
+                placeholder={t("auth.register.email.placeholder")}
                 value={form.email}
                 disabled
                 className="w-full pl-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm bg-gray-100 cursor-not-allowed"
@@ -165,7 +168,7 @@ function Register() {
               <input
                 type="password"
                 name="password"
-                placeholder="Senha"
+                placeholder={t("auth.register.password.placeholder")}
                 value={form.password}
                 onChange={handleChange}
                 className={`w-full pl-10 py-2 rounded-lg border text-black text-sm shadow-sm focus:outline-none focus:shadow-md ${
@@ -183,7 +186,7 @@ function Register() {
               <input
                 type="password"
                 name="confirmPassword"
-                placeholder="Confirmar senha"
+                placeholder={t("auth.register.confirm_password.placeholder")}
                 value={form.confirmPassword}
                 onChange={handleChange}
                 className="w-full pl-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -193,14 +196,14 @@ function Register() {
             {form.password &&
               form.confirmPassword &&
               form.password !== form.confirmPassword && (
-                <p className="text-sm text-red-500 mt-1">As senhas não coincidem</p>
+                <p className="text-sm text-red-500 mt-1">{t("auth.register.password_mismatch")}</p>
               )}
           </div>
 
           <div className="w-full my-4">
             <label className="flex items-center space-x-2 text-sm text-gray-700">
               <ImageIcon className="w-4 h-4" />
-              <span>Foto de perfil (opcional)</span>
+              <span>{t("auth.register.profile_photo_optional")}</span>
               <input
                 type="file"
                 name="perfil_photo"
@@ -216,14 +219,14 @@ function Register() {
             className={`${styles.btn} ${styles.btnWide}`}
             disabled={!isFormValid || loading}
           >
-            {loading ? "Cadastrando..." : "Cadastrar"}
+            {loading ? t("auth.register.loading") : t("auth.register.submit")}
           </button>
         </form>
 
         <p className={styles.statSubtext}>
-          Já tem uma conta?
+          {t("auth.register.already_have_account")}
           <Link to="/login" className={`${styles.linkSuccess} ${styles.linkSuccessWide}`}>
-            Entrar
+            {t("auth.register.sign_in")}
           </Link>
         </p>
       </section>

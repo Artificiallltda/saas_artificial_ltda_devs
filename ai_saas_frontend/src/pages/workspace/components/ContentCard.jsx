@@ -2,6 +2,7 @@ import { FileText, Image, Video, Trash2 } from "lucide-react";
 import ContentPreview from "./ContentPreview";
 import { formatDateTime } from "../../../utils/dateUtils";
 import { TEXT_MODELS } from "../../../utils/constants";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function ContentCard({
   content,
@@ -12,6 +13,7 @@ export default function ContentCard({
   onToggleSelect,
   showDelete = true // nova prop
 }) {
+  const { t, language } = useLanguage();
   return (
     <div
       className={`relative rounded-lg p-4 bg-white shadow hover:shadow-md transition ${
@@ -55,7 +57,7 @@ export default function ContentCard({
             <Video className="w-4 h-4 text-purple-500" />
           )}
           <span className="text-xs text-gray-600">
-            {formatDateTime(content.created_at)}
+            {formatDateTime(content.created_at, language)}
           </span>
         </div>
 
@@ -64,7 +66,7 @@ export default function ContentCard({
         </div>
 
         <p className="mt-auto text-xs text-gray-700 pt-2 font-medium">
-          Modelo: <span>{TEXT_MODELS.find(m => m.value === content.model_used)?.label || content.model_used}</span>
+          {t("contents.card.model")}: <span>{TEXT_MODELS.find(m => m.value === content.model_used)?.label || content.model_used}</span>
         </p>
       </div>
     </div>

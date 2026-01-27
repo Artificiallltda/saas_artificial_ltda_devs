@@ -3,8 +3,10 @@ import { apiFetch } from "../../../../services/apiService";
 import { generatedContentRoutes } from "../../../../services/apiRoutes";
 import ContentPreview from "../../../workspace/components/ContentPreview";
 import ContentDetailsModal from "../../../workspace/components/ContentDetailsModal";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 export default function GeneratedFiles({ goBack }) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -44,9 +46,9 @@ export default function GeneratedFiles({ goBack }) {
   return (
     <div className="p-2 h-full overflow-y-auto">
       {loading ? (
-        <p className="text-gray-500">Carregando...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       ) : images.length === 0 ? (
-        <p className="text-gray-500">Nenhuma imagem gerada ainda.</p>
+        <p className="text-gray-500">{t("generation.text.generated_files.empty")}</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
           {images.map((content) => (
@@ -72,7 +74,7 @@ export default function GeneratedFiles({ goBack }) {
             onClick={() => handleDownload(selectedImage)}
             className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold transition"
           >
-            Baixar Imagem
+            {t("generation.text.generated_files.download")}
           </button>
         </ContentDetailsModal>
       )}

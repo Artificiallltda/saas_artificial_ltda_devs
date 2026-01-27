@@ -84,7 +84,7 @@ def is_model_allowed_for_basic_plan(model: str) -> bool:
         return True
     if m == "deepseek/deepseek-r1-0528:free":
         return True
-    if m in ("sonar", "sonar-reasoning"):
+    if m in ("sonar", "sonar-reasoning", "sonar-deep-research"):
         return True
     if m.startswith("claude-haiku-4-5"):
         return True

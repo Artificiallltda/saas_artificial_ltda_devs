@@ -11,8 +11,10 @@ import { apiFetch } from "../../services/apiService";
 import useSelectionMode from "../workspace/hooks/useSelectionMode";
 import SelectionToggleButton from "../workspace/components/SelectionToggleButton";
 import SelectionToolbar from "../workspace/components/SelectionToolbar";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function NotificationsList() {
+  const { t, language } = useLanguage();
   const {
     notifications,
     setNotifications,
@@ -42,15 +44,15 @@ export default function NotificationsList() {
   const selectedIds = selectedItems.map((item) => item.id);
 
   const handleDeleteNotification = async (id) => {
-    if (!window.confirm("Deseja excluir esta notificação?")) return;
+    if (!window.confirm(t("notifications.delete.confirm_single"))) return;
     try {
       await apiFetch(notificationRoutes.delete(id), { method: "DELETE" });
       const updated = notifications.filter((n) => n.id !== id);
       setNotifications(updated);
       setUnreadCount(updated.filter((n) => !n.is_read).length);
-      toast.success("Notificação excluída.");
+      toast.success(t("notifications.delete.success_single"));
     } catch (err) {
-      toast.error(err.message || "Erro ao excluir notificação.");
+      toast.error(err.message || t("notifications.delete.error_single"));
     }
   };
 
@@ -62,15 +64,15 @@ export default function NotificationsList() {
       );
       setNotifications(updated);
       setUnreadCount(updated.filter((n) => !n.is_read).length);
-      toast.success("Notificação marcada como lida.");
+      toast.success(t("notifications.mark_read.success_single"));
     } catch (err) {
-      toast.error(err.message || "Erro ao marcar como lida.");
+      toast.error(err.message || t("notifications.mark_read.error_single"));
     }
   };
 
   const handleDeleteSelected = async () => {
     if (selectedItems.length === 0) return;
-    if (!window.confirm(`Deseja excluir ${selectedItems.length} notificação(ões)?`)) return;
+    if (!window.confirm(t("notifications.delete.confirm_multiple", { count: selectedItems.length }))) return;
     try {
       await Promise.all(
         selectedIds.map((id) => apiFetch(notificationRoutes.delete(id), { method: "DELETE" }))
@@ -79,9 +81,9 @@ export default function NotificationsList() {
       setNotifications(updated);
       setUnreadCount(updated.filter((n) => !n.is_read).length);
       clearSelection();
-      toast.success("Notificações excluídas.");
+      toast.success(t("notifications.delete.success_multiple"));
     } catch (err) {
-      toast.error(err.message || "Erro ao excluir notificações.");
+      toast.error(err.message || t("notifications.delete.error_multiple"));
     }
   };
 
@@ -97,9 +99,9 @@ export default function NotificationsList() {
       setNotifications(updated);
       setUnreadCount(updated.filter((n) => !n.is_read).length);
       clearSelection();
-      toast.success("Notificações marcadas como lidas.");
+      toast.success(t("notifications.mark_read.success_multiple"));
     } catch (err) {
-      toast.error(err.message || "Erro ao marcar notificações como lidas.");
+      toast.error(err.message || t("notifications.mark_read.error_multiple"));
     }
   };
 
@@ -119,10 +121,12 @@ export default function NotificationsList() {
 
   return (
     <Layout>
-      <h1 className={styles.title}>Minhas Notificações</h1>
+      <h1 className={styles.title}>{t("notifications.title")}</h1>
       <p className="text-gray-600 mb-6">
-        Visualize e gerencie suas notificações mais recentes.{" "}
-        <strong>{unreadCount} não lida{unreadCount !== 1 ? "s" : ""}</strong>
+        {t("notifications.subtitle")}{" "}
+        <strong>
+          {unreadCount} {t(unreadCount === 1 ? "notifications.unread.single" : "notifications.unread.plural")}
+        </strong>
       </p>
 
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -130,7 +134,7 @@ export default function NotificationsList() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="search"
-            placeholder="Buscar notificações..."
+            placeholder={t("notifications.search.placeholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 py-2 bg-white rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -167,9 +171,9 @@ export default function NotificationsList() {
       </div>
 
       {loading ? (
-        <p className="mt-6 text-sm">Carregando notificações...</p>
+        <p className="mt-6 text-sm">{t("notifications.loading")}</p>
       ) : filteredNotifications.length === 0 ? (
-        <p className="mt-6 text-gray-500 text-sm">Nenhuma notificação encontrada.</p>
+        <p className="mt-6 text-gray-500 text-sm">{t("notifications.empty")}</p>
       ) : (
         <div className="flex flex-col gap-3">
   {filteredNotifications.map((notification) => {
@@ -197,8 +201,8 @@ export default function NotificationsList() {
               handleDeleteNotification(notification.id);
             }}
             className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-md z-10"
-            aria-label="Excluir notificação"
-            title="Excluir notificação"
+            aria-label={t("notifications.delete.aria")}
+            title={t("notifications.delete.title")}
           >
             <Trash className="w-4 h-4" />
           </button>
@@ -216,7 +220,7 @@ export default function NotificationsList() {
               }}
               onClick={(e) => e.stopPropagation()}
               className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-              title="Selecionar notificação"
+              title={t("notifications.select.title")}
             />
           </div>
         )}
@@ -232,7 +236,7 @@ export default function NotificationsList() {
           </p>
           <p className="text-xs text-gray-500 mt-1">
             {notification.created_at instanceof Date
-            ? notification.created_at.toLocaleString("pt-BR")
+            ? notification.created_at.toLocaleString(language)
             : ""}
           </p>
 
@@ -246,7 +250,7 @@ export default function NotificationsList() {
                 className="absolute right-3 top-[-1rem] inline-flex items-center gap-1 text-blue-600 text-xs hover:underline"
               >
                 <CheckCircle className="w-4 h-4 relative top-[1px]" />
-                Marcar como lida
+                {t("notifications.mark_read.cta")}
               </button>
             )}
           </div>
@@ -260,11 +264,11 @@ export default function NotificationsList() {
 
       <SelectionToolbar
         count={selectedItems.length}
-        confirmLabel="Excluir selecionados"
+        confirmLabel={t("notifications.toolbar.delete_selected")}
         onConfirm={handleDeleteSelected}
         confirmColor="red"
         icon={<Trash className="w-4 h-4" />}
-        secondaryConfirmLabel="Marcar como lidas"
+        secondaryConfirmLabel={t("notifications.toolbar.mark_read")}
         onSecondaryConfirm={handleMarkSelectedAsRead}
         secondaryConfirmColor="blue"
         secondaryIcon={<CheckCircle className="w-4 h-4" />}

@@ -4,10 +4,13 @@ import { toast } from "react-toastify";
 import styles from "./forgot.module.css";
 import { Lock } from "lucide-react";
 import { authRoutes } from "../../../services/apiRoutes";
+import { useLanguage } from "../../../context/LanguageContext";
+import { backendMessageKeyMap } from "../../../i18n";
 
 export default function ResetPassword() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -25,13 +28,17 @@ export default function ResetPassword() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success(data.message);
+        const msg = data.message;
+        const key = backendMessageKeyMap[msg];
+        toast.success(key ? t(key) : msg);
         navigate("/login");
       } else {
-        toast.error(data.error || "Erro ao redefinir senha");
+        const backendMsg = data.error || t("auth.reset_password.error");
+        const key = backendMessageKeyMap[backendMsg];
+        toast.error(key ? t(key) : backendMsg);
       }
     } catch (error) {
-      toast.error("Erro de conexão");
+      toast.error(t("auth.common.connection_error"));
     } finally {
       setLoading(false);
     }
@@ -40,14 +47,14 @@ export default function ResetPassword() {
   return (
     <main className={styles.pageBackground}>
       <section className={styles.statCard}>
-        <h1 className={styles.title}>Nova senha</h1>
+        <h1 className={styles.title}>{t("auth.reset_password.title")}</h1>
         <form onSubmit={handleSubmit}>
           <div className="max-w-md w-full my-4">
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="password"
-                placeholder="Digite a nova senha"
+                placeholder={t("auth.reset_password.password.placeholder")}
                 className="w-xs pl-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -63,7 +70,7 @@ export default function ResetPassword() {
             className={`${styles.btn} ${styles.btnWide}`}
             disabled={loading}
           >
-            {loading ? "Enviando..." : "Redefinir senha"}
+            {loading ? t("auth.reset_password.loading") : t("auth.reset_password.submit")}
           </button>
         </form>
       </section>

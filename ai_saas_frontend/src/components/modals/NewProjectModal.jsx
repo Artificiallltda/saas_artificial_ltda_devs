@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function NewProjectModal({ isOpen, onClose, onCreate }) {
+  const { t } = useLanguage();
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -9,7 +11,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreate }) {
 
   const handleSubmit = async () => {
     if (!projectName.trim()) {
-      setErrorMsg("O nome do projeto é obrigatório.");
+      setErrorMsg(t("projects.validation.name_required"));
       return;
     }
 
@@ -24,7 +26,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreate }) {
       setProjectName("");
       setProjectDescription("");
     } catch (err) {
-      setErrorMsg(err.message || "Erro ao criar projeto");
+      setErrorMsg(err.message || t("projects.create.error"));
     } finally {
       setLoading(false);
     }
@@ -42,16 +44,16 @@ export default function NewProjectModal({ isOpen, onClose, onCreate }) {
           <X className="w-5 h-5 text-gray-500" />
         </button>
 
-        <h2 className="text-lg font-semibold text-gray-900">Novo Projeto</h2>
+        <h2 className="text-lg font-semibold text-gray-900">{t("projects.create.title")}</h2>
         <p className="text-sm text-gray-600 mb-4">
-          Dê um nome e uma breve descrição para organizar seu conteúdo.
+          {t("projects.create.description")}
         </p>
 
         <div className="mb-3">
-          <label className="text-sm font-medium text-gray-700">Nome</label>
+          <label className="text-sm font-medium text-gray-700">{t("projects.fields.name")}</label>
           <input
             type="text"
-            placeholder="Ex: Campanha de Marketing"
+            placeholder={t("projects.fields.name.placeholder")}
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
             className="w-full mt-1 pl-3 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -59,9 +61,9 @@ export default function NewProjectModal({ isOpen, onClose, onCreate }) {
         </div>
 
         <div className="mb-3">
-          <label className="text-sm font-medium text-gray-700">Descrição</label>
+          <label className="text-sm font-medium text-gray-700">{t("projects.fields.description")}</label>
           <textarea
-            placeholder="Descrição opcional..."
+            placeholder={t("projects.fields.description.placeholder")}
             value={projectDescription}
             onChange={(e) => setProjectDescription(e.target.value)}
             className="w-full mt-1 pl-3 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -79,7 +81,7 @@ export default function NewProjectModal({ isOpen, onClose, onCreate }) {
             disabled={loading}
             className="bg-black text-white py-2 px-4 rounded-md text-sm hover:opacity-90 transition disabled:opacity-50"
           >
-            {loading ? "Criando..." : "Criar Projeto"}
+            {loading ? t("projects.create.creating") : t("projects.create.submit")}
           </button>
         </div>
       </div>

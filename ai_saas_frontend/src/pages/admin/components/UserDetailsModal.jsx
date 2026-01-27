@@ -4,8 +4,10 @@ import { toast } from "react-toastify";
 import CustomSelect from "../../../components/common/CustomSelect";
 import { userRoutes, adminRoutes, plansRoutes } from "../../../services/apiRoutes";
 import { apiFetch } from "../../../services/apiService";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function UserDetailsModal({ user, onClose, onUpdate }) {
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState(user.full_name);
   const [username, setUsername] = useState(user.username);
   const [email, setEmail] = useState(user.email);
@@ -20,7 +22,7 @@ export default function UserDetailsModal({ user, onClose, onUpdate }) {
         const data = await apiFetch(plansRoutes.list);
         setPlans(data);
       } catch {
-        toast.error("Erro ao carregar planos.");
+        toast.error(t("admin.user_modal.plans.load_error"));
       }
     };
     fetchPlans();
@@ -60,7 +62,7 @@ export default function UserDetailsModal({ user, onClose, onUpdate }) {
         });
       }
 
-      toast.success("Usuário atualizado.");
+      toast.success(t("admin.user_modal.update.success"));
 
       const updatedUser = {
         ...user,
@@ -72,7 +74,7 @@ export default function UserDetailsModal({ user, onClose, onUpdate }) {
       };
       onUpdate(updatedUser);
     } catch (err) {
-      toast.error(err.message || "Erro ao atualizar usuário.");
+      toast.error(err.message || t("admin.user_modal.update.error"));
     } finally {
       setLoading(false);
     }
@@ -80,8 +82,8 @@ export default function UserDetailsModal({ user, onClose, onUpdate }) {
 
   const planOptions = plans.map((p) => ({ value: p.id, label: p.name }));
   const activeOptions = [
-    { value: true, label: "Sim" },
-    { value: false, label: "Não" },
+    { value: true, label: t("common.yes") },
+    { value: false, label: t("common.no") },
   ];
 
   return (
@@ -91,37 +93,37 @@ export default function UserDetailsModal({ user, onClose, onUpdate }) {
           <X className="w-5 h-5 text-gray-500" />
         </button>
 
-        <h2 className="text-lg font-semibold mb-5">Editar Usuário</h2>
+        <h2 className="text-lg font-semibold mb-5">{t("admin.user_modal.title")}</h2>
 
         <div className="flex flex-col gap-4">
           {/* Campos */}
           <div>
-            <label className="block text-sm font-medium mb-1">Nome Completo</label>
+            <label className="block text-sm font-medium mb-1">{t("admin.user_modal.full_name")}</label>
             <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 transition" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Username</label>
+            <label className="block text-sm font-medium mb-1">{t("admin.user_modal.username")}</label>
             <input value={username} onChange={(e) => setUsername(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 transition" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="block text-sm font-medium mb-1">{t("admin.user_modal.email")}</label>
             <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 transition" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Plano</label>
+            <label className="block text-sm font-medium mb-1">{t("admin.user_modal.plan")}</label>
             <CustomSelect
               value={planOptions.find((p) => p.value === plan)}
               onChange={(selected) => setPlan(selected?.value || "")}
               options={planOptions}
-              placeholder="Selecione um plano"
+              placeholder={t("admin.user_modal.plan.placeholder")}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Ativo?</label>
+            <label className="block text-sm font-medium mb-1">{t("admin.user_modal.active")}</label>
             <CustomSelect
               value={activeOptions.find((a) => a.value === isActive)}
               onChange={(selected) => setIsActive(selected.value)}
@@ -130,7 +132,7 @@ export default function UserDetailsModal({ user, onClose, onUpdate }) {
           </div>
 
           <button onClick={handleSave} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition disabled:opacity-50">
-            {loading ? "Salvando..." : "Salvar alterações"}
+            {loading ? t("common.saving") : t("common.save_changes")}
           </button>
         </div>
       </div>

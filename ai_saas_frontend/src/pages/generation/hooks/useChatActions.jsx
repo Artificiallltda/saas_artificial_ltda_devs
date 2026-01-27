@@ -2,15 +2,17 @@ import { useState, useRef } from "react";
 import { toast } from "react-toastify";
 import { aiRoutes } from "../../../services/apiRoutes";
 import { apiFetch } from "../../../services/apiService"; // ← import do service
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function useChatActions({ chatId, setChatId, messages, setMessages, updateChatList }) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [controller, setController] = useState(null);
   const messagesEndRef = useRef(null);
 
   const handleSend = async ({ input, files, model, temperature, isTemperatureLocked }) => {
     if (!input.trim() && files.length === 0) {
-      toast.warning("Digite uma mensagem ou anexe um arquivo!");
+      toast.warning(t("generation.text.actions.message_or_attachment_required"));
       return;
     }
 
@@ -64,7 +66,7 @@ export default function useChatActions({ chatId, setChatId, messages, setMessage
 
       const newChat = {
         id: aiData.chat_id,
-        title: aiData.chat_title || "Novo Chat",
+        title: aiData.chat_title || t("generation.text.sidebar.new_chat"),
         archived: false,
         created_at: aiData.created_at || new Date().toISOString(),
         snippet: aiData.messages?.slice(-1)[0]?.content || "",
@@ -97,7 +99,7 @@ export default function useChatActions({ chatId, setChatId, messages, setMessage
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (err) {
       if (err.name === "AbortError") return;
-      toast.error(err.message || "Erro ao gerar resposta");
+      toast.error(err.message || t("generation.text.error_toast"));
       setMessages((prev) => prev.filter((m) => m.content !== "typing"));
     } finally {
       setLoading(false);

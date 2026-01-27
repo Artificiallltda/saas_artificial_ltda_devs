@@ -11,10 +11,12 @@ import NewProjectModal from "../../components/modals/NewProjectModal";
 import { apiFetch } from "../../services/apiService";
 import { projectRoutes } from "../../services/apiRoutes";
 import { EmptyState } from "../../components/EmptyState";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
 
   const { projects, projectsThisMonth } = useProjects(user);
   const { contents, contentsThisMonth } = useContents(user);
@@ -29,13 +31,13 @@ export default function Home() {
         body: JSON.stringify({ name, description }),
       });
 
-      toast.success("Projeto criado com sucesso!");
+      toast.success(t("dashboard.create_project.success"));
 
       // ✅ fluxo correto: volta para lista de projetos
       navigate("/workspace/projects");
 
     } catch (err) {
-      toast.error(err.message || "Erro ao criar projeto");
+      toast.error(err.message || t("dashboard.create_project.error"));
     }
   };
 
@@ -45,10 +47,8 @@ export default function Home() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className={styles.title}>Dashboard</h1>
-            <p className="text-gray-600">
-              Bem-vindo à sua plataforma de IA generativa
-            </p>
+            <h1 className={styles.title}>{t("dashboard.title")}</h1>
+            <p className="text-gray-600">{t("dashboard.subtitle")}</p>
           </div>
 
           <button
@@ -56,7 +56,7 @@ export default function Home() {
             className={`${styles.btnBlack} ${styles.btnBlackStandard}`}
           >
             <Plus className="w-4 h-4" />
-            <span className="text-sm">Novo Projeto</span>
+            <span className="text-sm">{t("dashboard.create_project.cta")}</span>
           </button>
         </div>
 
@@ -64,13 +64,13 @@ export default function Home() {
         <div className={styles.panelGrid}>
           <div className={styles.statCard}>
             <div className={styles.statHeader}>
-              <p className={styles.blockTitle}>Agentes Criados</p>
+              <p className={styles.blockTitle}>{t("dashboard.stats.agents_created")}</p>
             </div>
             <p className="text-2xl font-bold">
               {user?.tokens_available ?? 0}
             </p>
             <p className={`${styles.statSubtext} text-xs`}>
-              Funcionalidade futura!
+              {t("dashboard.stats.future_feature")}
             </p>
           </div>
 
@@ -79,12 +79,12 @@ export default function Home() {
             onClick={() => navigate("/workspace/projects")}
           >
             <div className={styles.statHeader}>
-              <p className={styles.blockTitle}>Projetos</p>
+              <p className={styles.blockTitle}>{t("dashboard.stats.projects")}</p>
               <FileText className="w-4 h-4 text-gray-medium" />
             </div>
             <p className="text-2xl font-bold">{projects.length}</p>
             <p className={`${styles.statSubtext} text-xs`}>
-              +{projectsThisMonth} novos este mês
+              {t("dashboard.stats.projects_this_month", { count: projectsThisMonth })}
             </p>
           </div>
 
@@ -93,19 +93,19 @@ export default function Home() {
             onClick={() => navigate("/workspace/generated-contents")}
           >
             <div className={styles.statHeader}>
-              <p className={styles.blockTitle}>Conteúdo Gerado</p>
+              <p className={styles.blockTitle}>{t("dashboard.stats.generated_content")}</p>
               <Image className="w-4 h-4 text-gray-medium" />
             </div>
             <p className="text-2xl font-bold">{contents.length}</p>
             <p className={`${styles.statSubtext} text-xs`}>
-              +{contentsThisMonth} criados este mês
+              {t("dashboard.stats.contents_this_month", { count: contentsThisMonth })}
             </p>
           </div>
         </div>
 
         {/* Ferramentas IA */}
         <div>
-          <h2 className={styles.subTitle}>Ferramentas de IA</h2>
+          <h2 className={styles.subTitle}>{t("dashboard.ai_tools.title")}</h2>
 
           <div className={styles.panelGrid}>
             <div className={styles.statCard}>
@@ -114,17 +114,17 @@ export default function Home() {
                   <FileText className="text-white w-6 h-6" />
                 </div>
                 <h3 className="font-semibold text-black mb-1">
-                  Geração de Texto
+                  {t("generation.text.title")}
                 </h3>
                 <p className={`${styles.statSubtext} text-sm`}>
-                  Crie conteúdo usando LLMs avançados
+                  {t("dashboard.ai_tools.text.description")}
                 </p>
               </div>
               <Link
                 to="/text-generation"
                 className={`${styles.btnBlack} ${styles.btnBlackWide}`}
               >
-                Começar
+                {t("dashboard.ai_tools.start")}
               </Link>
             </div>
 
@@ -134,17 +134,17 @@ export default function Home() {
                   <Image className="text-white w-6 h-6" />
                 </div>
                 <h3 className="font-semibold text-black mb-1">
-                  Geração de Imagem
+                  {t("generation.image.title")}
                 </h3>
                 <p className={`${styles.statSubtext} text-sm`}>
-                  Gere imagens a partir de prompts
+                  {t("dashboard.ai_tools.image.description")}
                 </p>
               </div>
               <Link
                 to="/image-generation"
                 className={`${styles.btnBlack} ${styles.btnBlackWide}`}
               >
-                Começar
+                {t("dashboard.ai_tools.start")}
               </Link>
             </div>
 
@@ -154,17 +154,17 @@ export default function Home() {
                   <Video className="text-white w-6 h-6" />
                 </div>
                 <h3 className="font-semibold text-black mb-1">
-                  Geração de Vídeo
+                  {t("generation.video.title")}
                 </h3>
                 <p className={`${styles.statSubtext} text-sm`}>
-                  Crie vídeos com IA generativa
+                  {t("dashboard.ai_tools.video.description")}
                 </p>
               </div>
               <Link
                 to="/video-generation"
                 className={`${styles.btnBlack} ${styles.btnBlackWide}`}
               >
-                Começar
+                {t("dashboard.ai_tools.start")}
               </Link>
             </div>
           </div>
@@ -172,13 +172,13 @@ export default function Home() {
 
         {/* Projetos recentes */}
         <div>
-          <h2 className={styles.subTitle}>Projetos Recentes</h2>
+          <h2 className={styles.subTitle}>{t("dashboard.recent_projects.title")}</h2>
 
           {projects.length === 0 ? (
             <EmptyState
-              title="Nenhum projeto ainda"
-              description="Você ainda não criou nenhum projeto. Comece agora para gerar seu primeiro conteúdo com IA."
-              ctaLabel="Criar novo projeto"
+              title={t("dashboard.recent_projects.empty.title")}
+              description={t("dashboard.recent_projects.empty.description")}
+              ctaLabel={t("dashboard.recent_projects.empty.cta")}
               onCtaClick={() => setShowProjectModal(true)}
             />
           ) : (
@@ -199,11 +199,11 @@ export default function Home() {
                         {item.name}
                       </p>
                       <p className={`${styles.statSubtext} text-sm`}>
-                        {item.description || "Sem descrição"}
+                        {item.description || t("dashboard.recent_projects.no_description")}
                       </p>
                     </div>
                     <p className={`${styles.statSubtext} text-sm`}>
-                      {new Date(item.created_at).toLocaleDateString("pt-BR")}
+                      {new Date(item.created_at).toLocaleDateString(language)}
                     </p>
                   </div>
                 ))}

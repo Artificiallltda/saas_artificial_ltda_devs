@@ -5,10 +5,13 @@ import styles from "./login.module.css";
 import { User, LockKeyhole, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 import { authRoutes } from "../../../services/apiRoutes";
+import { useLanguage } from "../../../context/LanguageContext";
+import { backendMessageKeyMap } from "../../../i18n";
 
 function Login() {
   const { loginSuccess } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -28,17 +31,21 @@ function Login() {
         body: JSON.stringify({ identifier, password }),
       });
       if (res.status === 429) {
-        throw new Error("Você excedeu o limite de tentativas. Tente novamente em alguns minutos.");
+        throw new Error(t("auth.login.rate_limit"));
       }
       let data = {};
       try {
         data = await res.json();
       } catch {}
 
-      if (!res.ok) throw new Error(data?.error || "Erro ao fazer login");
+      if (!res.ok) {
+        const backendMsg = data?.error || t("auth.login.error");
+        const key = backendMessageKeyMap[backendMsg];
+        throw new Error(key ? t(key) : backendMsg);
+      }
 
       loginSuccess(data);
-      toast.success("Usuário logado com sucesso!");
+      toast.success(t("auth.login.success"));
       navigate("/");
     } catch (err) {
       setError(err.message);
@@ -54,7 +61,7 @@ function Login() {
           <img src="/static/artificiall/Artificiall_Negativo_Vert_RGB.png" alt="Logo" className="w-64 h-auto" />
         </div>
         <div className={styles.loginRight}>
-          <h1 className={styles.title}>Login</h1>
+          <h1 className={styles.title}>{t("auth.login.title")}</h1>
           <form onSubmit={handleLogin} className="w-full max-w-sm">
             <div className="relative w-full my-4">
               <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
@@ -62,7 +69,7 @@ function Login() {
               </div>
               <input
                 type="text"
-                placeholder="Usuário ou Email"
+                placeholder={t("auth.login.identifier.placeholder")}
                 className="w-full pl-10 pr-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
@@ -76,7 +83,7 @@ function Login() {
               </div>
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Senha"
+                placeholder={t("auth.login.password.placeholder")}
                 className="w-full pl-10 pr-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -87,7 +94,7 @@ function Login() {
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
-                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                aria-label={showPassword ? t("auth.login.password.hide") : t("auth.login.password.show")}
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -99,13 +106,13 @@ function Login() {
               className={`${styles.btn} ${styles.btnWide}`}
               disabled={loading}
             >
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? t("auth.login.loading") : t("auth.login.submit")}
             </button>
           </form>
           <p className={styles.statSubtext}>
-            Esqueceu a Senha?
+            {t("auth.login.forgot_password")}
             <Link to="/login/forgot-password" className={`${styles.linkSuccess} ${styles.linkSuccessWide}`}>
-              Recuperar
+              {t("auth.login.recover")}
             </Link>
           </p>
         </div>

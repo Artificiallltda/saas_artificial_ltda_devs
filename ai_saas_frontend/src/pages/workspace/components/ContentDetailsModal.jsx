@@ -4,15 +4,17 @@ import { toast } from "react-toastify";
 import ContentPreview from "./ContentPreview";
 import { formatDateTime } from "../../../utils/dateUtils";
 import { TEXT_MODELS } from "../../../utils/constants";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function ContentDetailsModal({ content, onClose, showAddButton = false }) {
+  const { t, language } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [mediaUrl, setMediaUrl] = useState(null);
 
   const handleDownload = () => {
     try {
       if (!mediaUrl) {
-        toast.warning("Nenhum arquivo disponível para download");
+        toast.warning(t("contents.modal.no_file_to_download"));
         return;
       }
 
@@ -26,10 +28,10 @@ export default function ContentDetailsModal({ content, onClose, showAddButton = 
       a.download = filename;
       a.click();
 
-      toast.success("Download iniciado!");
+      toast.success(t("contents.modal.download_started"));
     } catch (err) {
       console.error(err);
-      toast.error("Falha ao iniciar download");
+      toast.error(t("contents.modal.download_failed"));
     }
   };
 
@@ -39,12 +41,12 @@ export default function ContentDetailsModal({ content, onClose, showAddButton = 
         <button
           onClick={onClose}
           className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100"
-          aria-label="Fechar modal"
+          aria-label={t("common.close")}
         >
           <X className="w-5 h-5 text-gray-500" />
         </button>
 
-        <h2 className="text-xl font-semibold mb-6">Detalhes do Conteúdo</h2>
+        <h2 className="text-xl font-semibold mb-6">{t("contents.modal.title")}</h2>
 
         {/* Preview (imagem/vídeo/texto) */}
         <div className="mb-4 flex justify-center">
@@ -60,7 +62,9 @@ export default function ContentDetailsModal({ content, onClose, showAddButton = 
             >
               <Download className="w-4 h-4" />
               <span>
-                {content.content_type === "video" ? "Baixar Vídeo" : "Baixar Imagem"}
+                {content.content_type === "video"
+                  ? t("contents.modal.download_video")
+                  : t("contents.modal.download_image")}
               </span>
             </button>
           </div>
@@ -69,7 +73,7 @@ export default function ContentDetailsModal({ content, onClose, showAddButton = 
         {/* Detalhes */}
         <div className="text-sm text-gray-700 space-y-2 mb-6">
           <p>
-            <strong>Prompt:</strong>{" "}
+            <strong>{t("contents.modal.prompt")}:</strong>{" "}
             {expanded
               ? content.prompt
               : content.prompt?.slice(0, 150) +
@@ -79,25 +83,25 @@ export default function ContentDetailsModal({ content, onClose, showAddButton = 
                 onClick={() => setExpanded(!expanded)}
                 className="ml-2 text-blue-600 hover:underline text-xs"
               >
-                {expanded ? "Ver menos" : "Ver mais"}
+                {expanded ? t("common.show_less") : t("common.show_more")}
               </button>
             )}
           </p>
 
           <p>
-            <strong>Modelo:</strong>{" "}
+            <strong>{t("contents.modal.model")}:</strong>{" "}
             {TEXT_MODELS.find((m) => m.value === content.model_used)?.label ||
               content.model_used}
           </p>
-          {content.style && <p><strong>Estilo:</strong> {content.style}</p>}
-          {content.ratio && <p><strong>Proporção:</strong> {content.ratio}</p>}
+          {content.style && <p><strong>{t("contents.modal.style")}:</strong> {content.style}</p>}
+          {content.ratio && <p><strong>{t("contents.modal.ratio")}:</strong> {content.ratio}</p>}
           {content.content_type === "video" && (
             <p>
-              <strong>Duração:</strong>{" "}
-              {content.duration ? `${content.duration}s` : "—"}
+              <strong>{t("contents.modal.duration")}:</strong>{" "}
+              {content.duration ? `${content.duration}s` : t("common.placeholder")}
             </p>
           )}
-          <p><strong>Criado em:</strong> {formatDateTime(content.created_at)}</p>
+          <p><strong>{t("contents.modal.created_at")}:</strong> {formatDateTime(content.created_at, language)}</p>
         </div>
 
         {showAddButton && (
@@ -105,7 +109,7 @@ export default function ContentDetailsModal({ content, onClose, showAddButton = 
             onClick={() => {}}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold transition"
           >
-            Adicionar ao projeto
+            {t("contents.modal.add_to_project")}
           </button>
         )}
       </div>
