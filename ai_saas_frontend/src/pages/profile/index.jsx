@@ -8,8 +8,10 @@ import { toast } from "react-toastify";
 import { emailRoutes } from "../../services/apiRoutes";
 import { apiFetch } from "../../services/apiService";
 import SecurityModal from "../../components/modals/SecurityModal";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function Profile() {
+  const { t } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,9 +22,9 @@ export default function Profile() {
     setErrorMessage("");
     try {
       await apiFetch(emailRoutes.sendSecurityCode, { method: "POST" });
-      toast.success("Código enviado para seu e-mail.");
+      toast.success(t("settings.security_code.sent"));
     } catch {
-      setErrorMessage("Erro ao enviar o código. Tente novamente.");
+      setErrorMessage(t("settings.security_code.send_error"));
     }
   };
 
@@ -45,12 +47,12 @@ export default function Profile() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
       });
-      toast.success("Código verificado com sucesso!");
+      toast.success(t("settings.security_code.verified"));
       setShowModal(false);
       setSecurityVerified(true);
       navigate("/profile/security");
     } catch {
-      setErrorMessage("Código incorreto ou expirado.");
+      setErrorMessage(t("settings.security_code.wrong_or_expired"));
     } finally {
       setLoading(false);
     }
@@ -59,7 +61,7 @@ export default function Profile() {
   return (
     <Layout>
       <section className="space-y-6">
-        <h1 className={styles.title}>Minha Conta</h1>
+        <h1 className={styles.title}>{t("profile.title")}</h1>
         <div className={styles.panelGrid}>
           <div
             className={`${styles.modernCard} ${styles.modernCardSecurity}`}
@@ -69,8 +71,8 @@ export default function Profile() {
             onKeyPress={(e) => e.key === "Enter" && handleSecurityClick()}
           >
             <ShieldCheck size={28} className={styles.iconSecurity} />
-            <h2 className={styles.cardTitle}>Segurança</h2>
-            <p className={styles.cardDescription}>Gerencie email e senha</p>
+            <h2 className={styles.cardTitle}>{t("profile.cards.security.title")}</h2>
+            <p className={styles.cardDescription}>{t("profile.cards.security.description")}</p>
           </div>
 
           <Link
@@ -78,8 +80,8 @@ export default function Profile() {
             className={`${styles.modernCard} ${styles.modernCardSubscription}`}
           >
             <CreditCard size={28} className={styles.iconSubscription} />
-            <h2 className={styles.cardTitle}>Assinatura</h2>
-            <p className={styles.cardDescription}>Plano atual</p>
+            <h2 className={styles.cardTitle}>{t("profile.cards.subscription.title")}</h2>
+            <p className={styles.cardDescription}>{t("profile.cards.subscription.description")}</p>
           </Link>
 
           <Link
@@ -87,8 +89,8 @@ export default function Profile() {
             className={`${styles.modernCard} ${styles.modernCardProjects}`}
           >
             <FileText size={28} className={styles.iconProjects} />
-            <h2 className={styles.cardTitle}>Projetos</h2>
-            <p className={styles.cardDescription}>Acesse seus projetos</p>
+            <h2 className={styles.cardTitle}>{t("profile.cards.projects.title")}</h2>
+            <p className={styles.cardDescription}>{t("profile.cards.projects.description")}</p>
           </Link>
 
           <Link
@@ -96,8 +98,8 @@ export default function Profile() {
             className={`${styles.modernCard} ${styles.modernCardSupport}`}
           >
             <HelpCircle size={28} className={styles.iconSupport} />
-            <h2 className={styles.cardTitle}>Suporte</h2>
-            <p className={styles.cardDescription}>Central de ajuda</p>
+            <h2 className={styles.cardTitle}>{t("profile.cards.support.title")}</h2>
+            <p className={styles.cardDescription}>{t("profile.cards.support.description")}</p>
           </Link>
         </div>
       </section>

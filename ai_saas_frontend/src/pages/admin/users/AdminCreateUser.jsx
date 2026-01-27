@@ -7,9 +7,11 @@ import CustomSelect from "../../../components/common/CustomSelect";
 import { adminRoutes, plansRoutes } from "../../../services/apiRoutes";
 import { apiFetch } from "../../../services/apiService";
 import styles from "../admin.module.css";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function AdminCreateUser() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     full_name: "",
     username: "",
@@ -35,7 +37,7 @@ export default function AdminCreateUser() {
         const data = await apiFetch(plansRoutes.list);
         setPlans(data || []);
       } catch (err) {
-        toast.error(err.message || "Erro ao carregar planos");
+        toast.error(err.message || t("admin.create_user.plans.load_error"));
       }
     };
     fetchPlans();
@@ -43,10 +45,10 @@ export default function AdminCreateUser() {
 
   // Validação em tempo real
   useEffect(() => {
-    setEmailError(form.email && !emailRegex.test(form.email) ? "E-mail inválido" : "");
+    setEmailError(form.email && !emailRegex.test(form.email) ? t("admin.create_user.validation.invalid_email") : "");
     setPasswordError(
       form.password && !passwordRegex.test(form.password)
-        ? "Senha deve ter 8+ caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial"
+        ? t("admin.create_user.validation.password_requirements")
         : ""
     );
   }, [form.email, form.password]);
@@ -84,10 +86,10 @@ export default function AdminCreateUser() {
         body: formData,
       });
 
-      toast.success("Usuário criado com sucesso!");
+      toast.success(t("admin.create_user.success"));
       navigate("/admin/users");
     } catch (err) {
-      toast.error(err.message || "Erro ao criar usuário");
+      toast.error(err.message || t("admin.create_user.error"));
     } finally {
       setLoading(false);
     }
@@ -104,15 +106,15 @@ export default function AdminCreateUser() {
         </button>
         <nav className="flex items-center text-sm space-x-1">
           <Link to="/admin" className="text-gray-700 hover:text-black">
-            Painel Administrativo
+            {t("admin.title")}
           </Link>
           <span>/</span>
-          <span className="text-gray-500">Gerenciar Usuários</span>
+          <span className="text-gray-500">{t("admin.users.title")}</span>
         </nav>
       </div>
 
       <section className="bg-white rounded-xl shadow-md p-6 max-w-lg mx-auto">
-        <h1 className="text-xl font-semibold mb-6">Criar Usuário</h1>
+        <h1 className="text-xl font-semibold mb-6">{t("admin.create_user.title")}</h1>
         <form onSubmit={handleSubmit}>
           {/* Nome */}
           <div className="relative mb-4">
@@ -122,7 +124,7 @@ export default function AdminCreateUser() {
             <input
               type="text"
               name="full_name"
-              placeholder="Nome completo"
+              placeholder={t("admin.create_user.full_name.placeholder")}
               value={form.full_name}
               onChange={handleChange}
               className="w-full h-11 pl-10 pr-10 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -138,7 +140,7 @@ export default function AdminCreateUser() {
             <input
               type="text"
               name="username"
-              placeholder="Username"
+              placeholder={t("admin.create_user.username.placeholder")}
               value={form.username}
               onChange={handleChange}
               className="w-full h-11 pl-10 pr-10 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -155,7 +157,7 @@ export default function AdminCreateUser() {
               <input
                 type="email"
                 name="email"
-                placeholder="Email"
+                placeholder={t("admin.create_user.email.placeholder")}
                 value={form.email}
                 onChange={handleChange}
                 className="w-full h-11 pl-10 pr-10 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -174,7 +176,7 @@ export default function AdminCreateUser() {
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
-                placeholder="Senha"
+                placeholder={t("admin.create_user.password.placeholder")}
                 value={form.password}
                 onChange={handleChange}
                 className={`w-full h-11 pl-10 pr-10 rounded-lg border text-black text-sm shadow-sm focus:outline-none focus:shadow-md ${
@@ -187,7 +189,7 @@ export default function AdminCreateUser() {
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
                 tabIndex={-1}
-                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                aria-label={showPassword ? t("admin.create_user.password.hide") : t("admin.create_user.password.show")}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -204,7 +206,7 @@ export default function AdminCreateUser() {
               <input
                 type={showConfirm ? "text" : "password"}
                 name="confirmPassword"
-                placeholder="Confirmar senha"
+                placeholder={t("admin.create_user.confirm_password.placeholder")}
                 value={form.confirmPassword}
                 onChange={handleChange}
                 className="w-full h-11 pl-10 pr-10 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -215,14 +217,14 @@ export default function AdminCreateUser() {
                 onClick={() => setShowConfirm((v) => !v)}
                 className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
                 tabIndex={-1}
-                aria-label={showConfirm ? "Ocultar senha" : "Mostrar senha"}
+                aria-label={showConfirm ? t("admin.create_user.password.hide") : t("admin.create_user.password.show")}
               >
                 {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
             <p className="h-5 ml-10 text-xs text-red-500 mt-1">
               {(form.password && form.confirmPassword && form.password !== form.confirmPassword)
-                ? "As senhas não coincidem"
+                ? t("admin.create_user.validation.password_mismatch")
                 : "\u00A0"}
             </p>
           </div>
@@ -238,7 +240,7 @@ export default function AdminCreateUser() {
               options={plans}
               getOptionLabel={(p) => p.name}
               getOptionValue={(p) => p.id}
-              placeholder="Selecione um plano"
+              placeholder={t("admin.create_user.plan.placeholder")}
               className="pl-10 text-sm"
             />
           </div>
@@ -248,7 +250,7 @@ export default function AdminCreateUser() {
             disabled={!isFormValid || loading}
             className="mt-4 w-full py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            {loading ? "Cadastrando..." : "Cadastrar Usuário"}
+            {loading ? t("admin.create_user.loading") : t("admin.create_user.submit")}
           </button>
         </form>
       </section>

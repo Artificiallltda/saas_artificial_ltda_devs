@@ -13,8 +13,10 @@ import { toast } from "react-toastify";
 import useSelectionMode from "../hooks/useSelectionMode";
 import SelectionToggleButton from "../components/SelectionToggleButton";
 import SelectionToolbar from "../components/SelectionToolbar";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function GeneratedContentsList() {
+  const { t } = useLanguage();
   const { loading, allContents, setAllContents, handleDeleteContent } = useContentsFetch();
   const {
     filteredContents,
@@ -38,7 +40,7 @@ export default function GeneratedContentsList() {
 
   async function handleDeleteSelected() {
     if (selectedItems.length === 0) return;
-    if (!confirm(`Excluir ${selectedItems.length} conteúdo(s) selecionado(s)?`)) return;
+    if (!confirm(t("contents.delete_selected.confirm", { count: selectedItems.length }))) return;
 
     const ids = selectedItems.map((c) => c.id);
     try {
@@ -48,7 +50,7 @@ export default function GeneratedContentsList() {
         headers: { "Content-Type": "application/json" }
       });
 
-      toast.success(`${selectedItems.length} conteúdo(s) excluído(s)!`);
+      toast.success(t("contents.delete_selected.success", { count: selectedItems.length }));
       setAllContents((prev) => prev.filter((c) => !ids.includes(c.id)));
       clearSelection();
     } catch (err) {
@@ -60,8 +62,8 @@ export default function GeneratedContentsList() {
     <Layout>
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-bold">Meus Conteúdos Gerados</h1>
-          <p className="text-gray-600 mb-6">Aqui estão todos os conteúdos que você gerou com IA</p>
+          <h1 className="text-xl font-bold">{t("contents.title")}</h1>
+          <p className="text-gray-600 mb-6">{t("contents.subtitle")}</p>
         </div>
       </div>
 
@@ -76,7 +78,7 @@ export default function GeneratedContentsList() {
                 : "text-gray-600 hover:text-blue-500"
             }`}
           >
-            {tab === "text" ? "Textos" : tab === "image" ? "Imagens" : "Vídeos"}
+            {t(`contents.tabs.${tab}`)}
           </button>
         ))}
       </div>
@@ -84,7 +86,7 @@ export default function GeneratedContentsList() {
       <div className="flex items-center justify-between mb-4">
         <input
           type="search"
-          placeholder="Buscar conteúdos..."
+          placeholder={t("contents.search.placeholder")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full max-w-md pl-3 py-2 bg-white rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -101,9 +103,9 @@ export default function GeneratedContentsList() {
       </div>
 
       {loading ? (
-        <p>Carregando...</p>
+        <p>{t("common.loading")}</p>
       ) : filteredContents.length === 0 ? (
-        <p className="text-gray-500">Nenhum conteúdo encontrado.</p>
+        <p className="text-gray-500">{t("contents.empty")}</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {filteredContents.map((c) => (
@@ -129,7 +131,7 @@ export default function GeneratedContentsList() {
 
       <SelectionToolbar
         count={selectedItems.length}
-        confirmLabel="Excluir selecionados"
+        confirmLabel={t("contents.delete_selected.cta")}
         onConfirm={handleDeleteSelected}
         confirmColor="red"
         icon={<Trash2 className="w-4 h-4" />}

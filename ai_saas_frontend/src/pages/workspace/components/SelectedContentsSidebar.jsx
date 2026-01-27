@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { FileText, X } from "lucide-react";
 import { apiFetch } from "../../../services/apiService";
 import { generatedContentRoutes } from "../../../services/apiRoutes";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function SelectedContentsSidebar({ selectedContents, onRemove }) {
+  const { t } = useLanguage();
   const [imageUrls, setImageUrls] = useState({});
 
   useEffect(() => {
@@ -34,11 +36,11 @@ export default function SelectedContentsSidebar({ selectedContents, onRemove }) 
 
   return (
     <aside className="relative w-72 p-4 bg-white rounded-lg shadow overflow-y-auto pb-20 h-[60vh]">
-      <h2 className="font-semibold">Conteúdos vinculados</h2>
+      <h2 className="font-semibold">{t("projects.modify_content.linked_contents")}</h2>
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {selectedContents.length === 0 ? (
           <p className="text-sm text-gray-500 text-center">
-            Nenhum conteúdo selecionado.
+            {t("projects.modify_content.none_selected")}
           </p>
         ) : (
           selectedContents.map((c) => (
@@ -51,12 +53,12 @@ export default function SelectedContentsSidebar({ selectedContents, onRemove }) 
                 imageUrls[c.id] ? (
                   <img
                     src={imageUrls[c.id]}
-                    alt={c.prompt || "Imagem gerada"}
+                    alt={c.prompt || t("contents.preview.image_alt")}
                     className="w-12 h-12 object-cover rounded"
                   />
                 ) : (
                   <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
-                    Carregando...
+                    {t("projects.modify_content.loading")}
                   </div>
                 )
               ) : (
@@ -68,7 +70,7 @@ export default function SelectedContentsSidebar({ selectedContents, onRemove }) 
               {/* Infos */}
               <div className="flex-1">
                 <p className="text-sm text-gray-700 line-clamp-1">
-                  {c.prompt || "Sem título"}
+                  {c.prompt || t("projects.modify_content.no_title")}
                 </p>
                 <span className="text-xs text-gray-400">{c.model_used}</span>
               </div>

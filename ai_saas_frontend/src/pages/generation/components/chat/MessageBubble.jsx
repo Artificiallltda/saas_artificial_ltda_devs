@@ -3,8 +3,10 @@ import TypingIndicator from "./TypingIndicator";
 import MessageContent from "./MessageContent";
 import { chatRoutes } from "../../../../services/apiRoutes";
 import { Download } from "lucide-react";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 function MessageBubble({ msg }) {
+  const { t } = useLanguage();
   const isUser = msg.role === "user";
   const { content, attachments } = msg;
 
@@ -29,7 +31,7 @@ function MessageBubble({ msg }) {
         a.click();
         URL.revokeObjectURL(a.href);
       })
-      .catch(() => alert("Falha ao baixar a imagem"));
+      .catch(() => alert(t("generation.text.message.download_image_error")));
   };
 
   return (
@@ -86,7 +88,7 @@ function MessageBubble({ msg }) {
                       rel="noopener noreferrer"
                       className="text-white underline break-all px-2 py-1"
                     >
-                      {att.name || "Arquivo"}
+                      {att.name || t("generation.text.message.file")}
                     </a>
                   );
                 }
@@ -95,7 +97,7 @@ function MessageBubble({ msg }) {
                   <div className="relative" key={i}>
                     <img
                       src={attUrl}
-                      alt={att.name || "imagem"}
+                      alt={att.name || t("generation.text.message.image")}
                       className={
                         attachments.length === 1
                           ? "rounded-md object-contain max-w-[400px] max-h-[250px]"
@@ -106,7 +108,7 @@ function MessageBubble({ msg }) {
                       <button
                         onClick={() => handleDownload(attUrl)}
                         className="absolute top-2 right-2 bg-gray-800 text-white p-1 rounded-lg hover:bg-gray-700 transition cursor-pointer"
-                        title="Baixar imagem"
+                        title={t("generation.text.message.download_image")}
                       >
                         <Download className="w-4 h-4" />
                       </button>

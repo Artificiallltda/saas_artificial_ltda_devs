@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, Mail } from "lucide-react";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function SecurityModal({
   isOpen,
@@ -9,6 +10,7 @@ export default function SecurityModal({
   loading = false,
   errorMessage = ""
 }) {
+  const { t } = useLanguage();
   const [securityCode, setSecurityCode] = useState("");
   const [resendCooldown, setResendCooldown] = useState(120);
   const [canResend, setCanResend] = useState(false);
@@ -57,10 +59,10 @@ export default function SecurityModal({
         </button>
 
         <h2 className="text-lg font-semibold text-gray-900">
-          Verificação de Segurança
+          {t("settings.security_modal.title")}
         </h2>
         <p className="text-sm text-gray-600 mb-4">
-          Enviamos um código para seu e-mail. Digite para continuar.
+          {t("settings.security_modal.description")}
         </p>
 
         <div className="flex justify-between items-center mb-3">
@@ -68,7 +70,7 @@ export default function SecurityModal({
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Código de segurança"
+              placeholder={t("settings.security_modal.code.placeholder")}
               value={securityCode}
               onChange={(e) => setSecurityCode(e.target.value)}
               className="w-full pl-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -80,7 +82,7 @@ export default function SecurityModal({
             disabled={loading}
             className="bg-black text-white py-2 px-4 rounded-md text-sm hover:opacity-90 transition disabled:opacity-50"
           >
-            {loading ? "Verificando..." : "Verificar"}
+            {loading ? t("settings.security_modal.verify.loading") : t("settings.security_modal.verify.submit")}
           </button>
         </div>
 
@@ -93,7 +95,9 @@ export default function SecurityModal({
           disabled={!canResend || loading}
           className="w-full mt-4 text-sm text-blue-600 hover:underline disabled:opacity-50"
         >
-          {canResend ? "Reenviar código" : `Reenviar em ${resendCooldown}s`}
+          {canResend
+            ? t("settings.security_modal.resend")
+            : t("settings.security_modal.resend_in", { seconds: resendCooldown })}
         </button>
       </div>
     </div>

@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { Plus, Search, File, FolderMinus, Folder, MessageSquare } from "lucide-react";
 import ChatItem from "./ChatItem";
 import useChatSearch from "../../hooks/useChatSearch";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 export default function Sidebar({ chats, chatId, loadChat, createNewChat, updateChatList, setImagesOpen }) {
+  const { t, language } = useLanguage();
   const [showArchived, setShowArchived] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef(null);
@@ -46,7 +48,7 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
             className="w-full flex flex-col items-center py-3 rounded-lg bg-gray-50 text-gray-900 hover:bg-gray-100 transition-colors"
           >
             <File className="w-5 h-5 mb-1" />
-            <span className="text-sm font-medium">Gerações</span>
+            <span className="text-sm font-medium">{t("generation.text.sidebar.generations")}</span>
           </button>
 
           {/* Novo Chat */}
@@ -58,7 +60,7 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
             className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[var(--color-primary)] text-white hover:brightness-105 transition-colors mx-0"
           >
             <Plus className="w-4 h-4" />
-            <span className="font-medium text-sm">Novo Chat</span>
+            <span className="font-medium text-sm">{t("generation.text.sidebar.new_chat")}</span>
           </button>
         </div>
 
@@ -72,14 +74,14 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
               handleChange(e);
               setSearchOpen(true);
             }}
-            placeholder="Buscar em chats..."
+            placeholder={t("generation.text.sidebar.search_placeholder")}
             className="w-full pl-9 px-5 py-2 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-400 overflow-y-auto shadow-sm focus:outline-none focus:shadow-md"
           />
 
           {searchOpen && (
             <div className="absolute mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 animate-fadeIn origin-top">
               {loading ? (
-                <p className="p-3 text-sm text-gray-500">Buscando...</p>
+                <p className="p-3 text-sm text-gray-500">{t("generation.text.sidebar.searching")}</p>
               ) : results.length > 0 ? (
                 <ul className="max-h-80 overflow-y-auto divide-y divide-gray-200">
                   {results.map((chat) => (
@@ -96,7 +98,7 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
                         )}
                         <span className="flex-1 text-sm truncate">{chat.title}</span>
                         <span className="text-xs text-gray-400">
-                          {new Date(chat.created_at).toLocaleDateString("pt-BR")}
+                          {new Date(chat.created_at).toLocaleDateString(language)}
                         </span>
                       </div>
                       {chat.snippet && (
@@ -109,7 +111,7 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
                   ))}
                 </ul>
               ) : (
-                <p className="p-3 text-sm text-gray-500">Nenhum resultado</p>
+                <p className="p-3 text-sm text-gray-500">{t("generation.text.sidebar.no_results")}</p>
               )}
             </div>
           )}
@@ -117,9 +119,9 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
       </div>
 
       {/* Lista de Chats Ativos */}
-      <h2 className="font-semibold text-gray-700 mb-2 text-sm px-4">Chats</h2>
+      <h2 className="font-semibold text-gray-700 mb-2 text-sm px-4">{t("generation.text.sidebar.chats")}</h2>
       <div className="flex-1 overflow-y-auto pr-1">
-        {active.length === 0 && <p className="text-sm text-gray-400 px-3">Nenhum chat</p>}
+        {active.length === 0 && <p className="text-sm text-gray-400 px-3">{t("generation.text.sidebar.no_chats")}</p>}
         {active.map((c) => (
           <ChatItem
             key={c.id}
@@ -141,7 +143,9 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
               onClick={() => setShowArchived((prev) => !prev)}
             >
               <FolderMinus className="w-4 h-4" />
-              {showArchived ? "Ocultar Arquivados" : "Mostrar Arquivados"}
+              {showArchived
+                ? t("generation.text.sidebar.hide_archived")
+                : t("generation.text.sidebar.show_archived")}
             </button>
 
             {showArchived && (

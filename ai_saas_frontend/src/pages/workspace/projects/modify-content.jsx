@@ -17,11 +17,13 @@ import ContentDetailsModalWrapper from "../../workspace/components/ContentDetail
 import useSelectionMode from "../hooks/useSelectionMode";
 import SelectionToggleButton from "../components/SelectionToggleButton";
 import SelectionToolbar from "../components/SelectionToolbar";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function ModifyContent() {
   const { id: projectId } = useParams();
   const navigate = useNavigate();
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  const { t } = useLanguage();
 
   const { loading: loadingContents, allContents } = useContentsFetch();
   const {
@@ -60,7 +62,7 @@ export default function ModifyContent() {
     );
     setSelectedContents((prev) => [...prev, ...onlyNew]);
     clearSelection();
-    toast.success(`${onlyNew.length} conteúdo(s) adicionado(s) à seleção`);
+    toast.success(t("projects.modify_content.selection_added", { count: onlyNew.length }));
   }
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export default function ModifyContent() {
         const resProject = await fetch(projectRoutes.get(projectId), {
           credentials: "include"
         });
-        if (!resProject.ok) throw new Error("Erro ao buscar projeto");
+        if (!resProject.ok) throw new Error("projects.edit.load_error");
 
         const projectData = await resProject.json();
         const projectContentIds = projectData.contents.map((c) =>
@@ -84,7 +86,8 @@ export default function ModifyContent() {
         setSelectedContents(projectContents);
         setOriginalContents(projectContents);
       } catch (err) {
-        toast.error(err.message);
+        const msg = err?.message || "projects.edit.load_error";
+        toast.error(msg.startsWith("projects.") ? t(msg) : msg);
       } finally {
         setLoadingProject(false);
       }
@@ -125,7 +128,7 @@ export default function ModifyContent() {
         headers: { "Content-Type": "application/json" }
       });
 
-      toast.success("Alterações salvas!");
+      toast.success(t("projects.modify_content.save_success"));
       setOriginalContents([...selectedContents]);
     } catch (err) {
       toast.error(err.message);
@@ -137,7 +140,7 @@ export default function ModifyContent() {
   if (loadingContents || loadingProject) {
     return (
       <Layout>
-        <p className="p-4 text-sm">Carregando conteúdos...</p>
+        <p className="p-4 text-sm">{t("projects.modify_content.loading_contents")}</p>
       </Layout>
     );
   }
@@ -145,7 +148,7 @@ export default function ModifyContent() {
   if (!project) {
     return (
       <Layout>
-        <p className="p-4 text-red-500">Projeto não encontrado.</p>
+        <p className="p-4 text-red-500">{t("projects.modify_content.project_not_found")}</p>
       </Layout>
     );
   }
@@ -157,19 +160,19 @@ export default function ModifyContent() {
           <button
             onClick={() => navigate(-1)}
             className="flex items-center text-gray-700 hover:text-black"
-            aria-label="Voltar"
+            aria-label={t("projects.modify_content.back")}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
 
           <nav className="flex items-center text-sm space-x-1 ml-4">
             <Link to="/workspace/projects" className="text-gray-700 hover:text-black">
-              Projetos
+              {t("projects.title")}
             </Link>
             <span>/</span>
             <span className="text-gray-500">{project.name}</span>
             <span>/</span>
-            <span className="text-gray-500">Modificar Conteúdo</span>
+            <span className="text-gray-500">{t("projects.modify_content.title")}</span>
           </nav>
         </div>
       </div>
@@ -187,7 +190,7 @@ export default function ModifyContent() {
                     : "text-gray-600 hover:text-blue-500"
                 }`}
               >
-                {label}
+                {t(`contents.tabs.${value}`)}
               </button>
             ))}
           </div>
@@ -197,7 +200,7 @@ export default function ModifyContent() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="search"
-                placeholder="Buscar conteúdos..."
+                placeholder={t("projects.modify_content.search_placeholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 py-2 bg-white rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none"
@@ -230,7 +233,7 @@ export default function ModifyContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {filteredContents.length === 0 ? (
-              <p className="text-gray-500 text-sm">Nenhum conteúdo encontrado.</p>
+              <p className="text-gray-500 text-sm">{t("projects.modify_content.empty")}</p>
             ) : (
               filteredContents
                 .filter((c) => !selectedContents.some((sel) => sel.id === c.id))
@@ -266,7 +269,7 @@ export default function ModifyContent() {
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
-              {saving ? "Salvando..." : "Salvar"}
+              {saving ? t("projects.modify_content.saving") : t("projects.modify_content.save")}
             </button>
           </div>
         )}
@@ -274,7 +277,7 @@ export default function ModifyContent() {
 
       <SelectionToolbar
         count={selectedItems.length}
-        confirmLabel="Adicionar à seleção"
+        confirmLabel={t("projects.modify_content.add_to_selection")}
         onConfirm={handleConfirmSelection}
         confirmColor="blue"
       />

@@ -6,14 +6,18 @@ import { aiRoutes } from '../../../services/apiRoutes';
 import { apiFetch } from '../../../services/apiService';
 import { TEXT_MODELS } from '../../../utils/constants';
 import Sidebar from "../components/chat/Sidebar";
+import DeepResearchWarning from "../components/chat/DeepResearchWarning";
 import useChats from "../hooks/useChats";
+import { useLanguage } from '../../../context/LanguageContext';
 
 function TextGeneration() {
+  const { t } = useLanguage();
   const { chats, chatId, messages, setMessages, chatVisible, chatIdSetter, loadChat, createNewChat, updateChatList } = useChats();
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("gpt-4o");
   const [temperature, setTemperature] = useState(0.7);
   const [loading, setLoading] = useState(false);
+  const [deepResearchLoading, setDeepResearchLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -25,7 +29,7 @@ function TextGeneration() {
       setMessages([{
         id: 1,
         role: 'assistant',
-        content: 'Olá! Sou o assistente de geração de texto. Como posso ajudar você hoje?'
+        contentKey: 'generation.text.assistant.greeting'
       }]);
     }
   }, []);
@@ -81,7 +85,7 @@ function TextGeneration() {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      toast.warning("Digite um prompt antes de gerar!");
+      toast.warning(t("generation.common.prompt_required"));
       return;
     }
 
@@ -93,6 +97,12 @@ function TextGeneration() {
     
     setMessages(prev => [...prev, userMessage]);
     setLoading(true);
+
+    // Verificar se é o modelo Deep Research
+    const isDeepResearch = model === "sonar-deep-research";
+    if (isDeepResearch) {
+      setDeepResearchLoading(true);
+    }
 
     // Chamada real ao backend (substitui o bloco de simulação)
     try {
@@ -114,7 +124,7 @@ function TextGeneration() {
       updateChatList?.(
         {
           id: aiData.chat_id,
-          title: aiData.chat_title || "Novo Chat",
+          title: aiData.chat_title || t("generation.text.sidebar.new_chat"),
           archived: false,
           created_at: aiData.created_at || new Date().toISOString(),
           snippet: aiData.messages?.slice(-1)[0]?.content || "",
@@ -130,12 +140,13 @@ function TextGeneration() {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-      toast.success("Texto gerado com sucesso!");
+      toast.success(t("generation.text.success_toast"));
       setPrompt("");
     } catch (err) {
-      toast.error(err.message || "Erro ao gerar resposta");
+      toast.error(err.message || t("generation.text.error_toast"));
     } finally {
       setLoading(false);
+      setDeepResearchLoading(false);
     }
   };
 
@@ -177,8 +188,8 @@ function TextGeneration() {
               {/* Header com Botão de Toggle */}
               <div className="border-b border-gray-200 px-6 py-4 flex-shrink-0 flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-semibold text-gray-900">Geração de Texto</h1>
-                  <p className="text-sm text-gray-500">Crie textos incríveis usando IA generativa</p>
+                  <h1 className="text-2xl font-semibold text-gray-900">{t("generation.text.title")}</h1>
+                  <p className="text-sm text-gray-500">{t("generation.text.subtitle")}</p>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -199,7 +210,11 @@ function TextGeneration() {
                           : 'bg-gray-100 text-gray-800 rounded-bl-none'
                       }`}
                     >
-                      {message.content && <p className="whitespace-pre-wrap">{message.content}</p>}
+                      {(message.contentKey || message.content) && (
+                        <p className="whitespace-pre-wrap">
+                          {message.contentKey ? t(message.contentKey) : message.content}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -208,6 +223,11 @@ function TextGeneration() {
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                  </div>
+                )}
+                {deepResearchLoading && (
+                  <div className="flex justify-start">
+                    <DeepResearchWarning />
                   </div>
                 )}
               </div>
@@ -222,14 +242,14 @@ function TextGeneration() {
                       className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                       <Settings className="w-4 h-4" />
-                      Configurações
+                      {t("generation.common.settings")}
                       <ChevronDown className={`w-4 h-4 transition-transform ${showSettings ? 'transform rotate-180' : ''}`} />
                     </button>
                     
                     {showSettings && (
                       <div className="absolute right-0 bottom-full mb-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 p-3 space-y-3">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{t("generation.common.fields.model")}</label>
                           <select
                             value={model}
                             onChange={(e) => setModel(e.target.value)}
@@ -244,7 +264,7 @@ function TextGeneration() {
                         </div>
                         
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Temperatura</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{t("generation.text.settings.temperature")}</label>
                           <input
                             type="range"
                             min="0"
@@ -255,9 +275,9 @@ function TextGeneration() {
                             className="w-full"
                           />
                           <div className="flex justify-between text-xs text-gray-500">
-                            <span>0 (preciso)</span>
+                            <span>{t("generation.text.settings.temperature_precise")}</span>
                             <span>{temperature}</span>
-                            <span>1 (criativo)</span>
+                            <span>{t("generation.text.settings.temperature_creative")}</span>
                           </div>
                         </div>
                       </div>
@@ -267,7 +287,7 @@ function TextGeneration() {
                   <div className="flex items-end gap-2">
                     <div className="flex-1 relative">
                       <textarea
-                        placeholder="Descreva o texto que você gostaria de gerar..."
+                        placeholder={t("generation.text.prompt_placeholder")}
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                         onKeyDown={(e) => {

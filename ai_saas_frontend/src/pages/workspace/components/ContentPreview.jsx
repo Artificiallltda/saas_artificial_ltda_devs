@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../../../services/apiService";
 import { generatedContentRoutes } from "../../../services/apiRoutes";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function ContentPreview({ content, isModal = false, onMediaReady }) {
+  const { t } = useLanguage();
   const baseClasses = "object-contain rounded";
   const [mediaUrl, setMediaUrl] = useState(null);
 
@@ -75,7 +77,7 @@ export default function ContentPreview({ content, isModal = false, onMediaReady 
         {mediaUrl ? (
           <img
             src={mediaUrl}
-            alt={content.prompt || "Imagem gerada"}
+            alt={content.prompt || t("contents.preview.image_alt")}
             className={
               isModal
                 ? `${baseClasses} max-w-full max-h-[400px]`
@@ -84,7 +86,7 @@ export default function ContentPreview({ content, isModal = false, onMediaReady 
           />
         ) : (
           <p className="text-gray-500 text-xs text-center py-8">
-            Carregando imagem...
+            {t("contents.preview.loading_image")}
           </p>
         )}
       </div>
@@ -122,7 +124,7 @@ export default function ContentPreview({ content, isModal = false, onMediaReady 
           )
         ) : (
           <p className="text-gray-500 text-xs text-center py-8">
-            Carregando vídeo...
+            {t("contents.preview.loading_video")}
           </p>
         )}
       </div>
