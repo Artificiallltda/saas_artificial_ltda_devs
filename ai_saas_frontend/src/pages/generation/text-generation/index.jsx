@@ -7,12 +7,14 @@ import { apiFetch } from '../../../services/apiService';
 import { TEXT_MODELS } from '../../../utils/constants';
 import Sidebar from "../components/chat/Sidebar";
 import DeepResearchWarning from "../components/chat/DeepResearchWarning";
+import MessageSkeleton from "../../../components/ui/MessageSkeleton";
+import EmptyState from "../../../components/ui/EmptyState";
 import useChats from "../hooks/useChats";
 import { useLanguage } from '../../../context/LanguageContext';
 
 function TextGeneration() {
   const { t } = useLanguage();
-  const { chats, chatId, messages, setMessages, chatVisible, chatIdSetter, loadChat, createNewChat, updateChatList } = useChats();
+  const { chats, chatId, messages, setMessages, chatVisible, chatIdSetter, loadChat, createNewChat, updateChatList, loadingChats, loadingMessages, chatsError, messagesError } = useChats();
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("gpt-4o");
   const [temperature, setTemperature] = useState(0.7);
@@ -165,16 +167,12 @@ function TextGeneration() {
           <Sidebar
             chats={chats}
             chatId={chatId}
-            loadChat={(id) => {
-              loadChat(id);
-              setMobileSidebarOpen(false);
-            }}
-            createNewChat={() => {
-              createNewChat();
-              setMobileSidebarOpen(false);
-            }}
+            loadChat={loadChat}
+            createNewChat={createNewChat}
             updateChatList={updateChatList}
-            setImagesOpen={() => {}} // Não faz nada na geração de texto
+            setImagesOpen={() => {}}
+            loadingChats={loadingChats}
+            chatsError={chatsError}
             isCollapsed={sidebarCollapsed}
           />
         </div>
@@ -198,26 +196,52 @@ function TextGeneration() {
 
               {/* Chat Area */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
+                {loadingMessages ? (
+                  <MessageSkeleton count={3} />
+                ) : messagesError ? (
+                  <EmptyState 
+                    type="error-messages" 
+                    onRetry={() => chatId && loadChat(chatId)}
+                    className="my-8"
+                    translations={{
+                      error_messages_title: t("empty_states.error_messages.title"),
+                      error_messages_description: t("empty_states.error_messages.description"),
+                      error_messages_action: t("empty_states.error_messages.action")
+                    }}
+                  />
+                ) : messages.length === 0 ? (
+                  <EmptyState 
+                    type="empty-chat" 
+                    onRetry={() => document.querySelector('textarea')?.focus()}
+                    className="my-8"
+                    translations={{
+                      empty_chat_title: t("empty_states.empty_chat.title"),
+                      empty_chat_description: t("empty_states.empty_chat.description"),
+                      empty_chat_action: t("empty_states.empty_chat.action")
+                    }}
+                  />
+                ) : (
+                  messages.map((message) => (
                     <div
-                      className={`max-w-3xl rounded-2xl px-4 py-3 ${
-                        message.role === 'user'
-                          ? 'bg-blue-600 text-white rounded-br-none'
-                          : 'bg-gray-100 text-gray-800 rounded-bl-none'
-                      }`}
+                      key={message.id}
+                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      {(message.contentKey || message.content) && (
-                        <p className="whitespace-pre-wrap">
-                          {message.contentKey ? t(message.contentKey) : message.content}
-                        </p>
-                      )}
+                      <div
+                        className={`max-w-3xl rounded-2xl px-4 py-3 ${
+                          message.role === 'user'
+                            ? 'bg-blue-600 text-white rounded-br-none'
+                            : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                        }`}
+                      >
+                        {(message.contentKey || message.content) && (
+                          <p className="whitespace-pre-wrap">
+                            {message.contentKey ? t(message.contentKey) : message.content}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
                 {loading && (
                   <div className="flex items-center gap-2 p-3 text-gray-500">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />

@@ -7,16 +7,25 @@ export default function useChats() {
   const [chatId, setChatId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [chatVisible, setChatVisible] = useState(true);
+  const [loadingChats, setLoadingChats] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [chatsError, setChatsError] = useState(null);
+  const [messagesError, setMessagesError] = useState(null);
 
   useEffect(() => {
     const fetchChats = async () => {
       try {
+        setLoadingChats(true);
+        setChatsError(null);
         const res = await fetch(chatRoutes.list, { credentials: "include" });
         const data = await res.json();
         setChats(data || []);
       } catch (err) {
         console.error("Erro ao carregar chats:", err);
+        setChatsError(err);
         toast.error("Erro ao carregar chats");
+      } finally {
+        setLoadingChats(false);
       }
     };
     fetchChats();
@@ -24,6 +33,8 @@ export default function useChats() {
 
   const loadChat = async (id) => {
     try {
+      setLoadingMessages(true);
+      setMessagesError(null);
       setChatVisible(false);
       setTimeout(async () => {
         setChatId(id);
@@ -35,7 +46,10 @@ export default function useChats() {
       }, 200);
     } catch (err) {
       console.error("Erro ao carregar mensagens:", err);
+      setMessagesError(err);
       toast.error("Erro ao carregar mensagens do chat");
+    } finally {
+      setLoadingMessages(false);
     }
   };
 
@@ -95,5 +109,9 @@ export default function useChats() {
     loadChat,
     createNewChat,
     updateChatList,
+    loadingChats,
+    loadingMessages,
+    chatsError,
+    messagesError,
   };
 }

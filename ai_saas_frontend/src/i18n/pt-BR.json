@@ -3,6 +3,32 @@
   "language.en": "EN",
   "language.switch_to_pt": "Mudar para português (PT-BR)",
   "language.switch_to_en": "Mudar para inglês (EN-US)",
+  "empty_states": {
+    "no_chats": {
+      "title": "Nenhum chat encontrado",
+      "description": "Você ainda não criou nenhuma conversa. Comece uma nova interação com a IA!",
+      "action": "Criar novo chat"
+    },
+    "empty_chat": {
+      "title": "Conversa vazia",
+      "description": "Comece digitando uma mensagem para iniciar o chat com a IA.",
+      "action": "Enviar primeira mensagem"
+    },
+    "error_chats": {
+      "title": "Erro ao carregar chats",
+      "description": "Não foi possível carregar sua lista de conversas. Verifique sua conexão e tente novamente.",
+      "action": "Tentar novamente"
+    },
+    "error_messages": {
+      "title": "Erro ao carregar mensagens",
+      "description": "Não foi possível carregar as mensagens deste chat. Verifique sua conexão e tente novamente.",
+      "action": "Tentar novamente"
+    },
+    "default": {
+      "title": "Nenhum conteúdo disponível",
+      "description": "Não há conteúdo para exibir no momento."
+    }
+  },
   "header.open_main_menu": "Abrir menu principal",
   "header.main_menu": "Menu principal",
   "header.open_chat_menu": "Abrir menu de chats",

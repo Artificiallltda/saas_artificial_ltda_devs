@@ -3,6 +3,32 @@
   "language.en": "EN",
   "language.switch_to_pt": "Switch to Portuguese (PT-BR)",
   "language.switch_to_en": "Switch to English (EN-US)",
+  "empty_states": {
+    "no_chats": {
+      "title": "No chats found",
+      "description": "You haven't created any conversations yet. Start a new interaction with the AI!",
+      "action": "Create new chat"
+    },
+    "empty_chat": {
+      "title": "Empty conversation",
+      "description": "Start by typing a message to begin chatting with the AI.",
+      "action": "Send first message"
+    },
+    "error_chats": {
+      "title": "Error loading chats",
+      "description": "Unable to load your conversation list. Check your connection and try again.",
+      "action": "Try again"
+    },
+    "error_messages": {
+      "title": "Error loading messages",
+      "description": "Unable to load messages from this chat. Check your connection and try again.",
+      "action": "Try again"
+    },
+    "default": {
+      "title": "No content available",
+      "description": "There is no content to display at the moment."
+    }
+  },
   "header.open_main_menu": "Open main menu",
   "header.main_menu": "Main menu",
   "header.open_chat_menu": "Open chat menu",

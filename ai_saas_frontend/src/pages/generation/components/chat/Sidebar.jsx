@@ -1,11 +1,28 @@
 import { useState, useRef, useEffect } from "react";
 import { Plus, Search, File, FolderMinus, Folder, MessageSquare } from "lucide-react";
 import ChatItem from "./ChatItem";
+import ChatSkeleton from "../../../../components/ui/ChatSkeleton";
+import EmptyState from "../../../../components/ui/EmptyState";
 import useChatSearch from "../../hooks/useChatSearch";
 import { useLanguage } from "../../../../context/LanguageContext";
 
-export default function Sidebar({ chats, chatId, loadChat, createNewChat, updateChatList, setImagesOpen }) {
+export default function Sidebar({ 
+  chats, 
+  chatId, 
+  loadChat, 
+  createNewChat, 
+  updateChatList, 
+  setImagesOpen,
+  loadingChats,
+  chatsError 
+}) {
   const { t, language } = useLanguage();
+  
+  // Debug para verificar o dicionário
+  console.log("Debug - Language:", language);
+  console.log("Debug - t('empty_states'):", t("empty_states"));
+  console.log("Debug - t('empty_states.no_chats'):", t("empty_states.no_chats"));
+  console.log("Debug - t('empty_states.no_chats.title'):", t("empty_states.no_chats.title"));
   const [showArchived, setShowArchived] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef(null);
@@ -121,19 +138,44 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
       {/* Lista de Chats Ativos */}
       <h2 className="font-semibold text-gray-700 mb-2 text-sm px-4">{t("generation.text.sidebar.chats")}</h2>
       <div className="flex-1 overflow-y-auto pr-1">
-        {active.length === 0 && <p className="text-sm text-gray-400 px-3">{t("generation.text.sidebar.no_chats")}</p>}
-        {active.map((c) => (
-          <ChatItem
-            key={c.id}
-            chat={c}
-            selected={chatId === c.id}
-            loadChat={() => {
-              loadChat(c.id);
-              setImagesOpen(false); // fechar as gerações
+        {loadingChats ? (
+          <ChatSkeleton count={5} />
+        ) : chatsError ? (
+          <EmptyState 
+            type="error-chats" 
+            onRetry={() => window.location.reload()}
+            className="px-3 py-4"
+            translations={{
+              error_chats_title: language === "pt-BR" ? "Erro ao carregar chats" : "Error loading chats",
+              error_chats_description: language === "pt-BR" ? "Não foi possível carregar sua lista de conversas. Verifique sua conexão e tente novamente." : "Unable to load your conversation list. Check your connection and try again.",
+              error_chats_action: language === "pt-BR" ? "Tentar novamente" : "Try again"
             }}
-            onUpdateList={updateChatList}
           />
-        ))}
+        ) : active.length === 0 ? (
+          <EmptyState 
+            type="no-chats" 
+            onRetry={createNewChat}
+            className="px-3 py-4"
+            translations={{
+              no_chats_title: language === "pt-BR" ? "Nenhum chat encontrado" : "No chats found",
+              no_chats_description: language === "pt-BR" ? "Você ainda não criou nenhuma conversa. Comece uma nova interação com a IA!" : "You haven't created any conversations yet. Start a new interaction with the AI!",
+              no_chats_action: language === "pt-BR" ? "Criar novo chat" : "Create new chat"
+            }}
+          />
+        ) : (
+          active.map((c) => (
+            <ChatItem
+              key={c.id}
+              chat={c}
+              selected={chatId === c.id}
+              loadChat={() => {
+                loadChat(c.id);
+                setImagesOpen(false); // fechar as gerações
+              }}
+              onUpdateList={updateChatList}
+            />
+          ))
+        )}
 
         {/* Chats Arquivados */}
         {archived.length > 0 && (
