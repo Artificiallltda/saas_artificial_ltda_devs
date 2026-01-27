@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 import NewProjectModal from "../../components/modals/NewProjectModal";
 import { apiFetch } from "../../services/apiService";
 import { projectRoutes } from "../../services/apiRoutes";
-import { EmptyState } from "../../components/EmptyState";
+import { EmptyState } from "../../components/EmptyStates";
 import { useLanguage } from "../../context/LanguageContext";
 
 export default function Home() {

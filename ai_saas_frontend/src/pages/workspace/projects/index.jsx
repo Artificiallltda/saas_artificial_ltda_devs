@@ -12,7 +12,7 @@ import FiltersPanel from "../components/FiltersPanel";
 import { formatDate, formatDateTime } from "../../../utils/dateUtils";
 import SortMenu from "../components/SortMenu";
 import { apiFetch } from "../../../services/apiService";
-import { EmptyState } from "../../../components/EmptyState";
+import { EmptyState } from "../../../components/EmptyStates";
 import { useLanguage } from "../../../context/LanguageContext";
 import { backendMessageKeyMap } from "../../../i18n";
 
