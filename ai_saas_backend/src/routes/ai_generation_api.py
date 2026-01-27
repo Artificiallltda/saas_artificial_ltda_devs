@@ -2,7 +2,8 @@ from flask import Blueprint, request, jsonify
 from extensions import jwt_required, db
 from models.chat import Chat, ChatMessage, ChatAttachment, SenderType
 from models.generated_content import GeneratedImageContent
-from models.user import User  # <--- corrigido, import do modelo User
+from models.user import User
+from models.monthly_usage import MonthlyUsage  # ✅ NOVO
 from flask_jwt_extended import get_jwt_identity
 import os, uuid, base64, requests, time
 from datetime import datetime
@@ -13,6 +14,7 @@ from google.genai import types
 from openai import OpenAI
 from io import BytesIO
 from PIL import Image
+import math  # ✅ NOVO
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("API_KEY")
@@ -40,6 +42,44 @@ ai_generation_api = Blueprint("ai_generation_api", __name__)
 GEMINI_MODELS = ("gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3-pro-preview")
 OPENROUTER_PREFIXES = ("deepseek/", "google/", "tngtech/", "qwen/", "z-ai/")
 OPENROUTER_SUFFIX = ":free"
+
+
+# =========================
+# ✅ COTA MENSAL (MENSAGENS)
+# =========================
+def _enforce_monthly_message_quota_or_403(user_id: str):
+    """
+    Bloqueia consumo quando a cota mensal do usuário acabou.
+    Retorna (user, usage, quota, used, error_response_tuple_or_None)
+    """
+    user = User.query.get(user_id)
+    if not user:
+        return None, None, 0, 0, (jsonify({"error": "Usuário inválido"}), 403)
+
+    quota = int(user.monthly_message_quota or 0)
+    usage = MonthlyUsage.get_or_create_for_current_month(user_id=user_id)
+    used = int(usage.used_messages or 0)
+
+    # Se quota <= 0, trate como bloqueado (se quiser "ilimitado", troque esta regra)
+    if quota <= 0 or used >= quota:
+        percent_used = 1.0
+        if quota > 0:
+            percent_used = min(used / quota, 1.0)
+
+        return user, usage, quota, used, (
+            jsonify({
+                "code": "QUOTA_EXCEEDED",
+                "message": "🚫 Você atingiu o limite da sua cota mensal.",
+                "monthKey": usage.month_key,
+                "quotaMessages": quota,
+                "usedMessages": used,
+                "percentUsed": percent_used
+            }),
+            403
+        )
+
+    return user, usage, quota, used, None
+
 
 def resolve_gemini_model(req_model: str) -> str:
     # mapeia temporariamente modelos sem quota para um que funciona
@@ -71,12 +111,10 @@ def resolve_perplexity_try_models(model: str) -> list[str]:
     elif model == "sonar-reasoning":
         chain += ["sonar"]
     elif model == "sonar-deep-research":
-        # deep-research pode exigir superfície/endpoint diferentes; fallback para sonar
         chain += ["sonar-reasoning", "sonar"]
     return chain
 
 def is_model_allowed_for_basic_plan(model: str) -> bool:
-    # Básico: gpt-4o, deepseek/deepseek-r1-0528:free, sonar, sonar-reasoning, claude-haiku-4-5 (inclui snapshots)
     if not model:
         return False
     m = model.strip().lower()
@@ -105,7 +143,7 @@ def supports_generate_image(model: str) -> bool:
 def to_data_url(path: str, mimetype: str) -> str:
     with open(path, "rb") as f:
         return f"data:{mimetype};base64,{base64.b64encode(f.read()).decode('utf-8')}"
-    
+
 def generate_system_message(model: str):
     print(f"[DEBUG] generate_system_message chamado com model={model}")
     if supports_generate_image(model):
@@ -223,7 +261,7 @@ def build_messages_for_anthropic(session_messages):
         if not text:
             continue
         msgs.append({
-            "role": role,  # "user" | "assistant"
+            "role": role,
             "content": [{"type": "text", "text": text}]
         })
     return msgs
@@ -263,6 +301,7 @@ def send_with_retry_gemini(chat, message, retries=5, delay=2):
                 raise
     raise Exception("Falha após várias tentativas Gemini")
 
+
 @ai_generation_api.route("/generate-text", methods=["POST"])
 @jwt_required()
 def generate_text():
@@ -276,13 +315,13 @@ def generate_text():
         PERPLEXITY_API_KEY = env_keys["PERPLEXITY_API_KEY"]
         print(f"[CFG] Anthropic key: {_mask_key(ANTHROPIC_API_KEY)}")
 
-        response = None  # evita NameError em fluxos sem resposta HTTP
+        response = None
         ct = request.content_type or ""
         files_to_save = []
         uploaded_images = []
 
         print("\n=== NOVA REQUISIÇÃO ===")
-        
+
         if ct.startswith("multipart/form-data"):
             user_input = request.form.get("input", "")
             model = request.form.get("model", "gpt-4o")
@@ -327,11 +366,15 @@ def generate_text():
 
         user_id = get_jwt_identity()
 
+        # ✅ COTA: checa ANTES de qualquer chamada externa ou salvar mensagens
+        user, usage_row, quota, used, quota_err = _enforce_monthly_message_quota_or_403(user_id)
+        if quota_err:
+            return quota_err
+
         # Restrição por plano: Básico só pode usar modelos permitidos
         try:
-            user = User.query.get(user_id)
             plan_name = (user.plan.name if user and user.plan else "").strip().lower()
-        except Exception as _e:
+        except Exception:
             plan_name = ""
         if plan_name in ("básico", "basico"):
             if not is_model_allowed_for_basic_plan(model):
@@ -412,15 +455,13 @@ def generate_text():
         session_messages = [{"role": m.role, "content": m.content, "attachments": getattr(m, "attachments", [])} for m in history]
         print(f"[INFO] Iniciando envio para IA (modelo {model})")
 
-        # Modelo efetivamente usado (pode mudar por fallback quando Gemini sem quota)
         used_model = model
-
         generated_text = ""
-        # Acumuladores de uso de tokens (preenchidos quando o provedor devolver)
         usage_prompt = None
         usage_completion = None
         usage_total = None
         max_tokens_used = None
+
         try:
             if is_gemini_model(model):
                 gemini_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -435,7 +476,6 @@ def generate_text():
                     gemini_chat = gemini_client.chats.create(model=gm)
                     used_model = gm
 
-                    # histórico
                     history = ChatMessage.query.filter_by(chat_id=chat.id).order_by(ChatMessage.created_at).all()
                     print(f"[INFO] Histórico carregado: {len(history)} mensagens")
 
@@ -461,7 +501,6 @@ def generate_text():
                     if user_input:
                         parts.append(user_input)
 
-                    # intenção de imagem
                     def should_generate_image(prompt: str) -> bool:
                         try:
                             analysis_prompt = (
@@ -484,7 +523,6 @@ def generate_text():
 
                     user_asked_image = should_generate_image(user_input)
 
-                    # envio com retry
                     response = send_with_retry_gemini(gemini_chat, parts)
 
                     generated_text_local = None
@@ -615,7 +653,6 @@ def generate_text():
                         if txt:
                             used_model = mid
                             generated_text = txt
-                            # usage (Anthropic usa input/output tokens)
                             u = (data or {}).get("usage") or {}
                             _in = u.get("input_tokens")
                             _out = u.get("output_tokens")
@@ -636,7 +673,6 @@ def generate_text():
                         else:
                             err_msg = getattr(response, "text", "")[:500]
                         print(f"[ERROR] Anthropic {status} ({mid}): {err_msg}")
-                        # Se não for o último, tenta próximo; no último, devolve erro amigável
                         if mid == try_models[-1]:
                             generated_text = f"[Erro Anthropic {status}: {err_msg}]"
 
@@ -650,7 +686,7 @@ def generate_text():
                         "Content-Type": "application/json"
                     }
                     body = {
-                        "model": mid,  # "sonar" | "sonar-reasoning" | "sonar-reasoning-pro" | "sonar-deep-research"
+                        "model": mid,
                         "messages": build_messages_for_openai(session_messages, mid),
                         "temperature": temperature,
                         "return_citations": True
@@ -672,7 +708,6 @@ def generate_text():
                             used_model = mid
                             break
                         else:
-                            # detecção de erro e fallback para próximo modelo
                             err_text = ""
                             try:
                                 err_json = response.json()
@@ -710,6 +745,7 @@ def generate_text():
                     except Exception:
                         print(f"[WARN] Resposta OpenAI não é JSON:\n{response.text[:1000]}")
                         generated_text = "[Erro ao gerar resposta da IA]"
+
                     if supports_generate_image(model):
                         try:
                             client = OpenAI(api_key=OPENAI_API_KEY)
@@ -738,7 +774,9 @@ def generate_text():
                                 generated_text += "\n⚠️ A imagem não pôde ser gerada porque os termos utilizados não passaram pelo sistema de segurança."
                             else:
                                 print(f"[WARN] Falha ao gerar imagem pelo GPT: {e}")
+
                     print(f"[INFO] Texto gerado: {generated_text[:200]}")
+
                 except Exception as oe:
                     print(f"[ERROR] Falha na chamada OpenAI: {oe}")
                     generated_text = "[Erro ao gerar resposta da IA]"
@@ -749,6 +787,7 @@ def generate_text():
             generated_text = "[Erro ao gerar resposta da IA]"
 
         # cria a mensagem da IA
+        ai_msg = None
         try:
             safe_text = generated_text if not uploaded_images else ""
             ai_msg = ChatMessage(
@@ -766,6 +805,12 @@ def generate_text():
             db.session.add(ai_msg)
             db.session.commit()
             print(f"[MSG AI] Chat {chat.id} - Mensagem gerada: {generated_text[:50]} (ID {ai_msg.id})")
+
+            # ✅ COTA: incrementa 1 mensagem após sucesso
+            try:
+                usage_row.increment_messages(1)
+            except Exception as inc_e:
+                print(f"[WARN] Falha ao incrementar MonthlyUsage: {inc_e}")
 
             # agora salva os anexos da IA (se houver)
             for img in uploaded_images:
@@ -806,7 +851,7 @@ def generate_text():
         except Exception as ae:
             db.session.rollback()
             print(f"[ERROR] Falha ao salvar mensagem AI: {ae}")
-        
+
         response_text = "" if uploaded_images else generated_text
         print(f"[Mensagem gerada] {generated_text}")
         if response is not None:
@@ -815,7 +860,7 @@ def generate_text():
         return jsonify({
             "chat_id": chat.id,
             "chat_title": chat.title,
-            "messages": [m.to_dict() for m in history] + [ai_msg.to_dict()] if 'ai_msg' in locals() else [m.to_dict() for m in history],
+            "messages": [m.to_dict() for m in history] + ([ai_msg.to_dict()] if ai_msg else []),
             "generated_text": response_text,
             "model_used": used_model,
             "temperature": None if uses_completion_tokens_for_openai(model) else temperature,
@@ -826,18 +871,20 @@ def generate_text():
         db.session.rollback()
         print(f"[EXCEPTION] {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
 # Mapeia proporção para tamanho da imagem baseado no modelo
 def map_size(model, ratio):
     size_map = {
         "1024x1024": "1024x1024",
-        "1536x1024": "1536x1024",  # landscape padrão
-        "1024x1536": "1024x1536",  # portrait padrão
+        "1536x1024": "1536x1024",
+        "1024x1536": "1024x1536",
     }
     if model in ["dall-e-2", "dall-e-3"]:
         size_map = {
             "1024x1024": "1024x1024",
-            "1536x1024": "1792x1024",  # landscape -> arredonda pro mais próximo válido
-            "1024x1536": "1024x1792",  # portrait -> arredonda pro mais próximo válido
+            "1536x1024": "1792x1024",
+            "1024x1536": "1024x1792",
         }
     return size_map.get(ratio, "1024x1024")
 
@@ -861,20 +908,25 @@ def generate_image():
     gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+
+    # ✅ COTA: aplica também na geração de imagem (conta como 1 “mensagem”)
+    user, usage_row, quota, used, quota_err = _enforce_monthly_message_quota_or_403(current_user_id)
+    if quota_err:
+        return quota_err
+
     if not user:
         return jsonify({"error": "Usuário inválido"}), 403
 
     data = request.get_json() or {}
     prompt = data.get("prompt")
-    model = data.get("model", "gpt-image-1")  # modelo enviado do frontend
+    model = data.get("model", "gpt-image-1")
     style = data.get("style", "auto")
-    ratio = data.get("ratio", "1024:1024")  # ex: "1:1", "16:9", "9:16"
+    ratio = data.get("ratio", "1024:1024")
     quality = data.get("quality", "auto")
 
     if not prompt:
         return jsonify({"error": "Prompt é obrigatório"}), 400
-    
+
     if style != "auto":
         final_prompt = f"O estilo da imagem deve ser: {style}. {prompt}"
     else:
@@ -884,6 +936,7 @@ def generate_image():
         os.makedirs(UPLOAD_DIR, exist_ok=True)
         filename = f"{uuid.uuid4()}.png"
         save_path = os.path.join(UPLOAD_DIR, filename)
+
         if not model.startswith("imagen-"):
             size = map_size(model, ratio)
             client = OpenAI(api_key=OPENAI_API_KEY)
@@ -906,9 +959,11 @@ def generate_image():
                 image_data = img_res.content
             else:
                 return jsonify({"error": "Resposta da API OpenAI não contém imagem válida"}), 500
+
             with open(save_path, "wb") as f:
                 f.write(image_data)
             final_ratio = size
+
         else:
             config_map = map_aspectratio_gemini(ratio)
             if not gemini_client:
@@ -924,8 +979,7 @@ def generate_image():
             generated_image = response.generated_images[0].image
             generated_image.save(save_path)
             final_ratio = config_map["aspectRatio"]
-            
-        # Salva no banco
+
         generated = GeneratedImageContent(
             user_id=user.id,
             prompt=prompt,
@@ -936,6 +990,12 @@ def generate_image():
         )
         db.session.add(generated)
         db.session.commit()
+
+        # ✅ COTA: incrementa 1 após sucesso
+        try:
+            usage_row.increment_messages(1)
+        except Exception as inc_e:
+            print(f"[WARN] Falha ao incrementar MonthlyUsage (image): {inc_e}")
 
         return jsonify({
             "message": "Imagem gerada com sucesso",
