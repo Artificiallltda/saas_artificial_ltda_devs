@@ -27,7 +27,6 @@ function ImageGeneration() {
     }
   ]);
 
-  // Fechar o dropdown de configurações ao clicar fora
   useEffect(() => {
     function handleClickOutside(event) {
       if (settingsRef.current && !settingsRef.current.contains(event.target)) {
@@ -44,14 +43,12 @@ function ImageGeneration() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       toast.error('❌ Apenas imagens (.png, .jpg, .jpeg, .webp) são permitidas como referência.');
       return;
     }
 
-    // Validate file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       toast.error('❌ A imagem deve ter no máximo 5MB.');
@@ -69,19 +66,20 @@ function ImageGeneration() {
   };
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      toast.warning("Digite um prompt antes de gerar!");
+    if (!prompt.trim() && !referenceImage) {
+      toast.warning("Digite um prompt ou anexe uma imagem de referência!");
       return;
     }
 
-    // Adiciona a mensagem do usuário ao chat
+    // Mensagem do usuário (mostra a imagem anexada como preview)
     const userMessage = {
       id: Date.now(),
       role: 'user',
-      content: prompt
+      content: prompt,
+      ...(referenceImage ? { image: URL.createObjectURL(referenceImage) } : {}),
     };
-    
     setMessages(prev => [...prev, userMessage]);
+
     setLoading(true);
     setGeneratedImage(null);
 
@@ -91,7 +89,6 @@ function ImageGeneration() {
       formData.append('model', model);
       formData.append('style', style);
       formData.append('ratio', ratio);
-      
       if (referenceImage) {
         formData.append('reference_image', referenceImage);
       }
@@ -102,14 +99,11 @@ function ImageGeneration() {
       });
 
       if (res.content?.id) {
-        const imgRes = await apiFetch(generatedContentRoutes.getImage(res.content.id), {
-          method: "GET",
-        });
+        const imgRes = await apiFetch(generatedContentRoutes.getImage(res.content.id), { method: "GET" });
         const blob = await imgRes.blob();
         const imageUrl = URL.createObjectURL(blob);
         setGeneratedImage(imageUrl);
-        
-        // Adiciona a imagem gerada ao chat
+
         const assistantMessage = {
           id: Date.now() + 1,
           role: 'assistant',
@@ -120,16 +114,12 @@ function ImageGeneration() {
       }
 
       toast.success("Imagem gerada com sucesso!");
-      setPrompt(''); // Limpa o input após o envio
-      setReferenceImage(null); // Limpa a imagem de referência
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      setPrompt('');
+      setReferenceImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       console.error(err);
       toast.error("Erro ao gerar imagem!");
-      
-      // Adiciona mensagem de erro ao chat
       const errorMessage = {
         id: Date.now() + 1,
         role: 'assistant',
@@ -164,13 +154,11 @@ function ImageGeneration() {
   return (
     <Layout>
       <section className="flex flex-col h-[calc(100vh-80px)] bg-white">
-        {/* Header */}
         <div className="border-b border-gray-200 px-6 py-4">
           <h1 className="text-2xl font-semibold text-gray-900">Geração de Imagem</h1>
           <p className="text-sm text-gray-500">Crie imagens incríveis usando IA generativa</p>
         </div>
 
-        {/* Chat Area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div
@@ -189,28 +177,30 @@ function ImageGeneration() {
                   <div className="mt-2">
                     <img 
                       src={message.image} 
-                      alt="Gerada pela IA" 
+                      alt={message.role === 'user' ? "Imagem enviada" : "Gerada pela IA"} 
                       className="max-h-96 rounded-lg shadow-md" 
                     />
-                    <button
-                      onClick={() => {
-                        fetch(message.image)
-                          .then((res) => res.blob())
-                          .then((blob) => {
-                            const a = document.createElement("a");
-                            const filename = `Artificiall-Image-${Date.now()}.png`;
-                            a.href = URL.createObjectURL(blob);
-                            a.download = filename;
-                            a.click();
-                            URL.revokeObjectURL(a.href);
-                          })
-                          .catch(() => toast.error("Falha ao baixar a imagem"));
-                      }}
-                      className="mt-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      <Download className="w-4 h-4" />
-                      Baixar imagem
-                    </button>
+                    {message.role !== 'user' && (
+                      <button
+                        onClick={() => {
+                          fetch(message.image)
+                            .then((res) => res.blob())
+                            .then((blob) => {
+                              const a = document.createElement("a");
+                              const filename = `Artificiall-Image-${Date.now()}.png`;
+                              a.href = URL.createObjectURL(blob);
+                              a.download = filename;
+                              a.click();
+                              URL.revokeObjectURL(a.href);
+                            })
+                            .catch(() => toast.error("Falha ao baixar a imagem"));
+                        }}
+                        className="mt-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <Download className="w-4 h-4" />
+                        Baixar imagem
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -225,9 +215,7 @@ function ImageGeneration() {
           )}
         </div>
 
-        {/* Input Area */}
         <div className="border-t border-gray-200 p-4 bg-white relative">
-          {/* Reference Image Preview */}
           {referenceImage && (
             <div className="mb-2 flex items-center gap-2 p-2 bg-gray-50 rounded-lg max-w-[calc(100%-200px)]">
               <img 
@@ -250,7 +238,6 @@ function ImageGeneration() {
           )}
           
           <div className="relative">
-            {/* Settings Dropdown */}
             <div className="absolute right-4 -top-14 z-10" ref={settingsRef}>
               <button
                 onClick={() => setShowSettings(!showSettings)}
@@ -312,10 +299,9 @@ function ImageGeneration() {
             </div>
             
             <div className="flex items-center gap-2">
-              {/* Clip Icon */}
               <button
                 type="button"
-                onClick={() => fileInputRef.current.click()}
+                onClick={() => fileInputRef.current?.click()}
                 className="p-3 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center -mt-1"
                 title="Anexar imagem de referência"
               >
@@ -336,7 +322,7 @@ function ImageGeneration() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && !loading) {
+                    if (e.key === 'Enter' && !e.shiftKey && !loading && (prompt.trim() || referenceImage)) {
                       e.preventDefault();
                       handleGenerate();
                     }
@@ -352,9 +338,9 @@ function ImageGeneration() {
               
               <button
                 onClick={handleGenerate}
-                disabled={loading || !prompt.trim()}
+                disabled={loading || (!prompt.trim() && !referenceImage)}
                 className={`p-3 rounded-xl ${
-                  loading || !prompt.trim()
+                  loading || (!prompt.trim() && !referenceImage)
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
                 } transition-colors`}
