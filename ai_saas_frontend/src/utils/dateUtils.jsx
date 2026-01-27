@@ -5,21 +5,21 @@ export function fixDateString(dateStr) {
   return new Date(fixed);
 }
 
-export function formatDate(dateStr, locale = "pt-BR") {
+export function formatDate(dateStr) {
   if (!dateStr) return "";
   const fixed = dateStr.includes("T") ? dateStr : dateStr.replace(" ", "T") + "Z";
-  return new Date(fixed).toLocaleDateString(locale, {
+  return new Date(fixed).toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 }
 
-export function formatDateTime(dateStr, locale = "pt-BR") {
+export function formatDateTime(dateStr) {
   if (!dateStr) return "";
   const cleaned = dateStr.replace(/\.\d+$/, "");
   const fixed = cleaned.endsWith("Z") ? cleaned : cleaned + "Z";
-  return new Date(fixed).toLocaleString(locale, {
+  return new Date(fixed).toLocaleString("pt-BR", {
     day: "2-digit",
     month: "short",
     year: "numeric",

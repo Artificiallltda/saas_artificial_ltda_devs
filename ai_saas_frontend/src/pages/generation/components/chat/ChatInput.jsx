@@ -2,7 +2,6 @@ import React, { useRef, useEffect } from "react";
 import { Send, Paperclip, X, Square } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../../context/AuthContext"; // hook do contexto
-import { useLanguage } from "../../../../context/LanguageContext";
 
 const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "application/pdf"];
 
@@ -17,7 +16,6 @@ export default function ChatInput({
   attachmentsAllowed,
 }) {
   const { user } = useAuth(); // pega o usuário direto do AuthContext
-  const { t } = useLanguage();
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
   const maxHeight = 160; // altura máxima do textarea
@@ -33,13 +31,13 @@ export default function ChatInput({
 
   const handleFileChange = (e) => {
     if (!finalAttachmentsAllowed ) {
-      toast.warning(t("generation.text.input.attachments_not_allowed"));
+      toast.warning("Seu plano atual não permite anexar arquivos.");
       return;
     }
     const newFiles = Array.from(e.target.files);
     const filtered = newFiles.filter(f => allowedTypes.includes(f.type));
     if (filtered.length < newFiles.length) {
-      toast.warning(t("generation.text.input.attachments_some_ignored"));
+      toast.warning("Alguns arquivos foram ignorados, apenas jpeg, png, gif e pdf são aceitos");
     }
     setFiles(prev => [...prev, ...filtered]);
   };
@@ -85,7 +83,7 @@ export default function ChatInput({
           type="button"
           onClick={() => finalAttachmentsAllowed  && fileInputRef.current.click()}
           className={`p-3 rounded-xl hover:bg-gray-100 transition shadow ${!finalAttachmentsAllowed  ? "opacity-50 cursor-not-allowed" : ""}`}
-          title={finalAttachmentsAllowed  ? t("generation.text.input.attach") : t("generation.text.input.upgrade_to_attach")}
+          title={finalAttachmentsAllowed  ? "Anexar arquivo" : "Melhore seu plano para utilizar este recurso!"}
         >
           <Paperclip className="w-6 h-6 text-gray-600" />
         </button>
@@ -103,7 +101,7 @@ export default function ChatInput({
         {/* Textarea */}
         <textarea
           ref={textareaRef}
-          placeholder={t("generation.text.input.placeholder")}
+          placeholder="Digite sua mensagem..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {

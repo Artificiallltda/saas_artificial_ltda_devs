@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { generatedContentRoutes } from "../services/apiRoutes";
 import { toast } from "react-toastify";
-import { useLanguage } from "../context/LanguageContext";
 
 export function useContents(user) {
-  const { t } = useLanguage();
   const [contents, setContents] = useState([]);
   const [contentsThisMonth, setContentsThisMonth] = useState(0);
 
@@ -15,7 +13,7 @@ export function useContents(user) {
       try {
         const res = await fetch(generatedContentRoutes.list, { credentials: "include" });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "dashboard.contents.load_error");
+        if (!res.ok) throw new Error(data.error || "Erro ao carregar conteúdos");
 
         setContents(data);
 
@@ -30,8 +28,7 @@ export function useContents(user) {
 
         setContentsThisMonth(count);
       } catch (err) {
-        const msg = err?.message || "dashboard.contents.load_error";
-        toast.error(msg.startsWith("dashboard.") ? t(msg) : msg);
+        toast.error(err.message);
       }
     };
 

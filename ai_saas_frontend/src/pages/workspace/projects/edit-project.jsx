@@ -6,11 +6,8 @@ import styles from "./projects.module.css";
 import { toast } from "react-toastify";
 import { projectRoutes } from "../../../services/apiRoutes";
 import { apiFetch } from "../../../services/apiService";
-import { useLanguage } from "../../../context/LanguageContext";
-import { backendMessageKeyMap } from "../../../i18n";
 
 export default function EditProject() {
-  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -26,14 +23,13 @@ export default function EditProject() {
       });
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || t("projects.edit.load_error"));
+      if (!res.ok) throw new Error(data.error || "Erro ao carregar projeto");
 
       setProject(data);
       setName(data.name);
       setDescription(data.description || "");
     } catch (err) {
-      const key = backendMessageKeyMap[err.message];
-      toast.error(key ? t(key) : err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -41,7 +37,7 @@ export default function EditProject() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast.error(t("projects.validation.name_required"));
+      toast.error("O nome do projeto é obrigatório.");
       return;
     }
 
@@ -52,11 +48,10 @@ export default function EditProject() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, description }),
         });
-        toast.success(t("projects.edit.success"));
+        toast.success("Projeto atualizado com sucesso!");
         navigate("/workspace/projects");
       } catch (err) {
-        const key = backendMessageKeyMap[err.message];
-        toast.error(key ? t(key) : err.message);
+        toast.error(err.message);
       } finally {
         setSaving(false);
       }
@@ -69,7 +64,7 @@ export default function EditProject() {
   if (loading) {
     return (
       <Layout>
-        <p className="p-4 text-sm">{t("projects.edit.loading")}</p>
+        <p className="p-4 text-sm">Carregando projeto...</p>
       </Layout>
     );
   }
@@ -77,7 +72,7 @@ export default function EditProject() {
   if (!project) {
     return (
       <Layout>
-        <p className="p-4 text-sm text-red-500">{t("projects.edit.not_found")}</p>
+        <p className="p-4 text-sm text-red-500">Projeto não encontrado.</p>
       </Layout>
     );
   }
@@ -93,25 +88,25 @@ export default function EditProject() {
         </button>
         <nav className="flex items-center text-sm space-x-1">
           <Link to="/" className="text-gray-700 hover:text-black">
-            {t("breadcrumbs.dashboard")}
+            Dashboard
           </Link>
           <span>/</span>
           <Link to="/workspace/projects" className="text-gray-700 hover:text-black">
-            {t("breadcrumbs.projects")}
+            Projetos
           </Link>
           <span>/</span>
-          <span className="text-gray-500">{t("breadcrumbs.edit")}</span>
+          <span className="text-gray-500">Editar</span>
         </nav>
       </div>
       <section className="flex flex-col items-center justify-center space-y-6">
-        <h1 className={styles.title}>{t("projects.edit.title")}</h1>
+        <h1 className={styles.title}>Editar Projeto</h1>
         <div className={styles.statCard}>
-          <p className={styles.statSubtext}>{t("projects.edit.subtitle")}</p>
+          <p className={styles.statSubtext}>Altere o nome ou a descrição do projeto.</p>
           <div className="relative mt-4 mb-3">
             <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder={t("projects.fields.name.placeholder_short")}
+              placeholder="Nome do projeto"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full pl-10 py-2 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -119,7 +114,7 @@ export default function EditProject() {
             />
           </div>
           <textarea
-            placeholder={t("projects.fields.description.placeholder_short")}
+            placeholder="Descrição do projeto..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows="4"
@@ -131,7 +126,7 @@ export default function EditProject() {
               disabled={saving || !name.trim()}
               className="bg-black text-white py-2 px-4 rounded-md text-sm hover:opacity-90 transition disabled:opacity-50"
             >
-              {saving ? t("common.saving") : t("common.save_changes")}
+              {saving ? "Salvando..." : "Salvar Alterações"}
             </button>
           </div>
         </div>

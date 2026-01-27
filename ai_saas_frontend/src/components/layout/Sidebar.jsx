@@ -12,22 +12,20 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useLanguage } from "../../context/LanguageContext";
 
 const navItems = [
-  { labelKey: "sidebar.dashboard", icon: LayoutDashboard, path: "/" },
-  { labelKey: "sidebar.text_generation", icon: FileText, path: "/text-generation" },
-  { labelKey: "sidebar.image_generation", icon: Image, path: "/image-generation" },
-  { labelKey: "sidebar.video_generation", icon: Video, path: "/video-generation" },
-  { labelKey: "sidebar.subscription", icon: CreditCard, path: "/subscription" },
-  { labelKey: "sidebar.profile", icon: User, path: "/profile" },
-  { labelKey: "sidebar.settings", icon: Settings, path: "/settings" }
+  { label: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { label: "Geração de Texto", icon: FileText, path: "/text-generation" },
+  { label: "Geração de Imagem", icon: Image, path: "/image-generation" },
+  { label: "Geração de Vídeo", icon: Video, path: "/video-generation" },
+  { label: "Assinatura", icon: CreditCard, path: "/subscription" },
+  { label: "Perfil", icon: User, path: "/profile" },
+  { label: "Configurações", icon: Settings, path: "/settings" }
 ];
 
 function ChatToggleButton({ collapsed }) {
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
   const [leftPos, setLeftPos] = useState(0);
-  const { t } = useLanguage();
 
   useEffect(() => {
     // Função para atualizar o estado quando a sidebar de chat abrir/fechar
@@ -80,7 +78,7 @@ function ChatToggleButton({ collapsed }) {
   return createPortal(
     <button
       onClick={() => window.toggleChatSidebar?.()}
-      title={t("sidebar.chat_toggle")}
+      title="Alternar chat"
       className={`
         group hidden md:flex
         fixed z-40
@@ -113,15 +111,14 @@ export default function Sidebar({
   isOpen = false,
   onClose
 }) {
-  const { user } = useAuth();
-  const { t } = useLanguage();
   const location = useLocation();
+  const { user } = useAuth();
   const touchStartX = useRef(null);
-  const [planName, setPlanName] = useState(user?.plan?.name || t("common.plan_default"));
+  const [planName, setPlanName] = useState(user?.plan?.name || "Inicial");
 
   useEffect(() => {
-    setPlanName(user?.plan?.name || t("common.plan_default"));
-  }, [user, t]);
+    setPlanName(user?.plan?.name || "Inicial");
+  }, [user]);
 
   // swipe mobile
   const handleTouchStart = (e) => {
@@ -168,11 +165,11 @@ export default function Sidebar({
           )}
 
           <nav className="space-y-2">
-            {navItems.map(({ labelKey, icon: Icon, path }) => {
+            {navItems.map(({ label, icon: Icon, path }) => {
               const isActive = location.pathname === path;
               return (
                 <Link
-                  key={labelKey}
+                  key={label}
                   to={path}
                   onClick={onClose}
                   className={`
@@ -185,7 +182,7 @@ export default function Sidebar({
                   `}
                 >
                   <Icon className="w-5 h-5 text-gray-600" />
-                  {!collapsed && <span>{t(labelKey)}</span>}
+                  {!collapsed && <span>{label}</span>}
                 </Link>
               );
             })}
@@ -197,7 +194,7 @@ export default function Sidebar({
                 className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
               >
                 <ShieldCheck className="w-5 h-5 text-gray-600" />
-                {!collapsed && <span>{t("admin.sidebar.link")}</span>}
+                {!collapsed && <span>Painel Administrativo</span>}
               </Link>
             )}
           </nav>
@@ -206,7 +203,7 @@ export default function Sidebar({
         <div className="border-t border-gray-300 py-4 text-sm">
           {!collapsed && (
             <div className="flex items-center justify-center">
-              <span className="mr-2 text-gray-600">{t("common.plan")}</span>
+              <span className="mr-2 text-gray-600">Plano</span>
               <span className="px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-300 shadow-sm">
                 {planName}
               </span>

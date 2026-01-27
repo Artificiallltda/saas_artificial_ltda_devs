@@ -8,7 +8,6 @@ import {
   VIDEO_RATIOS,
   IMAGE_RATIOS,
 } from "../../../utils/constants";
-import { useLanguage } from "../../../context/LanguageContext";
 
 export default function FiltersPanel({
   activeTab,
@@ -33,36 +32,8 @@ export default function FiltersPanel({
   filterDurMax,
   setFilterDurMax,
 }) {
-  const { t } = useLanguage();
   const filterRef = useRef(null);
   const [filterMenuOpen, setFilterMenuOpen] = React.useState(false);
-
-  const getStyleLabel = (value) => {
-    const key = `generation.image.styles.${value}`;
-    const translated = t(key);
-    return translated === key ? value : translated;
-  };
-
-  const getImageRatioLabel = (value) => {
-    const ratioKeyByValue = {
-      "1024x1024": "generation.image.ratios.square",
-      "1536x1024": "generation.image.ratios.landscape",
-      "1024x1536": "generation.image.ratios.portrait",
-    };
-    const key = ratioKeyByValue[value];
-    if (!key) return value;
-    return t(key);
-  };
-
-  const getVideoRatioLabel = (value) => {
-    const ratioKeyByValue = {
-      "16:9": "generation.video.ratios.landscape",
-      "9:16": "generation.video.ratios.portrait",
-    };
-    const key = ratioKeyByValue[value];
-    if (!key) return value;
-    return t(key);
-  };
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -85,32 +56,32 @@ export default function FiltersPanel({
 
       {filterMenuOpen && (
         <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-md shadow-lg p-4 z-50 animate-fadeIn">
-          <h3 className="text-sm font-semibold mb-2">{t("filters.advanced")}</h3>
+          <h3 className="text-sm font-semibold mb-2">Filtros Avançados</h3>
 
           {/* FILTRO DATA */}
-          <label className="block text-xs text-gray-600 mb-1 mt-2">{t("filters.date.label")}</label>
+          <label className="block text-xs text-gray-600 mb-1 mt-2">Data</label>
           <select
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
             className="bg-gray-50 rounded px-2 py-1 shadow-sm focus:outline-none focus:shadow-md text-black"
           >
-            <option value="">{t("filters.common.all")}</option>
-            <option value="7days">{t("filters.date.last_7_days")}</option>
-            <option value="30days">{t("filters.date.last_30_days")}</option>
+            <option value="">Todas</option>
+            <option value="7days">Últimos 7 dias</option>
+            <option value="30days">Últimos 30 dias</option>
           </select>
 
           {/* FILTRO LEITURA - APENAS NA TELA DE NOTIFICAÇÕES */}
           {activeTab === "notifications" && (
             <>
-              <label className="block text-xs text-gray-600 mb-1 mt-2">{t("filters.read_status.label")}</label>
+              <label className="block text-xs text-gray-600 mb-1 mt-2">Status de leitura</label>
               <select
                 value={filterReadStatus}
                 onChange={(e) => setFilterReadStatus(e.target.value)}
                 className="bg-gray-50 rounded px-2 py-1 shadow-sm focus:outline-none focus:shadow-md text-black"
               >
-                <option value="">{t("filters.common.all")}</option>
-                <option value="read">{t("filters.read_status.read")}</option>
-                <option value="unread">{t("filters.read_status.unread")}</option>
+                <option value="">Todos</option>
+                <option value="read">Somente lidos</option>
+                <option value="unread">Somente não lidos</option>
               </select>
             </>
           )}
@@ -119,13 +90,13 @@ export default function FiltersPanel({
           {activeTab !== "notifications" && activeTab !== "project" && (
             <>
               {/* FILTRO MODELO */}
-              <label className="block text-xs text-gray-600 mb-1 mt-2">{t("filters.model")}</label>
+              <label className="block text-xs text-gray-600 mb-1 mt-2">Modelo</label>
               <select
                 value={filterModel}
                 onChange={(e) => setFilterModel(e.target.value)}
                 className="bg-gray-50 rounded px-2 py-1 shadow-sm focus:outline-none focus:shadow-md text-black"
               >
-                <option value="">{t("filters.common.all")}</option>
+                <option value="">Todos</option>
                 {(activeTab === "text"
                   ? TEXT_MODELS
                   : activeTab === "image"
@@ -141,16 +112,16 @@ export default function FiltersPanel({
               {/* FILTRO ESTILO */}
               {(activeTab === "image" || activeTab === "video") && (
                 <>
-                  <label className="block text-xs text-gray-600 mb-1 mt-2">{t("filters.style")}</label>
+                  <label className="block text-xs text-gray-600 mb-1 mt-2">Estilo</label>
                   <select
                     value={filterStyle}
                     onChange={(e) => setFilterStyle(e.target.value)}
                     className="bg-gray-50 rounded px-2 py-1 shadow-sm focus:outline-none focus:shadow-md text-black"
                   >
-                    <option value="">{t("filters.common.all")}</option>
-                    {(activeTab === "image" ? IMAGE_STYLES : VIDEO_RATIOS).map(({ value }) => (
+                    <option value="">Todos</option>
+                    {(activeTab === "image" ? IMAGE_STYLES : VIDEO_RATIOS).map(({ value, label }) => (
                       <option key={value} value={value}>
-                        {activeTab === "image" ? getStyleLabel(value) : getVideoRatioLabel(value)}
+                        {label}
                       </option>
                     ))}
                   </select>
@@ -160,16 +131,16 @@ export default function FiltersPanel({
               {/* FILTRO PROPORÇÃO */}
               {activeTab === "image" && (
                 <>
-                  <label className="block text-xs text-gray-600 mb-1 mt-2">{t("filters.ratio")}</label>
+                  <label className="block text-xs text-gray-600 mb-1 mt-2">Proporção</label>
                   <select
                     value={filterRatio}
                     onChange={(e) => setFilterRatio(e.target.value)}
                     className="bg-gray-50 rounded px-2 py-1 shadow-sm focus:outline-none focus:shadow-md text-black"
                   >
-                    <option value="">{t("filters.common.all")}</option>
-                    {IMAGE_RATIOS.map(({ value }) => (
+                    <option value="">Todas</option>
+                    {IMAGE_RATIOS.map(({ value, label }) => (
                       <option key={value} value={value}>
-                        {getImageRatioLabel(value)}
+                        {label}
                       </option>
                     ))}
                   </select>
@@ -180,7 +151,7 @@ export default function FiltersPanel({
               {activeTab === "text" && (
                 <div className="flex gap-2 mt-1">
                   <div className="flex-1">
-                    <label className="block text-xs text-gray-600 mb-1 mt-2">{t("filters.temp_min")}</label>
+                    <label className="block text-xs text-gray-600 mb-1 mt-2">Temp Min</label>
                     <input
                       type="number"
                       step="0.1"
@@ -190,7 +161,7 @@ export default function FiltersPanel({
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="block text-xs text-gray-600 mb-1 mt-2">{t("filters.temp_max")}</label>
+                    <label className="block text-xs text-gray-600 mb-1 mt-2">Temp Max</label>
                     <input
                       type="number"
                       step="0.1"
@@ -206,7 +177,7 @@ export default function FiltersPanel({
               {activeTab === "video" && (
                 <div className="flex gap-2 mt-1">
                   <div className="flex-1">
-                    <label className="block text-xs text-gray-600 mb-1 mt-2">{t("filters.duration_min")}</label>
+                    <label className="block text-xs text-gray-600 mb-1 mt-2">Duração Mín</label>
                     <input
                       type="number"
                       value={filterDurMin}
@@ -215,7 +186,7 @@ export default function FiltersPanel({
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="block text-xs text-gray-600 mb-1 mt-2">{t("filters.duration_max")}</label>
+                    <label className="block text-xs text-gray-600 mb-1 mt-2">Duração Máx</label>
                     <input
                       type="number"
                       value={filterDurMax}
@@ -242,7 +213,7 @@ export default function FiltersPanel({
             }}
             className="w-full text-xs text-gray-600 hover:underline mt-4"
           >
-            {t("filters.clear")}
+            Limpar Filtros
           </button>
         </div>
       )}

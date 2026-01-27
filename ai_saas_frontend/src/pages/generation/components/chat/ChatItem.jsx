@@ -4,10 +4,8 @@ import { MoreVertical, Edit2, Trash2, Archive, CornerUpLeft } from "lucide-react
 import { toast } from "react-toastify";
 import { chatRoutes } from "../../../../services/apiRoutes";
 import { apiFetch } from "../../../../services/apiService";
-import { useLanguage } from "../../../../context/LanguageContext";
 
 export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
-  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [newTitle, setNewTitle] = useState(chat.title);
@@ -51,26 +49,26 @@ export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
         body: JSON.stringify({ title: newTitle }),
       });
 
-      toast.success(t("generation.text.chat_item.rename_success"));
+      toast.success("Chat renomeado!");
       onUpdateList(chat, "rename", newTitle);
       setRenaming(false);
     } catch (err) {
-      toast.error(err.message || t("generation.text.chat_item.rename_error"));
+      toast.error(err.message || "Erro ao renomear");
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm(t("generation.text.chat_item.delete_confirm"))) return;
+    if (!confirm("Deseja realmente deletar este chat?")) return;
 
     try {
       await apiFetch(`${chatRoutes.list}${chat.id}`, {
         method: "DELETE",
       });
 
-      toast.success(t("generation.text.chat_item.delete_success"));
+      toast.success("Chat deletado!");
       onUpdateList(chat, "delete");
     } catch (err) {
-      toast.error(err.message || t("generation.text.chat_item.delete_error"));
+      toast.error(err.message || "Erro ao deletar");
     }
   };
 
@@ -82,14 +80,10 @@ export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
 
       await apiFetch(endpoint, { method: "PATCH" });
 
-      toast.success(
-        chat.archived
-          ? t("generation.text.chat_item.unarchive_success")
-          : t("generation.text.chat_item.archive_success")
-      );
+      toast.success(`Chat ${chat.archived ? "desarquivado" : "arquivado"}!`);
       onUpdateList(chat, chat.archived ? "unarchive" : "archive");
     } catch (err) {
-      toast.error(err.message || t("generation.text.chat_item.archive_toggle_error"));
+      toast.error(err.message || "Erro ao atualizar status do chat");
     }
   };
 
@@ -136,7 +130,7 @@ export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
               }}
               className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left text-sm"
             >
-              <Edit2 className="w-4 h-4" /> {t("generation.text.chat_item.rename")}
+              <Edit2 className="w-4 h-4" /> Renomear
             </button>
 
             <button
@@ -145,11 +139,11 @@ export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
             >
               {chat.archived ? (
                 <>
-                  <CornerUpLeft className="w-4 h-4" /> {t("generation.text.chat_item.unarchive")}
+                  <CornerUpLeft className="w-4 h-4" /> Desarquivar
                 </>
               ) : (
                 <>
-                  <Archive className="w-4 h-4" /> {t("generation.text.chat_item.archive")}
+                  <Archive className="w-4 h-4" /> Arquivar
                 </>
               )}
             </button>
@@ -158,7 +152,7 @@ export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
               onClick={handleDelete}
               className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left text-sm text-red-500"
             >
-              <Trash2 className="w-4 h-4" /> {t("generation.text.chat_item.delete")}
+              <Trash2 className="w-4 h-4" /> Excluir
             </button>
           </div>,
           document.body

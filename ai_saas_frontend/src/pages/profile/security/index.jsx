@@ -3,11 +3,9 @@ import { User, Mail, Lock, ImageIcon, UserCircle2, ArrowLeft } from "lucide-reac
 import { Link } from "react-router-dom";
 import styles from "../profile.module.css";
 import Layout from "../../../components/layout/Layout";
-import { useLanguage } from "../../../context/LanguageContext";
 
 export default function Security() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
 
   return (
     <Layout>
@@ -20,14 +18,14 @@ export default function Security() {
           </button>
           <nav className="flex items-center text-sm space-x-1">
             <Link to="/profile" className="text-gray-700 hover:text-black">
-              {t("breadcrumbs.profile")}
+              Perfil
             </Link>
             <span>/</span>
-            <span className="text-gray-500">{t("breadcrumbs.security")}</span>
+            <span className="text-gray-500">Segurança</span>
           </nav>
         </div>
       <section className="space-y-6">
-      <h1 className={styles.title}>{t("profile.security.title")}</h1>
+      <h1 className={styles.title}>Segurança</h1>
       <div className={styles.panelGrid}>
         <div
           className={styles.modernCard}
@@ -37,8 +35,8 @@ export default function Security() {
           onKeyPress={(e) => e.key === "Enter" && navigate("/profile/security/name")}
         >
           <UserCircle2 size={28} className={styles.iconSecurity} />
-          <h2 className={styles.cardTitle}>{t("profile.security.cards.full_name.title")}</h2>
-          <p className={styles.cardDescription}>{t("profile.security.cards.full_name.description")}</p>
+          <h2 className={styles.cardTitle}>Nome completo</h2>
+          <p className={styles.cardDescription}>Editar nome de exibição</p>
         </div>
 
         <div
@@ -49,8 +47,8 @@ export default function Security() {
           onKeyPress={(e) => e.key === "Enter" && navigate("/profile/security/username")}
         >
           <User size={28} className={styles.iconSubscription} />
-          <h2 className={styles.cardTitle}>{t("profile.security.cards.username.title")}</h2>
-          <p className={styles.cardDescription}>{t("profile.security.cards.username.description")}</p>
+          <h2 className={styles.cardTitle}>Usuário</h2>
+          <p className={styles.cardDescription}>Editar nome de usuário</p>
         </div>
 
         <div
@@ -61,8 +59,8 @@ export default function Security() {
           onKeyPress={(e) => e.key === "Enter" && navigate("/profile/security/email")}
         >
           <Mail size={28} className={styles.iconProjects} />
-          <h2 className={styles.cardTitle}>{t("profile.security.cards.email.title")}</h2>
-          <p className={styles.cardDescription}>{t("profile.security.cards.email.description")}</p>
+          <h2 className={styles.cardTitle}>Email</h2>
+          <p className={styles.cardDescription}>Alterar endereço de email</p>
         </div>
 
         <div
@@ -73,8 +71,8 @@ export default function Security() {
           onKeyPress={(e) => e.key === "Enter" && navigate("/profile/security/password")}
         >
           <Lock size={28} className={styles.iconSupport} />
-          <h2 className={styles.cardTitle}>{t("profile.security.cards.password.title")}</h2>
-          <p className={styles.cardDescription}>{t("profile.security.cards.password.description")}</p>
+          <h2 className={styles.cardTitle}>Senha</h2>
+          <p className={styles.cardDescription}>Atualizar senha de acesso</p>
         </div>
 
         <div
@@ -85,8 +83,8 @@ export default function Security() {
           onKeyPress={(e) => e.key === "Enter" && navigate("/profile/security/photo")}
         >
           <ImageIcon size={28} className={styles.iconSecurity} />
-          <h2 className={styles.cardTitle}>{t("profile.security.cards.photo.title")}</h2>
-          <p className={styles.cardDescription}>{t("profile.security.cards.photo.description")}</p>
+          <h2 className={styles.cardTitle}>Foto de Perfil</h2>
+          <p className={styles.cardDescription}>Atualizar imagem do perfil</p>
         </div>
       </div>
     </section>

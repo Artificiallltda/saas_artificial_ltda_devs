@@ -13,11 +13,8 @@ import { formatDate, formatDateTime } from "../../../utils/dateUtils";
 import SortMenu from "../components/SortMenu";
 import { apiFetch } from "../../../services/apiService";
 import { EmptyState } from "../../../components/EmptyState";
-import { useLanguage } from "../../../context/LanguageContext";
-import { backendMessageKeyMap } from "../../../i18n";
 
 export default function ProjectsList() {
-  const { t, language } = useLanguage();
   const {
     loading,
     projects,
@@ -44,20 +41,19 @@ export default function ProjectsList() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t("projects.delete.confirm"))) return;
+    if (!window.confirm("Tem certeza que deseja excluir este projeto?")) return;
     try {
       await apiFetch(projectRoutes.delete(id), { method: "DELETE" });
-      toast.success(t("projects.delete.success"));
+      toast.success("Projeto excluído com sucesso!");
       setProjects((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
-      const key = backendMessageKeyMap[err.message];
-      toast.error(key ? t(key) : err.message);
+      toast.error(err.message);
     }
   };
 
   const createProject = async () => {
     if (!projectName.trim()) {
-      setErrorProject(t("projects.validation.name_required"));
+      setErrorProject("O nome do projeto é obrigatório.");
       return;
     }
 
@@ -74,14 +70,13 @@ export default function ProjectsList() {
         }),
       });
 
-      toast.success(t("projects.create.success"));
+      toast.success("Projeto criado com sucesso!");
       await loadProjects();
       setShowProjectModal(false);
       setProjectName("");
       setProjectDescription("");
     } catch (err) {
-      const key = backendMessageKeyMap[err.message];
-      setErrorProject(key ? t(key) : err.message);
+      setErrorProject(err.message);
     } finally {
       setLoadingProject(false);
     }
@@ -89,9 +84,9 @@ export default function ProjectsList() {
 
   return (
     <Layout>
-      <h1 className={styles.title}>{t("projects.title")}</h1>
+      <h1 className={styles.title}>Meus Projetos</h1>
       <p className="text-gray-600 mb-6">
-        {t("projects.subtitle")}
+        Gerencie seus projetos, edite detalhes ou adicione conteúdos.
       </p>
 
       {/* Barra de ações */}
@@ -100,7 +95,7 @@ export default function ProjectsList() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="search"
-            placeholder={t("projects.search.placeholder")}
+            placeholder="Buscar projetos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 py-2 bg-white rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -139,21 +134,21 @@ export default function ProjectsList() {
             className={`${styles.btnBlack} ${styles.btnBlackStandard}`}
           >
             <Plus className="w-4 h-4" />
-            <span className="text-sm">{t("projects.create.cta")}</span>
+            <span className="text-sm">Novo Projeto</span>
           </button>
         </div>
       </div>
 
       {/* Conteúdo */}
       {loading ? (
-        <p className="mt-6 text-sm">{t("projects.loading")}</p>
+        <p className="mt-6 text-sm">Carregando projetos...</p>
       ) : projects.length === 0 ? (
         <div onClick={(e) => e.stopPropagation()}>
           <EmptyState
             icon={FolderPlus}
-            title={t("projects.empty.title")}
-            description={t("projects.empty.description")}
-            ctaLabel={t("projects.empty.cta")}
+            title="Você ainda não possui projetos"
+            description="Crie seu primeiro projeto para começar a gerar conteúdos com IA."
+            ctaLabel="Criar novo projeto"
             onCtaClick={handleOpenCreateModal}
           />
         </div>
@@ -165,7 +160,7 @@ export default function ProjectsList() {
               project={project}
               onDelete={handleDelete}
               onSelect={setSelectedProject}
-              formatDate={(d) => formatDate(d, language)}
+              formatDate={formatDate}
             />
           ))}
         </div>
@@ -175,7 +170,7 @@ export default function ProjectsList() {
         <ProjectDetailsModal
           project={selectedProject}
           onClose={() => setSelectedProject(null)}
-          formatDateTime={(d) => formatDateTime(d, language)}
+          formatDateTime={formatDateTime}
         />
       )}
 

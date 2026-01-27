@@ -2,12 +2,10 @@ import React, { useEffect } from "react";
 import Select, { components } from "react-select";
 import { TEXT_MODELS } from "../../../../utils/constants";
 import { useAuth } from "../../../../context/AuthContext";
-import { useLanguage } from "../../../../context/LanguageContext";
 
 // Componente de Option customizado para tooltip
 const Option = (props) => {
   const { data } = props;
-  const { t } = useLanguage();
   return (
     <components.Option {...props}>
       <div className="flex items-center justify-between">
@@ -15,7 +13,7 @@ const Option = (props) => {
         {!data.isAllowed && (
           <span
             className="ml-2 text-xs text-red-500"
-            title={data.tooltip || t("generation.text.controls.upgrade_to_use_feature")}
+            title={data.tooltip || "Melhore seu plano para utilizar esse recurso!"}
           >
             ⚠
           </span>
@@ -32,7 +30,6 @@ export default function ChatControls({
   setTemperature,
   isTemperatureLocked,
 }) {
-  const { t } = useLanguage();
   const { user } = useAuth();
 
   // transforma a lista de features do plano em um objeto key → boolean
@@ -54,7 +51,7 @@ export default function ChatControls({
     return {
       ...m,
       isAllowed,
-      tooltip: isAllowed ? "" : t("generation.text.controls.plan_cannot_use_model"),
+      tooltip: isAllowed ? "" : "Seu plano atual não permite usar este modelo",
     };
   });
 
@@ -84,7 +81,7 @@ export default function ChatControls({
         isAllowed: BASIC_ALLOWED.has(m.value),
         tooltip: BASIC_ALLOWED.has(m.value)
           ? ""
-          : t("generation.text.controls.available_in_pro_premium"),
+          : "Disponível nos planos Pro/Premium",
       }))
     : afterHidden;
 
@@ -139,7 +136,7 @@ export default function ChatControls({
 
       {!isTemperatureLocked && (
         <div className="flex-1 flex flex-col">
-          <label className="text-gray-700 font-medium mb-1">{t("generation.text.controls.temp_label", { value: temperature })}</label>
+          <label className="text-gray-700 font-medium mb-1">Temp: {temperature}</label>
           <input
             type="range"
             min="0"

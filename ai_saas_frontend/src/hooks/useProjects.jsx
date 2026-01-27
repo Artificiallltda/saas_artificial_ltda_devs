@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { projectRoutes } from "../services/apiRoutes";
 import { toast } from "react-toastify";
-import { useLanguage } from "../context/LanguageContext";
 
 export function useProjects(user) {
-  const { t } = useLanguage();
   const [projects, setProjects] = useState([]);
   const [projectsThisMonth, setProjectsThisMonth] = useState(0);
 
@@ -15,7 +13,7 @@ export function useProjects(user) {
       try {
         const res = await fetch(projectRoutes.list, { credentials: "include" });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "dashboard.projects.load_error");
+        if (!res.ok) throw new Error(data.error || "Erro ao carregar projetos");
 
         setProjects(data);
 
@@ -30,8 +28,7 @@ export function useProjects(user) {
 
         setProjectsThisMonth(count);
       } catch (err) {
-        const msg = err?.message || "dashboard.projects.load_error";
-        toast.error(msg.startsWith("dashboard.") ? t(msg) : msg);
+        toast.error(err.message);
       }
     };
 
