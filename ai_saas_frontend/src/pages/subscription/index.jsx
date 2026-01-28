@@ -6,21 +6,11 @@ import { toast } from "react-toastify";
 import styles from "./subscription.module.css";
 import { apiFetch } from "../../services/apiService";
 import { userRoutes } from "../../services/apiRoutes";
-import { useLanguage } from "../../context/LanguageContext";
-import { backendMessageKeyMap } from "../../i18n";
 
 export default function Subscription() {
-  const { t } = useLanguage();
   const [user, setUser] = useState(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-
-  const translateBackendText = (text) => {
-    if (!text) return text;
-    const key = backendMessageKeyMap[text];
-    if (key) return t(key);
-    return text;
-  };
 
   useEffect(() => {
     const loadUser = async () => {
@@ -28,7 +18,7 @@ export default function Subscription() {
         const data = await apiFetch(userRoutes.getCurrentUser());
         setUser(data);
       } catch {
-        toast.error(t("subscription.load_user_error"));
+        toast.error("Erro ao carregar dados do usuário");
       }
     };
     loadUser();
@@ -57,11 +47,11 @@ export default function Subscription() {
                   className="font-medium text-gray-900 dark:text-gray-100 line-clamp-3"
                   style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", overflow: "hidden" }}
                 >
-                  {translateBackendText(pf.description)}
+                  {pf.description}
                 </span>
                 {displayValue && (
                   <span className="text-gray-600 dark:text-gray-300 text-xs">
-                    {translateBackendText(displayValue)}
+                    {displayValue}
                   </span>
                 )}
               </div>
@@ -75,7 +65,7 @@ export default function Subscription() {
   return (
     <Layout>
       <section className={styles.container}>
-        <h1 className={styles.title}>{t("subscription.title")}</h1>
+        <h1 className={styles.title}>Assinatura</h1>
 
         <div className={styles.grid}>
           {/* Plano Atual */}
@@ -89,18 +79,16 @@ export default function Subscription() {
             <div className={styles.iconWrapper}>
               <UserCheck size={40} color="#16a34a" />
             </div>
-            <h2 className={styles.cardTitle}>{t("subscription.current_plan.title")}</h2>
+            <h2 className={styles.cardTitle}>Seu Plano Atual</h2>
             {user ? (
               <>
-                <p className={styles.planName}>
-                  {user.plan?.name ? translateBackendText(user.plan.name) : t("common.not_informed")}
-                </p>
+                <p className={styles.planName}>{user.plan?.name || "Não informado"}</p>
                 {Array.isArray(user.plan?.features) &&
                   user.plan.features.length > 0 &&
                   renderFeatures(user.plan.features)}
               </>
             ) : (
-              <p>{t("common.loading")}</p>
+              <p>Carregando...</p>
             )}
           </div>
 
@@ -115,16 +103,16 @@ export default function Subscription() {
             <div className={styles.iconWrapper}>
               <TrendingUp size={40} color="#facc15" />
             </div>
-            <h2 className={styles.cardTitle}>{t("subscription.upgrade.title")}</h2>
+            <h2 className={styles.cardTitle}>Melhorar Plano</h2>
             <p className={styles.description}>
-              {t("subscription.upgrade.description")}
+              Melhore seu plano na ARTIFICIALL para obter mais funcionalidades!
             </p>
             <button
               disabled
               className={styles.upgradeBtn}
-              title={t("common.not_implemented")}
+              title="Funcionalidade ainda não implementada"
             >
-              {t("subscription.upgrade.contact_us")}
+              Contate-nos
             </button>
           </div>
         </div>
@@ -134,23 +122,23 @@ export default function Subscription() {
       <SettingsModal
         isOpen={showInfoModal}
         onClose={() => setShowInfoModal(false)}
-        title={t("subscription.info_modal.title")}
-        description={t("subscription.info_modal.description")}
+        title="Informações do Plano"
+        description="Detalhes do seu plano atual"
       >
         {user ? (
           <>
             <p className="text-gray-700 text-sm">
               <strong className="font-semibold text-gray-900 text-sm">
-                {t("subscription.info_modal.plan_label")}
+                Plano:
               </strong>{" "}
-              {user.plan?.name ? translateBackendText(user.plan.name) : t("common.not_informed")}
+              {user.plan?.name || "Não informado"}
             </p>
             {Array.isArray(user.plan?.features) &&
               user.plan.features.length > 0 &&
               renderFeatures(user.plan.features)}
           </>
         ) : (
-          <p>{t("common.loading")}</p>
+          <p>Carregando...</p>
         )}
       </SettingsModal>
 
@@ -158,18 +146,18 @@ export default function Subscription() {
       <SettingsModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        title={t("subscription.premium_modal.title")}
-        description={t("subscription.premium_modal.description")}
+        title="Plano Premium"
+        description="O plano Premium oferece recursos adicionais e suporte prioritário."
       >
         <p className={styles.upgradeText}>
-          {t("subscription.premium_modal.body")}
+          Com o plano Premium você terá acesso a funcionalidades exclusivas e suporte dedicado.
         </p>
         <button
           disabled
           className={styles.upgradeBtn}
-          title={t("common.not_implemented")}
+          title="Funcionalidade ainda não implementada"
         >
-          {t("subscription.premium_modal.cta")}
+          Adquirir Plano
         </button>
       </SettingsModal>
     </Layout>

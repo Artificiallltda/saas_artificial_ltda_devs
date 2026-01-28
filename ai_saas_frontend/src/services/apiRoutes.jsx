@@ -1,9 +1,4 @@
-// Normaliza a base da API e aplica fallback seguro
-const rawBase = (import.meta.env.VITE_API_BASE_URL ?? "").toString().trim();
-// remove barras finais para evitar "//api"
-const normalizedBase = rawBase.replace(/\/+$/, "");
-// se não houver base definida, usa caminho relativo (mesma origem) -> "/api"
-const API_BASE = `${normalizedBase}/api`;
+const API_BASE = import.meta.env.VITE_API_BASE_URL + "/api";
 
 
 export const authRoutes = {
@@ -40,7 +35,6 @@ export const adminRoutes = {
   createUser: () => `${API_BASE}/admin/users`,                      // POST → criar user
   updateUserPlan: (id) => `${API_BASE}/admin/users/${id}/plan`,     // PUT → atualizar plano
   updateUserStatus: (id) => `${API_BASE}/admin/users/${id}/status`, // PUT → atualizar role e is_active
-  usage: (qs = "") => `${API_BASE}/admin/usage${qs ? `?${qs}` : ""}`,
 };
 
 

@@ -1,9 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { ArrowUpDown } from "lucide-react";
-import { useLanguage } from "../../../context/LanguageContext";
 
 export default function SortMenu({ activeTab, sortBy, setSortBy }) {
-  const { t } = useLanguage();
   const sortRef = useRef(null);
   const [sortMenuOpen, setSortMenuOpen] = React.useState(false);
 
@@ -35,7 +33,7 @@ export default function SortMenu({ activeTab, sortBy, setSortBy }) {
             }}
             className="w-full text-left px-4 py-2 hover:bg-gray-100"
           >
-            {t("sort.newest")}
+            Mais recentes
           </button>
           <button
             onClick={() => {
@@ -44,7 +42,7 @@ export default function SortMenu({ activeTab, sortBy, setSortBy }) {
             }}
             className="w-full text-left px-4 py-2 hover:bg-gray-100"
           >
-            {t("sort.oldest")}
+            Mais antigos
           </button>
           <button
             onClick={() => {
@@ -53,7 +51,7 @@ export default function SortMenu({ activeTab, sortBy, setSortBy }) {
             }}
             className="w-full text-left px-4 py-2 hover:bg-gray-100"
           >
-            {t("sort.name")}
+            Por nome
           </button>
 
           {/* Só mostra "Por modelo" e "Por duração" se NÃO for nem "project" nem "notifications" */}
@@ -66,7 +64,7 @@ export default function SortMenu({ activeTab, sortBy, setSortBy }) {
                 }}
                 className="w-full text-left px-4 py-2 hover:bg-gray-100"
               >
-                {t("sort.model")}
+                Por modelo
               </button>
               {activeTab === "video" && (
                 <button
@@ -76,7 +74,7 @@ export default function SortMenu({ activeTab, sortBy, setSortBy }) {
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
-                  {t("sort.duration")}
+                  Por duração
                 </button>
               )}
             </>

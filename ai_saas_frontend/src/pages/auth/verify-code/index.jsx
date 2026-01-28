@@ -5,13 +5,10 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { KeyRound, ArrowLeft } from "lucide-react";
 import { emailRoutes } from "../../../services/apiRoutes";
-import { useLanguage } from "../../../context/LanguageContext";
-import { backendMessageKeyMap } from "../../../i18n";
 
 function VerifyCode() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const email = state?.email;
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +21,7 @@ function VerifyCode() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (code.trim().length !== 6) {
-      toast.error(t("auth.verify_code.invalid_code_length"));
+      toast.error("Código deve ter 6 dígitos");
       return;
     }
 
@@ -37,13 +34,9 @@ function VerifyCode() {
       });
 
       const data = await res.json();
-      if (!res.ok) {
-        const backendMsg = data.error || t("auth.verify_code.error");
-        const key = backendMessageKeyMap[backendMsg];
-        throw new Error(key ? t(key) : backendMsg);
-      }
+      if (!res.ok) throw new Error(data.error || "Erro na verificação");
 
-      toast.success(t("auth.verify_code.success"));
+      toast.success("E-mail verificado com sucesso!");
       navigate("/register", { state: { email } });
     } catch (err) {
       toast.error(err.message);
@@ -57,20 +50,20 @@ function VerifyCode() {
       <section className={styles.statCard}>
         <Link to="/login" className={styles.loginLink}>
           <ArrowLeft className="w-4 h-4 mr-1" />
-          {t("auth.common.back_to_login")}
+          Login
         </Link>
-        <h1 className={styles.title}>{t("auth.verify_code.title")}</h1>
+        <h1 className={styles.title}>Verificação de Código</h1>
         <form onSubmit={handleSubmit}>
           <div className="w-full">
             <p className="text-sm text-gray-700 py-3 text-center">
-                {t("auth.verify_code.sent_to")} <strong>{email}</strong>
+                Enviamos um código para <strong>{email}</strong>
             </p>
             <div className="relative">
               <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
                 name="code"
-                placeholder={t("auth.verify_code.code.placeholder")}
+                placeholder="Código de verificação"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 className="w-full pl-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
@@ -85,7 +78,7 @@ function VerifyCode() {
             className={`${styles.btn} ${styles.btnWide}`}
             disabled={loading}
           >
-            {loading ? t("auth.verify_code.loading") : t("auth.verify_code.submit")}
+            {loading ? "Verificando..." : "Verificar"}
           </button>
         </form>
       </section>

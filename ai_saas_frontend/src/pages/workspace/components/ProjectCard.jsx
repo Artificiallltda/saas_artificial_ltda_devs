@@ -1,8 +1,6 @@
 import { Trash2 } from "lucide-react";
-import { useLanguage } from "../../../context/LanguageContext";
 
 export default function ProjectCard({ project, onDelete, onSelect, formatDate }) {
-  const { t } = useLanguage();
   return (
     <div
       key={project.id}
@@ -22,12 +20,12 @@ export default function ProjectCard({ project, onDelete, onSelect, formatDate })
       <div className="flex-grow">
         <h2 className="font-semibold text-black mb-1">{project.name}</h2>
         <p className="text-xs text-gray-600 line-clamp-2">
-          {project.description || t("common.no_description")}
+          {project.description || "Sem descrição"}
         </p>
       </div>
 
       <div className="mt-auto flex gap-2 text-xs text-gray-500 pt-2">
-        <span>{t("projects.card.created")}: {formatDate(project.created_at)}</span>
+        <span>Criado: {formatDate(project.created_at)}</span>
       </div>
     </div>
   );
