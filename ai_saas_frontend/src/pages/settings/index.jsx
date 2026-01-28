@@ -82,7 +82,7 @@ export default function Settings() {
 
   return (
     <Layout>
-      <section className="space-y-8">
+      <section className="px-4 sm:px-6 space-y-8">
         <h1 className={styles.title}>Configurações</h1>
         <div className={styles.panelGrid}>
           <div
