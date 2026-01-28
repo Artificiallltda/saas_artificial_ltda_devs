@@ -12,7 +12,15 @@ export default {
         accent: "#f97316",      // laranja
         neutral: "#1e293b",     // cinza escuro
       },
+      // Estender tema de foco para acessibilidade
+      outline: {
+        'focus-ring': '3px solid #185cfc',
+      },
     },
   },
   plugins: [],
+  corePlugins: {
+    // Desabilitar outline padrão do Tailwind para usar custom focus
+    outline: false,
+  },
 }

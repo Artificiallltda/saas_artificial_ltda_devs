@@ -5,6 +5,46 @@
 
 :root {
   --color-success: #10B981;
+  /* Cores de Foco para Acessibilidade */
+  --color-focus-ring: #185cfc;
+}
+
+/* ================================================
+   ESTILOS GLOBAIS DE FOCO PARA ACESSIBILIDADE
+   ================================================ */
+
+/* Focus Ring Global - Aplicado em todos os elementos interativos */
+:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Botões, links e inputs com foco visível */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Remove o outline padrão do navegador */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus,
+a:focus,
+[role="button"]:focus {
+  outline: none;
+}
+
+/* Suporte para modo de contraste aumentado */
+@media (prefers-contrast: more) {
+  :focus-visible {
+    outline-width: 4px;
+  }
 }
 
 .Toastify__toast--success {
