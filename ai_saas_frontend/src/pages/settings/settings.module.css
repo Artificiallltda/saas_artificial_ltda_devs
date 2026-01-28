@@ -7,11 +7,11 @@
 }
 
 .panelGrid {
-  @apply grid grid-cols-1 md:grid-cols-3 gap-8;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
 }
 
 .modernCard {
-  @apply bg-white rounded-xl border border-gray-200 shadow-lg p-8 cursor-pointer flex flex-col items-center text-center transition-transform duration-300 hover:scale-[1.03] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black;
+  @apply bg-white rounded-xl border border-gray-200 shadow-lg p-4 sm:p-6 lg:p-8 cursor-pointer flex flex-col items-center text-center transition-transform duration-300 hover:scale-[1.03] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black;
 }
 
 .modernCardPlan {
@@ -28,7 +28,7 @@
   background: linear-gradient(135deg, #f43f5e 0%, #b91c1c 100%);
   color: white;
   border: none;
-  @apply shadow-lg p-8 cursor-pointer flex flex-col items-center text-center transition-transform duration-300 hover:scale-[1.03] hover:shadow-[0_10px_20px_-5px_rgba(244,63,94,0.7)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600;
+  @apply shadow-lg p-4 sm:p-6 lg:p-8 cursor-pointer flex flex-col items-center text-center transition-transform duration-300 hover:scale-[1.03] hover:shadow-[0_10px_20px_-5px_rgba(244,63,94,0.7)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600;
 }
 
 .iconWrapper {

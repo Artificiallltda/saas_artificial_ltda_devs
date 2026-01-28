@@ -58,7 +58,7 @@ export default function Profile() {
 
   return (
     <Layout>
-      <section className="space-y-6">
+      <section className="px-4 sm:px-6 space-y-6 py-8 min-h-[calc(100vh-64px-64px)]">
         <h1 className={styles.title}>Minha Conta</h1>
         <div className={styles.panelGrid}>
           <div

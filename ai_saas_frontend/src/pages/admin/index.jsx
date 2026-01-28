@@ -10,10 +10,10 @@ export default function AdminPanel() {
   return (
     <Layout>
 
-      <section className="space-y-6">
+      <section className="px-4 sm:px-6 space-y-6 py-8 min-h-[calc(100vh-64px-64px)]">
         <h1 className={styles.title}>Painel Administrativo</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
           <div
             className={`${styles.modernCard} ${styles.modernCardBlue}`}
             onClick={() => navigate("/admin/users")}
