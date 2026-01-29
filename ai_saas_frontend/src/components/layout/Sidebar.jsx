@@ -102,7 +102,7 @@ function ChatToggleButton({ collapsed, t }) {
         className={`${chatSidebarOpen ? "rotate-180" : ""} transition-transform`}
         aria-hidden="true"
       >
-        <path d="M5 4 L19 12 L5 20 Z" className="fill-white" />
+        <path d="M5 4 L19 12 L5 20 Z" className="fill-black" />
       </svg>
     </button>,
     document.body

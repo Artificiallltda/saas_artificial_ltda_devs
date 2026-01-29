@@ -7,12 +7,11 @@ import App from "./App";
 import { ToastContainer } from "react-toastify";
 import "./styles/index.css";
 
-const applyTheme = () => {
-  const savedTheme = localStorage.getItem("theme") || "light";
-  document.documentElement.setAttribute("data-theme", savedTheme);
-};
-
-applyTheme();
+// Carregar tema salvo
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'dark') {
+  document.body.classList.add('dark-mode');
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

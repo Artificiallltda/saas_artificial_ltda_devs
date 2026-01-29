@@ -130,6 +130,14 @@ export default function Header({
     fetchNotifications();
   }, [fetchNotifications]);
 
+  useEffect(() => {
+    // Garantir que o ícone do tema esteja correto
+    const themeButton = document.querySelector('[aria-label="Alternar tema"]');
+    if (themeButton) {
+      themeButton.textContent = document.body.classList.contains('dark-mode') ? '🌞' : '🌙';
+    }
+  }, []);
+
   return (
       <header
         className="flex items-center justify-between px-6 py-4 bg-white w-full relative z-50 border-0 border-b-0 shadow-none outline-none"
@@ -225,10 +233,22 @@ export default function Header({
       </div>
 
       {/* DIREITA */}
-      <div className="flex items-center gap-4 relative">
+      <div className="flex items-center gap-2 relative">
+        <button
+          onClick={() => {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            // Atualizar o ícone
+            event.target.textContent = isDark ? '🌞' : '🌙';
+          }}
+          className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+          aria-label="Alternar tema"
+        >
+          🌙
+        </button>
         <LanguageSelector />
         
-        <div className="relative p-2 rounded-md hover:bg-gray-100 cursor-pointer">
+        <div className="relative p-1.5 rounded-md hover:bg-gray-100 cursor-pointer">
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
             <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full px-1">
@@ -244,7 +264,7 @@ export default function Header({
 
         <button
           onClick={() => setMenuOpen(v => !v)}
-          className="w-8 h-8 rounded-full overflow-hidden border-0 ring-1 ring-gray-200/70 hover:ring-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-shadow"
+          className="w-7 h-7 rounded-full overflow-hidden border-0 ring-1 ring-gray-200/70 hover:ring-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-shadow"
         >
           {perfilPhotoUrl ? (
             <img src={perfilPhotoUrl} className="w-full h-full object-cover" />
