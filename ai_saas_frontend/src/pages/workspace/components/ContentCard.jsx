@@ -10,16 +10,15 @@ export default function ContentCard({
   selectionMode = false,
   selected = false,
   onToggleSelect,
-  showDelete = true // nova prop
+  showDelete = true,
 }) {
   return (
     <div
-      className={`relative rounded-lg p-4 bg-white shadow hover:shadow-md transition ${
+      className={`relative rounded-lg p-4 bg-white shadow hover:shadow-md transition flex flex-col ${
         selected ? "ring-2 ring-blue-500" : ""
       }`}
       onClick={() => !selectionMode && onSelect(content)}
     >
-      {/* Só mostra a lixeira se showDelete for true e não estiver no modo seleção */}
       {showDelete && !selectionMode && (
         <button
           className="absolute top-2 right-2 text-red-500 hover:text-red-700 z-20"
@@ -32,7 +31,6 @@ export default function ContentCard({
         </button>
       )}
 
-      {/* Checkbox do modo seleção */}
       {selectionMode && (
         <input
           type="checkbox"
@@ -43,30 +41,32 @@ export default function ContentCard({
         />
       )}
 
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          {content.content_type === "text" && (
-            <FileText className="w-4 h-4 text-blue-500" />
-          )}
-          {content.content_type === "image" && (
-            <Image className="w-4 h-4 text-green-500" />
-          )}
-          {content.content_type === "video" && (
-            <Video className="w-4 h-4 text-purple-500" />
-          )}
-          <span className="text-xs text-gray-600">
-            {formatDateTime(content.created_at)}
-          </span>
-        </div>
-
-        <div className="flex-grow">
-          <ContentPreview content={content} />
-        </div>
-
-        <p className="mt-auto text-xs text-gray-700 pt-2 font-medium">
-          Modelo: <span>{TEXT_MODELS.find(m => m.value === content.model_used)?.label || content.model_used}</span>
-        </p>
+      <div className="flex items-center gap-2 mb-2">
+        {content.content_type === "text" && (
+          <FileText className="w-4 h-4 text-blue-500" />
+        )}
+        {content.content_type === "image" && (
+          <Image className="w-4 h-4 text-green-500" />
+        )}
+        {content.content_type === "video" && (
+          <Video className="w-4 h-4 text-purple-500" />
+        )}
+        <span className="text-xs text-gray-600">
+          {formatDateTime(content.created_at)}
+        </span>
       </div>
+
+      <div className="flex-1">
+        <ContentPreview content={content} />
+      </div>
+
+      <p className="mt-2 text-xs text-gray-700 font-medium">
+        Modelo:{" "}
+        <span>
+          {TEXT_MODELS.find((m) => m.value === content.model_used)?.label ||
+            content.model_used}
+        </span>
+      </p>
     </div>
   );
 }

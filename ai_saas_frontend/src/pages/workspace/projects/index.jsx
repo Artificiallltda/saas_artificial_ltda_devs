@@ -13,6 +13,7 @@ import { formatDate, formatDateTime } from "../../../utils/dateUtils";
 import SortMenu from "../components/SortMenu";
 import { apiFetch } from "../../../services/apiService";
 import { EmptyState } from "../../../components/EmptyState";
+import CardsGrid from "../../../components/common/CardsGrid";
 
 export default function ProjectsList() {
   const {
@@ -153,7 +154,7 @@ export default function ProjectsList() {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardsGrid>
           {projects.map((project) => (
             <ProjectCard
               key={project.id}
@@ -163,7 +164,7 @@ export default function ProjectsList() {
               formatDate={formatDate}
             />
           ))}
-        </div>
+        </CardsGrid>
       )}
 
       {selectedProject && (

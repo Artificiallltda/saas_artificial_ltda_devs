@@ -9,7 +9,8 @@ import { useContents } from "../../hooks/useContents";
 import { userRoutes, emailRoutes } from "../../services/apiRoutes";
 import { apiFetch } from "../../services/apiService";
 import { toast } from "react-toastify";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import CardsGrid from "../../components/common/CardsGrid";
 
 export default function Settings() {
   const [user, setUser] = useState(null);
@@ -21,7 +22,6 @@ export default function Settings() {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const navigate = useNavigate();
 
   useEffect(() => {
     const loadUser = async () => {
@@ -84,17 +84,21 @@ export default function Settings() {
     <Layout>
       <section className="space-y-8">
         <h1 className={styles.title}>Configurações</h1>
-        <div className={styles.panelGrid}>
+
+        {/* Cards (antes: styles.panelGrid) */}
+        <CardsGrid className="md:grid-cols-2 xl:grid-cols-3">
           <div
             className={`${styles.modernCard} ${styles.modernCardPlan}`}
             onClick={() => setShowPlanModal(true)}
             role="button"
             tabIndex={0}
-            onKeyPress={(e) => e.key === "Enter" && setShowPlanModal(true)}
+            onKeyDown={(e) => e.key === "Enter" && setShowPlanModal(true)}
           >
             <UserCog size={28} className={styles.iconPlan} />
             <h2 className={styles.cardTitle}>Plano</h2>
-            <p className={styles.cardDescription}>Gerencie seu plano e pagamentos.</p>
+            <p className={styles.cardDescription}>
+              Gerencie seu plano e pagamentos.
+            </p>
           </div>
 
           <div
@@ -102,11 +106,13 @@ export default function Settings() {
             onClick={() => setShowAccountModal(true)}
             role="button"
             tabIndex={0}
-            onKeyPress={(e) => e.key === "Enter" && setShowAccountModal(true)}
+            onKeyDown={(e) => e.key === "Enter" && setShowAccountModal(true)}
           >
             <UserCircle2 size={28} className={styles.iconAccount} />
             <h2 className={styles.cardTitle}>Conta</h2>
-            <p className={styles.cardDescription}>Dados e opções da sua conta.</p>
+            <p className={styles.cardDescription}>
+              Dados e opções da sua conta.
+            </p>
           </div>
 
           <div
@@ -117,15 +123,18 @@ export default function Settings() {
             }}
             role="button"
             tabIndex={0}
-            onKeyPress={(e) =>
-              e.key === "Enter" && (setShowDeleteVerifyModal(true), requestSecurityCode())
+            onKeyDown={(e) =>
+              e.key === "Enter" &&
+              (setShowDeleteVerifyModal(true), requestSecurityCode())
             }
           >
             <Trash2 size={28} className={styles.iconDanger} />
             <h2 className={styles.cardTitle}>Deletar Conta</h2>
-            <p className={styles.cardDescription}>Encerrar conta permanentemente.</p>
+            <p className={styles.cardDescription}>
+              Encerrar conta permanentemente.
+            </p>
           </div>
-        </div>
+        </CardsGrid>
 
         {/* Modais */}
         <SettingsModal
@@ -137,7 +146,10 @@ export default function Settings() {
           {user ? (
             <>
               <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">Plano atual:</strong> {user.plan?.name || "Não informado"}
+                <strong className="font-semibold text-gray-900 text-sm">
+                  Plano atual:
+                </strong>{" "}
+                {user.plan?.name || "Não informado"}
               </p>
               <div className="flex mt-8">
                 <Link
@@ -162,19 +174,33 @@ export default function Settings() {
           {user ? (
             <>
               <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">Nome:</strong> {user.full_name || "N/A"}
+                <strong className="font-semibold text-gray-900 text-sm">
+                  Nome:
+                </strong>{" "}
+                {user.full_name || "N/A"}
               </p>
               <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">E-mail:</strong> {user.email || "N/A"}
+                <strong className="font-semibold text-gray-900 text-sm">
+                  E-mail:
+                </strong>{" "}
+                {user.email || "N/A"}
               </p>
               <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">Conteúdos gerados:</strong> {contents.length}
+                <strong className="font-semibold text-gray-900 text-sm">
+                  Conteúdos gerados:
+                </strong>{" "}
+                {contents.length}
               </p>
               <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">Projetos gerados:</strong> {projects.length}
+                <strong className="font-semibold text-gray-900 text-sm">
+                  Projetos gerados:
+                </strong>{" "}
+                {projects.length}
               </p>
               <p className="text-gray-700 text-sm">
-                <strong className="font-semibold text-gray-900 text-sm">Conta criada em:</strong>{" "}
+                <strong className="font-semibold text-gray-900 text-sm">
+                  Conta criada em:
+                </strong>{" "}
                 {new Date(user.created_at).toLocaleDateString("pt-BR")}
               </p>
             </>

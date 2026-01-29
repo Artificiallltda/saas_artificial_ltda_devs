@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import styles from "./subscription.module.css";
 import { apiFetch } from "../../services/apiService";
 import { userRoutes } from "../../services/apiRoutes";
+import CardsGrid from "../../components/common/CardsGrid";
 
 export default function Subscription() {
   const [user, setUser] = useState(null);
@@ -45,7 +46,11 @@ export default function Subscription() {
               <div className="flex flex-col">
                 <span
                   className="font-medium text-gray-900 dark:text-gray-100 line-clamp-3"
-                  style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", overflow: "hidden" }}
+                  style={{
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
                 >
                   {pf.description}
                 </span>
@@ -67,7 +72,8 @@ export default function Subscription() {
       <section className={styles.container}>
         <h1 className={styles.title}>Assinatura</h1>
 
-        <div className={styles.grid}>
+        {/* GRID PRINCIPAL (cards) */}
+        <CardsGrid className="items-stretch">
           {/* Plano Atual */}
           <div
             className={styles.card}
@@ -82,7 +88,9 @@ export default function Subscription() {
             <h2 className={styles.cardTitle}>Seu Plano Atual</h2>
             {user ? (
               <>
-                <p className={styles.planName}>{user.plan?.name || "Não informado"}</p>
+                <p className={styles.planName}>
+                  {user.plan?.name || "Não informado"}
+                </p>
                 {Array.isArray(user.plan?.features) &&
                   user.plan.features.length > 0 &&
                   renderFeatures(user.plan.features)}
@@ -115,7 +123,7 @@ export default function Subscription() {
               Contate-nos
             </button>
           </div>
-        </div>
+        </CardsGrid>
       </section>
 
       {/* Modal info */}
@@ -150,7 +158,8 @@ export default function Subscription() {
         description="O plano Premium oferece recursos adicionais e suporte prioritário."
       >
         <p className={styles.upgradeText}>
-          Com o plano Premium você terá acesso a funcionalidades exclusivas e suporte dedicado.
+          Com o plano Premium você terá acesso a funcionalidades exclusivas e
+          suporte dedicado.
         </p>
         <button
           disabled

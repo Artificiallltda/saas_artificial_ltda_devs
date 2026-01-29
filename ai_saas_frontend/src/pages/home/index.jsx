@@ -11,6 +11,7 @@ import NewProjectModal from "../../components/modals/NewProjectModal";
 import { apiFetch } from "../../services/apiService";
 import { projectRoutes } from "../../services/apiRoutes";
 import { EmptyState } from "../../components/EmptyState";
+import CardsGrid from "../../components/common/CardsGrid";
 
 export default function Home() {
   const { user } = useAuth();
@@ -30,10 +31,7 @@ export default function Home() {
       });
 
       toast.success("Projeto criado com sucesso!");
-
-      // ✅ fluxo correto: volta para lista de projetos
       navigate("/workspace/projects");
-
     } catch (err) {
       toast.error(err.message || "Erro ao criar projeto");
     }
@@ -61,7 +59,7 @@ export default function Home() {
         </div>
 
         {/* Cards de estatísticas */}
-        <div className={styles.panelGrid}>
+        <CardsGrid>
           <div className={styles.statCard}>
             <div className={styles.statHeader}>
               <p className={styles.blockTitle}>Agentes Criados</p>
@@ -101,13 +99,13 @@ export default function Home() {
               +{contentsThisMonth} criados este mês
             </p>
           </div>
-        </div>
+        </CardsGrid>
 
         {/* Ferramentas IA */}
         <div>
           <h2 className={styles.subTitle}>Ferramentas de IA</h2>
 
-          <div className={styles.panelGrid}>
+          <CardsGrid>
             <div className={styles.statCard}>
               <div>
                 <div className="bg-primary w-fit p-3 rounded-lg mb-4">
@@ -167,7 +165,7 @@ export default function Home() {
                 Começar
               </Link>
             </div>
-          </div>
+          </CardsGrid>
         </div>
 
         {/* Projetos recentes */}

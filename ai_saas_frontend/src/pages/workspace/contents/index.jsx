@@ -13,9 +13,12 @@ import { toast } from "react-toastify";
 import useSelectionMode from "../hooks/useSelectionMode";
 import SelectionToggleButton from "../components/SelectionToggleButton";
 import SelectionToolbar from "../components/SelectionToolbar";
+import CardsGrid from "../../../components/common/CardsGrid";
 
 export default function GeneratedContentsList() {
-  const { loading, allContents, setAllContents, handleDeleteContent } = useContentsFetch();
+  const { loading, allContents, setAllContents, handleDeleteContent } =
+    useContentsFetch();
+
   const {
     filteredContents,
     activeTab,
@@ -23,7 +26,7 @@ export default function GeneratedContentsList() {
     searchTerm,
     setSearchTerm,
     filterProps,
-    sortProps
+    sortProps,
   } = useFilters(allContents);
 
   const [selectedContent, setSelectedContent] = useState(null);
@@ -33,19 +36,20 @@ export default function GeneratedContentsList() {
     selectedItems,
     toggleSelectionMode,
     toggleSelect,
-    clearSelection
+    clearSelection,
   } = useSelectionMode();
 
   async function handleDeleteSelected() {
     if (selectedItems.length === 0) return;
-    if (!confirm(`Excluir ${selectedItems.length} conteúdo(s) selecionado(s)?`)) return;
+    if (!confirm(`Excluir ${selectedItems.length} conteúdo(s) selecionado(s)?`))
+      return;
 
     const ids = selectedItems.map((c) => c.id);
     try {
       await apiFetch(generatedContentRoutes.deleteBatch, {
         method: "DELETE",
         body: JSON.stringify({ ids }),
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
 
       toast.success(`${selectedItems.length} conteúdo(s) excluído(s)!`);
@@ -61,7 +65,9 @@ export default function GeneratedContentsList() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-xl font-bold">Meus Conteúdos Gerados</h1>
-          <p className="text-gray-600 mb-6">Aqui estão todos os conteúdos que você gerou com IA</p>
+          <p className="text-gray-600 mb-6">
+            Aqui estão todos os conteúdos que você gerou com IA
+          </p>
         </div>
       </div>
 
@@ -105,7 +111,7 @@ export default function GeneratedContentsList() {
       ) : filteredContents.length === 0 ? (
         <p className="text-gray-500">Nenhum conteúdo encontrado.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardsGrid>
           {filteredContents.map((c) => (
             <ContentCard
               key={c.id}
@@ -117,7 +123,7 @@ export default function GeneratedContentsList() {
               onToggleSelect={toggleSelect}
             />
           ))}
-        </div>
+        </CardsGrid>
       )}
 
       {selectedContent && (
