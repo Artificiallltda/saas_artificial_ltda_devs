@@ -8,16 +8,26 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
+  },
   server: {
-  host: true,  // aceita qualquer IP da rede
-  port: 3000,  // porta do front
-  strictPort: true,
-  proxy: {
+    host: true,  // aceita qualquer IP da rede
+    port: 3000,  // porta do front
+    strictPort: true,
+    proxy: {
       "/api": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
         secure: false, // se o backend usa https
       },
-  },
-}
+    },
+  }
 })
