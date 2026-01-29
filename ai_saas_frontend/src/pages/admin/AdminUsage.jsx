@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import Layout from "../../components/layout/Layout";
+import { useLanguage } from "../../context/LanguageContext";
+import { backendMessageKeyMap } from "../../i18n";
 
 export default function AdminUsage() {
+  const { t } = useLanguage();
   const [rows, setRows] = useState([]);
   const [model, setModel] = useState("");
   const [start, setStart] = useState("");
@@ -9,7 +12,7 @@ export default function AdminUsage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fmt = (n) => (n ?? 0).toLocaleString("pt-BR");
+  const fmt = (n) => (n ?? 0).toLocaleString(t("dates.locale"));
   const pct = (used, quota) =>
     quota ? Math.min(100, Math.round(((used ?? 0) / quota) * 100)) : null;
 
@@ -23,10 +26,16 @@ export default function AdminUsage() {
       if (end) params.set("end", end);
       const res = await fetch(`/api/admin/usage?${params.toString()}`, { credentials: "include" });
       const j = await res.json();
-      if (!res.ok) throw new Error(j?.error || "Falha ao carregar relatório");
+      if (!res.ok) {
+        const errorMsg = j?.error || t("admin.usage.load_error");
+        const key = backendMessageKeyMap[errorMsg];
+        throw new Error(key ? t(key) : errorMsg);
+      }
       setRows(j.results || []);
     } catch (e) {
-      setError(e.message || "Erro ao carregar dados");
+      const errorMsg = e.message || t("admin.usage.load_data_error");
+      const key = backendMessageKeyMap[errorMsg];
+      setError(key ? t(key) : errorMsg);
       setRows([]);
     } finally {
       setLoading(false);
@@ -39,7 +48,7 @@ export default function AdminUsage() {
     <Layout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Relatório de Uso de Tokens</h1>
+          <h1 className="text-2xl font-semibold">{t("admin.usage.title")}</h1>
           {/* extra: botão de exportação (opcional) */}
           {/* <button className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50">
             Exportar CSV
@@ -49,13 +58,13 @@ export default function AdminUsage() {
         {/* Filtros */}
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="block text-xs text-gray-500">Modelo</label>
+            <label className="block text-xs text-gray-500">{t("admin.usage.filters.model")}</label>
             <select
               value={model}
               onChange={(e) => setModel(e.target.value)}
               className="border rounded-lg px-3 py-2 text-sm bg-white"
             >
-              <option value="">Todos</option>
+              <option value="">{t("admin.usage.filters.all")}</option>
               <option value="gpt-4o">GPT-4o</option>
               <option value="deepseek/deepseek-r1-0528:free">DeepSeek R1 0528</option>
               <option value="sonar">Sonar</option>
@@ -70,7 +79,7 @@ export default function AdminUsage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500">Início</label>
+            <label className="block text-xs text-gray-500">{t("admin.usage.filters.start")}</label>
             <input
               type="date"
               value={start}
@@ -79,7 +88,7 @@ export default function AdminUsage() {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500">Fim</label>
+            <label className="block text-xs text-gray-500">{t("admin.usage.filters.end")}</label>
             <input
               type="date"
               value={end}
@@ -92,7 +101,7 @@ export default function AdminUsage() {
             className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-white text-sm shadow-sm hover:opacity-90"
             disabled={loading}
           >
-            {loading ? "Carregando..." : "Filtrar"}
+            {loading ? t("common.loading") : t("admin.usage.filters.apply")}
           </button>
           {error && <span className="text-red-600 text-sm">{error}</span>}
         </div>
@@ -103,13 +112,13 @@ export default function AdminUsage() {
             <table className="min-w-full text-sm">
               <thead className="bg-gray-50/80 backdrop-blur sticky top-0 z-10">
                 <tr className="text-xs uppercase tracking-wide text-gray-600">
-                  <th className="text-left px-4 py-3">Usuário</th>
-                  <th className="text-left px-4 py-3">Email</th>
-                  <th className="text-right px-4 py-3">Prompt</th>
-                  <th className="text-right px-4 py-3">Completion</th>
-                  <th className="text-right px-4 py-3">Total</th>
-                  <th className="text-right px-4 py-3">Cota</th>
-                  <th className="text-right px-4 py-3">Restante</th>
+                  <th className="text-left px-4 py-3">{t("admin.usage.table.user")}</th>
+                  <th className="text-left px-4 py-3">{t("admin.usage.table.email")}</th>
+                  <th className="text-right px-4 py-3">{t("admin.usage.table.prompt")}</th>
+                  <th className="text-right px-4 py-3">{t("admin.usage.table.completion")}</th>
+                  <th className="text-right px-4 py-3">{t("admin.usage.table.total")}</th>
+                  <th className="text-right px-4 py-3">{t("admin.usage.table.quota")}</th>
+                  <th className="text-right px-4 py-3">{t("admin.usage.table.remaining")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -140,7 +149,7 @@ export default function AdminUsage() {
                               <div
                                 className="h-full bg-[var(--color-primary)]"
                                 style={{ width: `${p}%` }}
-                                title={`${p}% usado`}
+                                title={t("admin.usage.table.used_percent", { percent: p })}
                               />
                             </div>
                           </div>
@@ -156,9 +165,9 @@ export default function AdminUsage() {
                   <tr>
                     <td colSpan={7} className="px-4 py-10">
                       <div className="flex flex-col items-center justify-center text-center text-gray-500">
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">📄</div>
-                        <div className="font-medium">Sem dados para os filtros.</div>
-                        <div className="text-xs">Ajuste o período ou selecione outro modelo.</div>
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">{t("admin.usage.empty.icon")}</div>
+                        <div className="font-medium">{t("admin.usage.empty.title")}</div>
+                        <div className="text-xs">{t("admin.usage.empty.description")}</div>
                       </div>
                     </td>
                   </tr>
@@ -167,7 +176,7 @@ export default function AdminUsage() {
                 {loading && (
                   <tr>
                     <td colSpan={7} className="px-4 py-6 text-center text-gray-500">
-                      Carregando...
+                      {t("common.loading")}
                     </td>
                   </tr>
                 )}
