@@ -12,18 +12,20 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
+import { backendMessageKeyMap } from "../../i18n";
 
-const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { label: "Geração de Texto", icon: FileText, path: "/text-generation" },
-  { label: "Geração de Imagem", icon: Image, path: "/image-generation" },
-  { label: "Geração de Vídeo", icon: Video, path: "/video-generation" },
-  { label: "Assinatura", icon: CreditCard, path: "/subscription" },
-  { label: "Perfil", icon: User, path: "/profile" },
-  { label: "Configurações", icon: Settings, path: "/settings" }
+const getNavItems = (t) => [
+  { label: t("sidebar.dashboard"), icon: LayoutDashboard, path: "/" },
+  { label: t("sidebar.text_generation"), icon: FileText, path: "/text-generation" },
+  { label: t("sidebar.image_generation"), icon: Image, path: "/image-generation" },
+  { label: t("sidebar.video_generation"), icon: Video, path: "/video-generation" },
+  { label: t("sidebar.subscription"), icon: CreditCard, path: "/subscription" },
+  { label: t("sidebar.profile"), icon: User, path: "/profile" },
+  { label: t("sidebar.settings"), icon: Settings, path: "/settings" }
 ];
 
-function ChatToggleButton({ collapsed }) {
+function ChatToggleButton({ collapsed, t }) {
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
   const [leftPos, setLeftPos] = useState(0);
 
@@ -78,7 +80,7 @@ function ChatToggleButton({ collapsed }) {
   return createPortal(
     <button
       onClick={() => window.toggleChatSidebar?.()}
-      title="Alternar chat"
+      title={t("sidebar.chat_toggle")}
       className={`
         group hidden md:flex
         fixed z-40
@@ -111,13 +113,21 @@ export default function Sidebar({
   isOpen = false,
   onClose
 }) {
+  const { t } = useLanguage();
   const location = useLocation();
   const { user } = useAuth();
   const touchStartX = useRef(null);
-  const [planName, setPlanName] = useState(user?.plan?.name || "Inicial");
+  const [planName, setPlanName] = useState(user?.plan?.name || t("common.plan_default"));
+  const navItems = getNavItems(t);
+
+  const translatePlanName = (planName) => {
+    if (!planName) return t("common.plan_default");
+    const translationKey = backendMessageKeyMap[planName];
+    return translationKey ? t(translationKey) : planName;
+  };
 
   useEffect(() => {
-    setPlanName(user?.plan?.name || "Inicial");
+    setPlanName(user?.plan?.name || t("common.plan_default"));
   }, [user]);
 
   // swipe mobile
@@ -137,7 +147,7 @@ export default function Sidebar({
     <>
       {/* BOTÃO DO CHAT – SEMPRE VISÍVEL */}
       {location.pathname === "/text-generation" && (
-        <ChatToggleButton collapsed={collapsed} />
+        <ChatToggleButton collapsed={collapsed} t={t} />
       )}
 
       <aside
@@ -194,7 +204,7 @@ export default function Sidebar({
                 className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700"
               >
                 <ShieldCheck className="w-5 h-5 text-gray-600" />
-                {!collapsed && <span>Painel Administrativo</span>}
+                {!collapsed && <span>{t('admin.sidebar.link')}</span>}
               </Link>
             )}
           </nav>
@@ -203,9 +213,9 @@ export default function Sidebar({
         <div className="border-t border-gray-300 py-4 text-sm">
           {!collapsed && (
             <div className="flex items-center justify-center">
-              <span className="mr-2 text-gray-600">Plano</span>
+              <span className="mr-2 text-gray-600">{t('common.plan')}</span>
               <span className="px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-300 shadow-sm">
-                {planName}
+                {translatePlanName(planName)}
               </span>
             </div>
           )}

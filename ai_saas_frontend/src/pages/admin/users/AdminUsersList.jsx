@@ -78,20 +78,21 @@ export default function AdminUsersList() {
 
   return (
     <Layout>
-      {/* Cabeçalho, busca e botão de seleção */}
-      <div className={styles.returnLink}>
-        <button onClick={() => navigate(-1)} className="flex items-center text-gray-700 hover:text-black">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-        </button>
-        <nav className="flex items-center text-sm space-x-1">
-          <Link to="/admin" className="text-gray-700 hover:text-black">{t("admin.title")}</Link>
-          <span>/</span>
-          <span className="text-gray-500">{t("admin.users.title")}</span>
-        </nav>
-      </div>
+      <section className="px-6 space-y-6">
+        {/* Cabeçalho, busca e botão de seleção */}
+        <div className={styles.returnLink}>
+          <button onClick={() => navigate(-1)} className="flex items-center text-gray-700 hover:text-black">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+          </button>
+          <nav className="flex items-center text-sm space-x-1">
+            <Link to="/admin" className="text-gray-700 hover:text-black">{t("admin.title")}</Link>
+            <span>/</span>
+            <span className="text-gray-500">{t("admin.users.title")}</span>
+          </nav>
+        </div>
 
-      <h1 className="text-xl font-semibold mb-4">{t("admin.users.title")}</h1>
-      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
+        <h1 className="text-xl font-semibold mb-4">{t("admin.users.title")}</h1>
+        <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
         <div className="relative max-w-md w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
@@ -113,14 +114,14 @@ export default function AdminUsersList() {
       ) : filteredUsers.length === 0 ? (
         <p className="mt-6 text-sm text-gray-500">{t("admin.users.empty")}</p>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredUsers.map((user) => {
             const isSelected = selectedItems.some((u) => u?.id === user?.id);
             const bgClass = user.is_active ? "bg-white border-blue-400" : "bg-gray-50 border-gray-300";
             return (
               <div
                 key={user.id}
-                className={`relative p-4 rounded-xl shadow-sm border flex justify-between items-start gap-4 cursor-pointer
+                className={`relative p-4 rounded-xl shadow-sm border flex flex-col justify-between h-full cursor-pointer
                   ${bgClass}
                   ${selectionMode ? (isSelected ? "ring-2 ring-blue-500" : "hover:ring-2 hover:ring-blue-300") : ""}`}
                 onClick={() => selectionMode && toggleSelect(user)}
@@ -140,19 +141,38 @@ export default function AdminUsersList() {
                   </div>
                 )}
 
-                <div className="flex flex-col w-full">
-                  <p className="font-semibold text-black">{user.full_name ?? t("common.placeholder")} ({user.username ?? t("common.placeholder")})</p>
-                  <p className="text-gray-600 text-sm">{user.email ?? t("common.placeholder")}</p>
-                  <p className="text-gray-600 text-sm">{t("admin.users.fields.plan")}: {user.plan?.name ?? t("common.placeholder")}</p>
-                  <p className="text-gray-600 text-sm">{t("admin.users.fields.status")}: {user.is_active ? t("admin.users.status.active") : t("admin.users.status.inactive")}</p>
+                <div className="flex flex-col w-full flex-grow space-y-3">
+                  <div>
+                    <p className="font-semibold text-black text-base">{user.full_name ?? t("common.placeholder")}</p>
+                    <p className="text-gray-500 text-sm">@{user.username ?? t("common.placeholder")}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 text-sm">{t("admin.users.fields.plan")}:</span>
+                      <span className="text-gray-700 text-sm font-medium">{user.plan?.name ?? t("common.placeholder")}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 text-sm">{t("admin.users.fields.status")}:</span>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        user.is_active 
+                          ? "bg-green-100 text-green-800" 
+                          : "bg-red-100 text-red-800"
+                      }`}>
+                        {user.is_active ? t("admin.users.status.active") : t("admin.users.status.inactive")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-gray-600 text-sm pt-1 border-t border-gray-100">
+                    {user.email ?? t("common.placeholder")}
+                  </div>
                 </div>
 
                 {!selectionMode && (
-                  <div className="flex gap-2">
-                    <button onClick={(e) => { e.stopPropagation(); setModalUser(user); }} className="text-blue-600 hover:text-blue-800" title={t("admin.users.actions.edit") }>
+                  <div className="flex gap-2 justify-end pt-2 border-t border-gray-100">
+                    <button onClick={(e) => { e.stopPropagation(); setModalUser(user); }} className="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors" title={t("admin.users.actions.edit") }>
                       <Edit className="w-5 h-5" />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDeleteUser(user.id); }} className="text-red-600 hover:text-red-800" title={t("admin.users.actions.delete") }>
+                    <button onClick={(e) => { e.stopPropagation(); handleDeleteUser(user.id); }} className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition-colors" title={t("admin.users.actions.delete") }>
                       <Trash className="w-5 h-5" />
                     </button>
                   </div>
@@ -176,6 +196,7 @@ export default function AdminUsersList() {
           }}
         />
       )}
+      </section>
     </Layout>
   );
 }

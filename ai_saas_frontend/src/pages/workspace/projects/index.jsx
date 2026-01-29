@@ -13,8 +13,10 @@ import { formatDate, formatDateTime } from "../../../utils/dateUtils";
 import SortMenu from "../components/SortMenu";
 import { apiFetch } from "../../../services/apiService";
 import { EmptyState } from "../../../components/EmptyState";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function ProjectsList() {
+  const { t } = useLanguage();
   const {
     loading,
     projects,
@@ -41,10 +43,10 @@ export default function ProjectsList() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Tem certeza que deseja excluir este projeto?")) return;
+    if (!window.confirm(t("projects.delete.confirm"))) return;
     try {
       await apiFetch(projectRoutes.delete(id), { method: "DELETE" });
-      toast.success("Projeto excluído com sucesso!");
+      toast.success(t("projects.delete.success"));
       setProjects((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
       toast.error(err.message);
@@ -53,7 +55,7 @@ export default function ProjectsList() {
 
   const createProject = async () => {
     if (!projectName.trim()) {
-      setErrorProject("O nome do projeto é obrigatório.");
+      setErrorProject(t("projects.validation.name_required"));
       return;
     }
 
@@ -70,7 +72,7 @@ export default function ProjectsList() {
         }),
       });
 
-      toast.success("Projeto criado com sucesso!");
+      toast.success(t("projects.create.success"));
       await loadProjects();
       setShowProjectModal(false);
       setProjectName("");
@@ -84,25 +86,25 @@ export default function ProjectsList() {
 
   return (
     <Layout>
-      <h1 className={styles.title}>Meus Projetos</h1>
+      <h1 className={styles.title}>{t("projects.title")}</h1>
       <p className="text-gray-600 mb-6">
-        Gerencie seus projetos, edite detalhes ou adicione conteúdos.
+        {t("projects.subtitle")}
       </p>
 
       {/* Barra de ações */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
         <div className="relative max-w-md w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="search"
-            placeholder="Buscar projetos..."
+            placeholder={t("projects.search.placeholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 py-2 bg-white rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
           />
         </div>
 
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-3 items-center flex-wrap">
           <FiltersPanel
             activeTab="project"
             dateFilter={dateFilter}
@@ -134,21 +136,21 @@ export default function ProjectsList() {
             className={`${styles.btnBlack} ${styles.btnBlackStandard}`}
           >
             <Plus className="w-4 h-4" />
-            <span className="text-sm">Novo Projeto</span>
+            <span className="text-sm">{t("projects.create.cta")}</span>
           </button>
         </div>
       </div>
 
       {/* Conteúdo */}
       {loading ? (
-        <p className="mt-6 text-sm">Carregando projetos...</p>
+        <p className="mt-6 text-sm">{t("projects.loading")}</p>
       ) : projects.length === 0 ? (
         <div onClick={(e) => e.stopPropagation()}>
           <EmptyState
             icon={FolderPlus}
-            title="Você ainda não possui projetos"
-            description="Crie seu primeiro projeto para começar a gerar conteúdos com IA."
-            ctaLabel="Criar novo projeto"
+            title={t("projects.empty.title")}
+            description={t("projects.empty.description")}
+            ctaLabel={t("projects.empty.cta")}
             onCtaClick={handleOpenCreateModal}
           />
         </div>
