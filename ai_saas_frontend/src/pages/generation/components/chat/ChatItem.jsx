@@ -95,7 +95,7 @@ export default function ChatItem({ chat, selected, loadChat, onUpdateList }) {
 
   return (
     <div
-      className={`group flex items-center justify-between px-3 py-2 mb-1 rounded-md text-sm truncate ${
+      className={`chat-item group flex items-center justify-between px-3 py-2 mb-1 rounded-md text-sm truncate ${
         selected ? "bg-[var(--color-primary)] text-white" : "hover:bg-gray-100 text-gray-800"
       }`}
       title={chat.title}
