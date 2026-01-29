@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import App from "./App";
 import { ToastContainer } from "react-toastify";
 import "./styles/index.css";
@@ -16,12 +17,14 @@ if (savedTheme === 'dark') {
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <NotificationProvider>
-          <App />
-          <ToastContainer theme="light" />
-        </NotificationProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <App />
+            <ToastContainer theme="light" />
+          </NotificationProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
