@@ -7,6 +7,7 @@ import { apiFetch } from '../../../services/apiService';
 import { TEXT_MODELS } from '../../../utils/constants';
 import Sidebar from "../components/chat/Sidebar";
 import useChats from "../hooks/useChats";
+import QuotaAlert from "../../../components/QuotaAlert";
 
 function TextGeneration() {
   const { chats, chatId, messages, setMessages, chatVisible, chatIdSetter, loadChat, createNewChat, updateChatList } = useChats();
@@ -18,6 +19,20 @@ function TextGeneration() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const settingsRef = useRef(null);
+
+  // ✅ Quota state (somente para alertas 80% / 100%)
+  const [quota, setQuota] = useState({ monthly_usage: 0, monthly_quota: 0 });
+
+  // ✅ Buscar quota ao abrir a página
+  useEffect(() => {
+    fetch("http://localhost:8000/api/quota/status", {
+      method: "GET",
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => setQuota(data))
+      .catch(() => {});
+  }, []);
 
   // Inicializar mensagens se não houver
   useEffect(() => {
@@ -94,7 +109,6 @@ function TextGeneration() {
     setMessages(prev => [...prev, userMessage]);
     setLoading(true);
 
-    // Chamada real ao backend (substitui o bloco de simulação)
     try {
       const aiData = await apiFetch(aiRoutes.generateText, {
         method: "POST",
@@ -132,6 +146,15 @@ function TextGeneration() {
       setMessages((prev) => [...prev, assistantMessage]);
       toast.success("Texto gerado com sucesso!");
       setPrompt("");
+
+      // ✅ (Opcional simples) Atualizar quota após gerar, para refletir consumo mais recente
+      fetch("http://localhost:8000/api/quota/status", {
+        method: "GET",
+        credentials: "include",
+      })
+        .then((res) => res.json())
+        .then((data) => setQuota(data))
+        .catch(() => {});
     } catch (err) {
       toast.error(err.message || "Erro ao gerar resposta");
     } finally {
@@ -141,6 +164,12 @@ function TextGeneration() {
 
   return (
     <Layout>
+      {/* ✅ ALERTA FIXO (canto superior direito) */}
+      <QuotaAlert
+        monthlyUsage={quota.monthly_usage}
+        monthlyQuota={quota.monthly_quota}
+      />
+
       <div className={`flex w-full h-[calc(100vh-80px)] overflow-hidden font-inter ${mobileSidebarOpen ? 'bg-white md:bg-gray-50' : 'bg-gray-50'}`}>
         {/* Sidebar */}
         <div className={`
