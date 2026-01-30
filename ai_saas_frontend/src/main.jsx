@@ -21,7 +21,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <AuthProvider>
           <NotificationProvider>
             <App />
-            <ToastContainer theme="light" />
+            <ToastContainer theme="light" position="bottom-right" />
           </NotificationProvider>
         </AuthProvider>
       </LanguageProvider>

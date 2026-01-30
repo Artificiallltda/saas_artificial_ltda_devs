@@ -40,6 +40,27 @@ export function LanguageProvider({ children }) {
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
+const defaultT = (key, params = undefined) => {
+  const dict = dictionaries["pt-BR"] || {};
+  const template = dict[key] ?? key;
+  if (!params) return template;
+
+  return Object.keys(params).reduce((acc, paramKey) => {
+    const value = params[paramKey];
+    return acc.replaceAll(`{${paramKey}}`, String(value));
+  }, template);
+};
+
 export function useLanguage() {
-  return useContext(LanguageContext);
+  const context = useContext(LanguageContext);
+  if (!context) {
+    // Se o contexto não está disponível, retornar um fallback seguro
+    console.warn("useLanguage called outside of LanguageProvider");
+    return {
+      language: "pt-BR",
+      changeLanguage: () => {},
+      t: defaultT
+    };
+  }
+  return context;
 }

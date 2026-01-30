@@ -40,8 +40,9 @@ export default function AdminUsersList() {
         role: u.role ?? "user",
       }));
       setUsers(safeData);
-    } catch {
-      toast.error("Erro ao carregar usuários.");
+    } catch (error) {
+      console.error("Erro ao carregar usuários:", error);
+      toast.error(t("admin.users.load_error"));
     }
   };
 
@@ -50,10 +51,11 @@ export default function AdminUsersList() {
     try {
       await apiFetch(userRoutes.deleteUser(id), { method: "DELETE" });
       setUsers(users.filter((u) => u.id !== id));
-      toast.success("Usuário excluído.");
+      toast.success(t("admin.users.actions.delete"));
       fetchUsers();
-    } catch {
-      toast.error("Erro ao excluir usuário.");
+    } catch (error) {
+      console.error("Erro ao excluir usuário:", error);
+      toast.error(t("admin.users.delete.error_single"));
     }
   };
 
@@ -64,10 +66,11 @@ export default function AdminUsersList() {
       await Promise.all(selectedIds.map((id) => apiFetch(userRoutes.deleteUser(id), { method: "DELETE" })));
       setUsers(users.filter((u) => !selectedIds.includes(u.id)));
       clearSelection();
-      toast.success("Usuários excluídos.");
+      toast.success(t("admin.users.delete.success_multiple"));
       fetchUsers();
-    } catch {
-      toast.error("Erro ao excluir usuários.");
+    } catch (error) {
+      console.error("Erro ao excluir usuários:", error);
+      toast.error(t("admin.users.delete.error_multiple"));
     }
   };
 
