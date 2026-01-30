@@ -10,9 +10,11 @@ import SelectionToolbar from "../../workspace/components/SelectionToolbar";
 import UserDetailsModal from "../components/UserDetailsModal";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "../admin.module.css";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function AdminUsersList() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
