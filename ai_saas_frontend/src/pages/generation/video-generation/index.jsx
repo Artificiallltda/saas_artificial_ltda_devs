@@ -7,9 +7,12 @@ import { aiRoutes, generatedContentRoutes, userRoutes } from '../../../services/
 import { apiFetch } from '../../../services/apiService';
 import { VIDEO_MODELS, VIDEO_RATIOS } from '../../../utils/constants';
 import { useLanguage } from '../../../context/LanguageContext';
+import { useFeatureRestriction } from '../../../hooks/useFeatureRestriction';
+import UpgradeModal from '../../../components/common/UpgradeModal';
 
 function VideoGeneration() {
   const { t } = useLanguage();
+  const { checkFeatureAccess, upgradeModal, closeUpgradeModal } = useFeatureRestriction();
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("veo-3.0-fast-generate-001");
   const [ratio, setRatio] = useState("16:9");
@@ -80,6 +83,11 @@ function VideoGeneration() {
   };
 
   const handleGenerate = async () => {
+    // Verificar se o usuário tem acesso à geração de vídeo
+    if (!checkFeatureAccess('video_generation')) {
+      return;
+    }
+
     if (!prompt.trim() && !referenceImage) {
       toast.warning(t('generation.common.prompt_required'));
       return;
@@ -98,20 +106,6 @@ function VideoGeneration() {
     setGeneratedVideo(null);
 
     try {
-      const userData = await apiFetch(userRoutes.getCurrentUser(), { method: "GET" });
-      const userPlan = userData?.plan?.name || "Básico";
-
-      if (userPlan !== "Pro") {
-        const errorMessage = {
-          id: Date.now() + 1,
-          role: 'assistant',
-          content: t('generation.video.pro_only')
-        };
-        setMessages(prev => [...prev, errorMessage]);
-        toast.error(t('generation.video.pro_only'));
-        return;
-      }
-
       const formData = new FormData();
       formData.append('prompt', prompt);
       formData.append('model_used', model);
@@ -388,6 +382,15 @@ function VideoGeneration() {
           </div>
         </div>
       </section>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={upgradeModal.isOpen}
+        onClose={closeUpgradeModal}
+        title={upgradeModal.title}
+        description={upgradeModal.description}
+        feature={upgradeModal.feature}
+      />
     </Layout>
   );
 }

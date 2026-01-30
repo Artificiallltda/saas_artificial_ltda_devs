@@ -37,14 +37,14 @@ export default function Subscription() {
   const renderFeatures = (features) => {
     return (
       <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-        {features.map((pf) => {
+        {features.map((pf, index) => {
           const isEnabled = pf.value === "true";
           const displayValue =
             pf.value !== "true" && pf.value !== "false" ? pf.value : null;
 
           return (
             <li
-              key={pf.id}
+              key={pf.id || `feature-${index}`}
               className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-shadow shadow-sm hover:shadow-md text-sm"
             >
               {isEnabled ? (
