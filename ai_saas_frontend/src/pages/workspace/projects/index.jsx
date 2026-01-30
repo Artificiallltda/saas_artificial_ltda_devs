@@ -86,108 +86,110 @@ export default function ProjectsList() {
 
   return (
     <Layout>
-      <h1 className={styles.title}>{t("projects.title")}</h1>
-      <p className="text-gray-600 mb-6">
-        {t("projects.subtitle")}
-      </p>
+      <div className="p-6">
+        <h1 className={styles.title}>{t("projects.title")}</h1>
+        <p className="text-gray-600 mb-6">
+          {t("projects.subtitle")}
+        </p>
 
-      {/* Barra de ações */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
-        <div className="relative max-w-md w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="search"
-            placeholder={t("projects.search.placeholder")}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 py-2 bg-white rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
-          />
-        </div>
-
-        <div className="flex gap-3 items-center flex-wrap">
-          <FiltersPanel
-            activeTab="project"
-            dateFilter={dateFilter}
-            setDateFilter={setDateFilter}
-            filterModel=""
-            setFilterModel={() => {}}
-            filterStyle=""
-            setFilterStyle={() => {}}
-            filterRatio=""
-            setFilterRatio={() => {}}
-            filterTempMin=""
-            setFilterTempMin={() => {}}
-            filterTempMax=""
-            setFilterTempMax={() => {}}
-            filterDurMin=""
-            setFilterDurMin={() => {}}
-            filterDurMax=""
-            setFilterDurMax={() => {}}
-          />
-
-          <SortMenu
-            activeTab="project"
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-          />
-
-          <button
-            onClick={handleOpenCreateModal}
-            className={`${styles.btnBlack} ${styles.btnBlackStandard}`}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="text-sm">{t("projects.create.cta")}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Conteúdo */}
-      {loading ? (
-        <p className="mt-6 text-sm">{t("projects.loading")}</p>
-      ) : projects.length === 0 ? (
-        <div onClick={(e) => e.stopPropagation()}>
-          <EmptyState
-            icon={FolderPlus}
-            title={t("projects.empty.title")}
-            description={t("projects.empty.description")}
-            ctaLabel={t("projects.empty.cta")}
-            onCtaClick={handleOpenCreateModal}
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              onDelete={handleDelete}
-              onSelect={setSelectedProject}
-              formatDate={formatDate}
+        {/* Barra de ações */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+          <div className="relative max-w-md w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="search"
+              placeholder={t("projects.search.placeholder")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 py-2 bg-white rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
             />
-          ))}
+          </div>
+
+          <div className="flex gap-3 items-center flex-wrap">
+            <FiltersPanel
+              activeTab="project"
+              dateFilter={dateFilter}
+              setDateFilter={setDateFilter}
+              filterModel=""
+              setFilterModel={() => {}}
+              filterStyle=""
+              setFilterStyle={() => {}}
+              filterRatio=""
+              setFilterRatio={() => {}}
+              filterTempMin=""
+              setFilterTempMin={() => {}}
+              filterTempMax=""
+              setFilterTempMax={() => {}}
+              filterDurMin=""
+              setFilterDurMin={() => {}}
+              filterDurMax=""
+              setFilterDurMax={() => {}}
+            />
+
+            <SortMenu
+              activeTab="project"
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+            />
+
+            <button
+              onClick={handleOpenCreateModal}
+              className={`${styles.btnBlack} ${styles.btnBlackStandard}`}
+            >
+              <Plus className="w-4 h-4" />
+              <span className="text-sm">{t("projects.create.cta")}</span>
+            </button>
+          </div>
         </div>
-      )}
 
-      {selectedProject && (
-        <ProjectDetailsModal
-          project={selectedProject}
-          onClose={() => setSelectedProject(null)}
-          formatDateTime={formatDateTime}
-        />
-      )}
+        {/* Conteúdo */}
+        {loading ? (
+          <p className="mt-6 text-sm">{t("projects.loading")}</p>
+        ) : projects.length === 0 ? (
+          <div onClick={(e) => e.stopPropagation()}>
+            <EmptyState
+              icon={FolderPlus}
+              title={t("projects.empty.title")}
+              description={t("projects.empty.description")}
+              ctaLabel={t("projects.empty.cta")}
+              onCtaClick={handleOpenCreateModal}
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {projects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                onDelete={handleDelete}
+                onSelect={setSelectedProject}
+                formatDate={formatDate}
+              />
+            ))}
+          </div>
+        )}
 
-      {showProjectModal && (
-        <ProjectModal
-          onClose={() => setShowProjectModal(false)}
-          onCreate={createProject}
-          name={projectName}
-          setName={setProjectName}
-          description={projectDescription}
-          setDescription={setProjectDescription}
-          loading={loadingProject}
-          error={errorProject}
-        />
-      )}
+        {selectedProject && (
+          <ProjectDetailsModal
+            project={selectedProject}
+            onClose={() => setSelectedProject(null)}
+            formatDateTime={formatDateTime}
+          />
+        )}
+
+        {showProjectModal && (
+          <ProjectModal
+            onClose={() => setShowProjectModal(false)}
+            onCreate={createProject}
+            name={projectName}
+            setName={setProjectName}
+            description={projectDescription}
+            setDescription={setProjectDescription}
+            loading={loadingProject}
+            error={errorProject}
+          />
+        )}
+      </div>
     </Layout>
   );
 }

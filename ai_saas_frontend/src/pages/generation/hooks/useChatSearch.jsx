@@ -42,10 +42,12 @@ export default function useChatSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);
+      setError(null);
       return;
     }
 
@@ -53,12 +55,19 @@ export default function useChatSearch() {
 
     const fetchChats = async () => {
       setLoading(true);
+      setError(null);
       try {
         const params = new URLSearchParams({ q: query });
         const res = await fetch(`${chatRoutes.list}?${params.toString()}`, {
           credentials: "include",
           signal: controller.signal,
         });
+        
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `Falha ao buscar chats (${res.status})`);
+        }
+        
         let data = await res.json();
 
         if (!data) data = [];
@@ -81,7 +90,10 @@ export default function useChatSearch() {
 
         setResults(data);
       } catch (err) {
-        if (err.name !== "AbortError") console.error("Erro ao buscar chats:", err);
+        if (err.name !== "AbortError") {
+          console.error("Erro ao buscar chats:", err);
+          setError(err.message || "Erro ao buscar chats");
+        }
       } finally {
         setLoading(false);
       }
@@ -96,5 +108,5 @@ export default function useChatSearch() {
 
   const handleChange = (e) => setQuery(e.target.value);
 
-  return { query, results, handleChange, loading, setQuery };
+  return { query, results, handleChange, loading, error, setQuery };
 }

@@ -1,16 +1,36 @@
 import { useState, useRef, useEffect } from 'react';
 import Layout from "../../../components/layout/Layout";
 import { Send, Loader2, Settings, ChevronDown } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 import { aiRoutes } from '../../../services/apiRoutes';
 import { apiFetch } from '../../../services/apiService';
 import { TEXT_MODELS } from '../../../utils/constants';
 import Sidebar from "../components/chat/Sidebar";
 import useChats from "../hooks/useChats";
 import { useLanguage } from '../../../context/LanguageContext';
+import { MessageSkeleton } from '../../../components/SkeletonLoader';
+import { MessageErrorState } from '../../../components/ErrorState';
+import { MessageEmptyState } from '../../../components/EmptyState';
 
 function TextGeneration() {
-  const { chats, chatId, messages, setMessages, chatVisible, chatIdSetter, loadChat, createNewChat, updateChatList } = useChats();
+  const { 
+    chats, 
+    chatId, 
+    messages, 
+    setMessages, 
+    chatVisible, 
+    chatIdSetter, 
+    loadChat, 
+    createNewChat, 
+    updateChatList,
+    chatsLoading,
+    chatsError,
+    messagesLoading,
+    messagesError,
+    retryLoadChats,
+    retryLoadMessages
+  } = useChats();
+  
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("gpt-4o");
   const [temperature, setTemperature] = useState(0.7);
@@ -143,6 +163,49 @@ function TextGeneration() {
     }
   };
 
+  const renderMessages = () => {
+    // Loading state for messages
+    if (messagesLoading) {
+      return <MessageSkeleton count={3} />;
+    }
+
+    // Error state for messages
+    if (messagesError) {
+      return (
+        <div className="flex justify-center py-8">
+          <MessageErrorState onRetry={retryLoadMessages} isLoading={messagesLoading} />
+        </div>
+      );
+    }
+
+    // Empty state for messages (only show if no chat is selected)
+    if (!chatId && messages.length === 0) {
+      return (
+        <div className="flex justify-center py-8">
+          <MessageEmptyState />
+        </div>
+      );
+    }
+
+    // Normal message rendering
+    return messages.map((message) => (
+      <div
+        key={message.id}
+        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+      >
+        <div
+          className={`max-w-3xl rounded-2xl px-4 py-3 ${
+            message.role === 'user'
+              ? 'bg-blue-600 text-white rounded-br-none'
+              : 'bg-gray-100 text-gray-800 rounded-bl-none'
+          }`}
+        >
+          {message.content && <p className="whitespace-pre-wrap">{message.content}</p>}
+        </div>
+      </div>
+    ));
+  };
+
   return (
     <Layout>
       <div className={`flex w-full h-[calc(100vh-80px)] overflow-hidden font-inter ${mobileSidebarOpen ? 'bg-white md:bg-gray-50' : 'bg-gray-50'}`}>
@@ -169,6 +232,9 @@ function TextGeneration() {
             updateChatList={updateChatList}
             setImagesOpen={() => {}} // Não faz nada na geração de texto
             isCollapsed={sidebarCollapsed}
+            chatsLoading={chatsLoading}
+            chatsError={chatsError}
+            retryLoadChats={retryLoadChats}
           />
         </div>
 
@@ -191,22 +257,7 @@ function TextGeneration() {
 
               {/* Chat Area */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-3xl rounded-2xl px-4 py-3 ${
-                        message.role === 'user'
-                          ? 'bg-blue-600 text-white rounded-br-none'
-                          : 'bg-gray-100 text-gray-800 rounded-bl-none'
-                      }`}
-                    >
-                      {message.content && <p className="whitespace-pre-wrap">{message.content}</p>}
-                    </div>
-                  </div>
-                ))}
+                {renderMessages()}
                 {loading && (
                   <div className="flex items-center gap-2 p-3 text-gray-500">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />

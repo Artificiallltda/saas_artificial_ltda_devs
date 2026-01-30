@@ -61,7 +61,7 @@ export default function Layout({ children, mainSidebarCollapsed }) {
   }, [sidebarOpen, isTextGeneration]);
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex h-screen w-full">
       {/* OVERLAY MOBILE */}
       {sidebarOpen && (
         <div
@@ -76,7 +76,7 @@ export default function Layout({ children, mainSidebarCollapsed }) {
           bg-white
           transition-[width] duration-300 ease-in-out
           ${sidebarCollapsed ? "w-20" : "w-64"}
-          fixed lg:relative z-50 h-screen overflow-y-auto
+          fixed lg:relative z-50 h-full overflow-y-auto
           ${!sidebarOpen ? "-translate-x-full lg:translate-x-0" : "translate-x-0"}
         `}
       >
@@ -88,7 +88,7 @@ export default function Layout({ children, mainSidebarCollapsed }) {
       </div>
 
       {/* CONTEÚDO */}
-      <div className="flex-1 flex flex-col w-full">
+      <div className="flex-1 flex flex-col w-full h-full">
         <Header
           onMenuClick={() =>
             setSidebarOpen((v) => {

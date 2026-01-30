@@ -3,8 +3,21 @@ import { Plus, Search, File, FolderMinus, Folder, MessageSquare } from "lucide-r
 import ChatItem from "./ChatItem";
 import useChatSearch from "../../hooks/useChatSearch";
 import { useLanguage } from "../../../../context/LanguageContext";
+import { ChatSkeleton, SearchSkeleton } from "../../../../components/SkeletonLoader";
+import { ChatErrorState, SearchErrorState } from "../../../../components/ErrorState";
+import { ChatEmptyState, SearchEmptyState } from "../../../../components/EmptyState";
 
-export default function Sidebar({ chats, chatId, loadChat, createNewChat, updateChatList, setImagesOpen }) {
+export default function Sidebar({ 
+  chats, 
+  chatId, 
+  loadChat, 
+  createNewChat, 
+  updateChatList, 
+  setImagesOpen,
+  chatsLoading,
+  chatsError,
+  retryLoadChats 
+}) {
   const [showArchived, setShowArchived] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef(null);
@@ -13,7 +26,7 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
   const archived = chats.filter((c) => c.archived);
   const active = chats.filter((c) => !c.archived);
 
-  const { query, results, handleChange, loading } = useChatSearch();
+  const { query, results, handleChange, loading: searchLoading, error: searchError } = useChatSearch();
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -31,14 +44,63 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
     setSearchOpen(false);
   };
 
+  // Render loading state for chats
+  if (chatsLoading) {
+    return (
+      <div className="relative w-full bg-white border-r border-gray-200 flex flex-col h-full pt-4 overflow-y-auto z-30">
+        <div className="flex flex-col gap-3 p-4 w-full">
+          <div className="w-full flex flex-col space-y-3">
+            <div className="w-full flex flex-col items-center py-3 rounded-lg bg-gray-50 text-gray-900">
+              <div className="w-5 h-5 bg-gray-200 rounded mb-1 animate-pulse"></div>
+              <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+            <div className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-gray-200">
+              <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
+              <div className="w-16 h-4 bg-gray-300 rounded animate-pulse"></div>
+            </div>
+          </div>
+          <div className="relative mt-2">
+            <div className="w-full h-10 bg-gray-100 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto pr-1">
+          <ChatSkeleton count={4} />
+        </div>
+      </div>
+    );
+  }
+
+  // Render error state for chats
+  if (chatsError) {
+    return (
+      <div className="relative w-full bg-white border-r border-gray-200 flex flex-col h-full pt-4 overflow-y-auto z-30">
+        <div className="flex flex-col gap-3 p-4 w-full">
+          <div className="w-full flex flex-col space-y-3">
+            <div className="w-full flex flex-col items-center py-3 rounded-lg bg-gray-50 text-gray-900">
+              <File className="w-5 h-5 mb-1" />
+              <span className="text-sm font-medium">{t('generation.text.sidebar.generations')}</span>
+            </div>
+            <button
+              onClick={createNewChat}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[var(--color-primary)] text-white hover:brightness-105 transition-colors mx-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="font-medium text-sm">{t('generation.text.sidebar.new_chat')}</span>
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto pr-1 px-4">
+          <ChatErrorState onRetry={retryLoadChats} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="relative w-full bg-white border-r border-gray-200 flex flex-col h-full pt-4 overflow-y-auto z-30"
       data-chat-sidebar=""
     >
-      {/* Botão de Toggle - Móvel */}
-     
-      
       {/* Conteúdo da Sidebar */}
       <div className="flex flex-col gap-3 p-4 w-full">
         <div className="w-full flex flex-col space-y-3">
@@ -80,8 +142,12 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
 
           {searchOpen && (
             <div className="absolute mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 animate-fadeIn origin-top">
-              {loading ? (
-                <p className="p-3 text-sm text-gray-500">{t('generation.text.sidebar.searching')}</p>
+              {searchLoading ? (
+                <SearchSkeleton count={3} />
+              ) : searchError ? (
+                <div className="p-4">
+                  <SearchErrorState />
+                </div>
               ) : results.length > 0 ? (
                 <ul className="max-h-80 overflow-y-auto divide-y divide-gray-200">
                   {results.map((chat) => (
@@ -110,9 +176,11 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-4">{t('generation.text.sidebar.no_results')}</p>
-              )}
+              ) : query ? (
+                <div className="p-4">
+                  <SearchEmptyState />
+                </div>
+              ) : null}
             </div>
           )}
         </div>
@@ -121,19 +189,24 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
       {/* Lista de Chats Ativos */}
       <h2 className="font-semibold text-gray-700 mb-2 text-sm px-4">{t('generation.text.sidebar.chats')}</h2>
       <div className="flex-1 overflow-y-auto pr-1">
-        {active.length === 0 && <p className="text-sm text-gray-400 px-3">{t('generation.text.sidebar.no_chats')}</p>}
-        {active.map((c) => (
-          <ChatItem
-            key={c.id}
-            chat={c}
-            selected={chatId === c.id}
-            loadChat={() => {
-              loadChat(c.id);
-              setImagesOpen(false); // fechar as gerações
-            }}
-            onUpdateList={updateChatList}
-          />
-        ))}
+        {active.length === 0 && !chatsLoading && !chatsError ? (
+          <div className="px-3">
+            <ChatEmptyState onCreateChat={createNewChat} />
+          </div>
+        ) : (
+          active.map((c) => (
+            <ChatItem
+              key={c.id}
+              chat={c}
+              selected={chatId === c.id}
+              loadChat={() => {
+                loadChat(c.id);
+                setImagesOpen(false);
+              }}
+              onUpdateList={updateChatList}
+            />
+          ))
+        )}
 
         {/* Chats Arquivados */}
         {archived.length > 0 && (
@@ -155,7 +228,7 @@ export default function Sidebar({ chats, chatId, loadChat, createNewChat, update
                     selected={chatId === c.id}
                     loadChat={() => {
                       loadChat(c.id);
-                      setImagesOpen(false); // fechar as gerações
+                      setImagesOpen(false);
                     }}
                     onUpdateList={updateChatList}
                     archived
