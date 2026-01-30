@@ -9,22 +9,24 @@ import {
   User,
   Settings,
   ShieldCheck,
-  Download
+  Lock
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { useFeatureRestriction } from "../../hooks/useFeatureRestriction";
 import { backendMessageKeyMap } from "../../i18n";
+import UpgradeModal from "../common/UpgradeModal";
 
 const getNavItems = (t) => [
-  { label: t("sidebar.dashboard"), icon: LayoutDashboard, path: "/" },
-  { label: t("sidebar.text_generation"), icon: FileText, path: "/text-generation" },
-  { label: t("sidebar.image_generation"), icon: Image, path: "/image-generation" },
-  { label: t("sidebar.video_generation"), icon: Video, path: "/video-generation" },
+  { label: t("sidebar.dashboard"), icon: LayoutDashboard, path: "/", feature: null },
+  { label: t("sidebar.text_generation"), icon: FileText, path: "/text-generation", feature: "text_generation" },
+  { label: t("sidebar.image_generation"), icon: Image, path: "/image-generation", feature: "image_generation" },
+  { label: t("sidebar.video_generation"), icon: Video, path: "/video-generation", feature: "video_generation" },
   { label: t("sidebar.download_bot"), icon: Download, path: "/download-bot" },
-  { label: t("sidebar.subscription"), icon: CreditCard, path: "/subscription" },
-  { label: t("sidebar.profile"), icon: User, path: "/profile" },
-  { label: t("sidebar.settings"), icon: Settings, path: "/settings" }
+  { label: t("sidebar.subscription"), icon: CreditCard, path: "/subscription", feature: null },
+  { label: t("sidebar.profile"), icon: User, path: "/profile", feature: null },
+  { label: t("sidebar.settings"), icon: Settings, path: "/settings", feature: null }
 ];
 
 function ChatToggleButton({ collapsed, t }) {
@@ -118,6 +120,7 @@ export default function Sidebar({
   const { t } = useLanguage();
   const location = useLocation();
   const { user } = useAuth();
+  const { hasFeatureAccess, checkFeatureAccess, upgradeModal, closeUpgradeModal, showUpgradeModal } = useFeatureRestriction();
   const touchStartX = useRef(null);
   const [planName, setPlanName] = useState(user?.plan?.name || t("common.plan_default"));
   const navItems = getNavItems(t);
@@ -178,25 +181,49 @@ export default function Sidebar({
           )}
 
           <nav className="space-y-2">
-            {navItems.map(({ label, icon: Icon, path }) => {
+            {navItems.map(({ label, icon: Icon, path, feature }) => {
               const isActive = location.pathname === path;
+              const hasAccess = !feature || hasFeatureAccess(feature);
+              
               return (
-                <Link
-                  key={label}
-                  to={path}
-                  onClick={onClose}
-                  className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg
-                    transition
-                    hover:bg-gray-100
-                    ${isActive
-                      ? "bg-gray-200 text-gray-900"
-                      : "text-gray-700"}
-                  `}
-                >
-                  <Icon className="w-5 h-5 text-gray-600" />
-                  {!collapsed && <span>{label}</span>}
-                </Link>
+                <div key={label}>
+                  {feature && !hasAccess ? (
+                    // Item bloqueado - mostra como desabilitado com ícone de cadeado
+                    <div
+                      className={`
+                        flex items-center gap-3 px-4 py-3 rounded-lg cursor-not-allowed
+                        ${isActive
+                          ? "bg-gray-100 text-gray-400"
+                          : "text-gray-400"}
+                      `}
+                      title={`${label} - Não disponível no seu plano`}
+                      onClick={() => showUpgradeModal(feature)}
+                    >
+                      <div className="relative">
+                        <Icon className="w-5 h-5" />
+                        <Lock className="w-3 h-3 absolute -bottom-1 -right-1 text-red-500" />
+                      </div>
+                      {!collapsed && <span className="text-sm">{label}</span>}
+                    </div>
+                  ) : (
+                    // Item normal ou sem restrição
+                    <Link
+                      to={path}
+                      onClick={onClose}
+                      className={`
+                        flex items-center gap-3 px-4 py-3 rounded-lg
+                        transition
+                        hover:bg-gray-100
+                        ${isActive
+                          ? "bg-gray-200 text-gray-900"
+                          : "text-gray-700"}
+                      `}
+                    >
+                      <Icon className="w-5 h-5 text-gray-600" />
+                      {!collapsed && <span>{label}</span>}
+                    </Link>
+                  )}
+                </div>
               );
             })}
 
@@ -224,6 +251,15 @@ export default function Sidebar({
           )}
         </div>
       </aside>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={upgradeModal.isOpen}
+        onClose={closeUpgradeModal}
+        title={upgradeModal.title}
+        description={upgradeModal.description}
+        feature={upgradeModal.feature}
+      />
     </>
   );
 }
