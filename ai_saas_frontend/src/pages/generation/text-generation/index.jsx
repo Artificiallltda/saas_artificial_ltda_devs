@@ -8,6 +8,7 @@ import { TEXT_MODELS } from '../../../utils/constants';
 import Sidebar from "../components/chat/Sidebar";
 import useChats from "../hooks/useChats";
 import { useLanguage } from '../../../context/LanguageContext';
+import DeepResearchWarning from "../components/chat/DeepResearchWarning";
 
 function TextGeneration() {
   const { chats, chatId, messages, setMessages, chatVisible, chatIdSetter, loadChat, createNewChat, updateChatList } = useChats();
@@ -18,6 +19,7 @@ function TextGeneration() {
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [showDeepResearchWarning, setShowDeepResearchWarning] = useState(false);
   const settingsRef = useRef(null);
 
   const { t, language } = useLanguage();
@@ -98,6 +100,11 @@ function TextGeneration() {
     setMessages(prev => [...prev, userMessage]);
     setLoading(true);
 
+    // Mostrar aviso do Deep Research se for o modelo selecionado
+    if (model === "sonar-deep-research") {
+      setShowDeepResearchWarning(true);
+    }
+
     // Chamada real ao backend (substitui o bloco de simulação)
     try {
       const aiData = await apiFetch(aiRoutes.generateText, {
@@ -140,6 +147,7 @@ function TextGeneration() {
       toast.error(err.message || "Erro ao gerar resposta");
     } finally {
       setLoading(false);
+      setShowDeepResearchWarning(false);
     }
   };
 
@@ -207,6 +215,12 @@ function TextGeneration() {
                     </div>
                   </div>
                 ))}
+                
+                {/* Deep Research Warning */}
+                {showDeepResearchWarning && (
+                  <DeepResearchWarning />
+                )}
+                
                 {loading && (
                   <div className="flex items-center gap-2 p-3 text-gray-500">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
