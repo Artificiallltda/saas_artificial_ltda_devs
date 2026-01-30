@@ -503,5 +503,8 @@
   "admin.create_user.card.description": "Criar uma nova conta",
   "admin.usage.card.title": "Uso de Tokens",
   "admin.usage.card.description": "Consumo por usuário, modelo e período",
-  "admin.create_user.breadcrumb": "Gerenciar Usuários"
+  "admin.create_user.breadcrumb": "Gerenciar Usuários",
+  "deep_research.title": "Deep Research",
+  "deep_research.loading_message": "Este Modelo de IA faz pesquisas online, aguarde enquanto realizamos todas as buscas necessárias para fornecer sua resposta.",
+  "deep_research.searching": "Buscando informações..."
 }

@@ -481,12 +481,14 @@
   "admin.usage.empty.icon": "📄",
   "admin.usage.empty.title": "No data for these filters.",
   "admin.usage.empty.description": "Adjust the time range or select another model.",
-  "admin.title": "Admin Panel",
   "admin.users.card.title": "Users",
   "admin.users.card.description": "View and manage all users",
   "admin.create_user.card.title": "Create User",
   "admin.create_user.card.description": "Create a new account",
   "admin.usage.card.title": "Token Usage",
   "admin.usage.card.description": "Consumption by user, model, and period",
-  "admin.create_user.breadcrumb": "Manage Users"
+  "admin.create_user.breadcrumb": "Manage Users",
+  "deep_research.title": "Deep Research",
+  "deep_research.loading_message": "This AI model performs online searches, please wait while we perform all necessary searches to provide your answer.",
+  "deep_research.searching": "Searching for information..."
 }   
