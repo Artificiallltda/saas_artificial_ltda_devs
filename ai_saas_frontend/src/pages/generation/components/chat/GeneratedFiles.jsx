@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../../../../services/apiService";
 import { generatedContentRoutes } from "../../../../services/apiRoutes";
-import ContentPreview from "../../../workspace/components/ContentPreview";
+import MediaPreview from "../../../../components/common/MediaPreview";
 import ContentDetailsModal from "../../../workspace/components/ContentDetailsModal";
 import { useLanguage } from "../../../../context/LanguageContext";
 
@@ -50,14 +50,18 @@ export default function GeneratedFiles({ goBack }) {
       ) : images.length === 0 ? (
         <p className="text-gray-500">{t("generation.text.generated_files.empty")}</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
           {images.map((content) => (
             <div
               key={content.id}
               className="relative cursor-pointer rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition"
               onClick={() => setSelectedImage(content)}
             >
-              <ContentPreview content={content} />
+              <MediaPreview 
+                content={content} 
+                aspectRatio="square"
+                className="w-full"
+              />
             </div>
           ))}
         </div>

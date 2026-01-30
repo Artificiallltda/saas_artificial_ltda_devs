@@ -1,5 +1,5 @@
 import { FileText, Image, Video, Trash2 } from "lucide-react";
-import ContentPreview from "./ContentPreview";
+import MediaPreview from "../../../components/common/MediaPreview";
 import { formatDateTime } from "../../../utils/dateUtils";
 import { TEXT_MODELS } from "../../../utils/constants";
 import { useLanguage } from "../../../context/LanguageContext";
@@ -61,8 +61,12 @@ export default function ContentCard({
           </span>
         </div>
 
-        <div className="flex-grow">
-          <ContentPreview content={content} />
+        <div className="flex-grow mb-3">
+          <MediaPreview 
+            content={content} 
+            aspectRatio={content.content_type === "video" ? "video" : "square"}
+            className="w-full"
+          />
         </div>
 
         <p className="mt-auto text-xs text-gray-700 pt-2 font-medium">
