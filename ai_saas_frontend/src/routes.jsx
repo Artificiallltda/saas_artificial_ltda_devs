@@ -13,6 +13,7 @@ import VerifyCode from "./pages/auth/verify-code";
 import TextGeneration from "./pages/generation/text-generation";
 import ImageGeneration from "./pages/generation/image-generation";
 import VideoGeneration from "./pages/generation/video-generation";
+import DownloadBot from "./pages/generation/download-bot";
 import Settings from "./pages/settings";
 import Profile from "./pages/profile";
 import Security from "./pages/profile/security";
@@ -103,6 +104,14 @@ function MainRoutes(){
         element={
           <PrivateRoute>
             <VideoGeneration />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/download-bot"
+        element={
+          <PrivateRoute>
+            <DownloadBot />
           </PrivateRoute>
         }
       />

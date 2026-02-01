@@ -25,11 +25,10 @@ class AutomationApp:
         )
         
         # Inicializa o Drive Service
-        # O arquivo 'credentials.json' deve estar na raiz do projeto
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        credentials_path = os.path.join(project_root, 'credentials.json')
+        # O arquivo 'credentials.json' deve estar na raiz do projeto SaaS
+        from .config import CREDENTIALS_PATH
         self.drive_service = DriveService(
-            credentials_path=credentials_path,
+            credentials_path=str(CREDENTIALS_PATH),
             folder_id=DRIVE_FOLDER_ID
         )
 

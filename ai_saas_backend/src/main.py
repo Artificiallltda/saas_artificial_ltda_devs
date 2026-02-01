@@ -10,7 +10,7 @@ from utils import check_if_token_revoked, create_default_plans
 from routes import (
     user_api, admin_api, auth_api, email_api, profile_api, project_api,
     generated_content_api, notification_api, plan_api, ai_generation_api,
-    ai_generation_video_api, chat_api
+    ai_generation_video_api, chat_api, download_api
 )
 from models import User, Plan
 import os, uuid
@@ -198,6 +198,7 @@ app.register_blueprint(notification_api, url_prefix="/api/notifications")
 app.register_blueprint(ai_generation_api, url_prefix="/api/ai")
 app.register_blueprint(ai_generation_video_api, url_prefix="/api/ai")
 app.register_blueprint(chat_api, url_prefix="/api/chats")
+app.register_blueprint(download_api, url_prefix="/api/downloads")
 
 print("🚀 Ambiente:", "DESENVOLVIMENTO" if ENV == "dev" else "PRODUÇÃO")
 
