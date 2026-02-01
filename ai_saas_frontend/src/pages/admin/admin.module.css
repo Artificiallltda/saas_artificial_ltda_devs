@@ -11,6 +11,116 @@
   @apply bg-white rounded-xl border border-gray-200 shadow-lg p-4 sm:p-6 lg:p-8 cursor-pointer flex flex-col items-center text-center transition-transform duration-300 hover:scale-[1.03] hover:shadow-xl;
 }
 
+/* Estilos para o modo escuro */
+body.dark-mode .title {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .modernCard {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .modernCardBlue {
+  border-color: #3b82f6 !important;
+}
+
+body.dark-mode .modernCardGreen {
+  border-color: #10b981 !important;
+}
+
+body.dark-mode .returnLink {
+  color: #cbd5e0 !important;
+}
+
+body.dark-mode .returnLink:hover {
+  background-color: #4a5568 !important;
+  color: #f8fafc !important;
+}
+
+/* Cards de usuários no modo escuro */
+body.dark-mode .relative.p-4.rounded-xl.shadow-sm.border {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .font-semibold.text-black.text-base {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-gray-500.text-sm {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode .text-gray-700.text-sm {
+  color: #cbd5e0 !important;
+}
+
+body.dark-mode .text-gray-600.text-sm {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode .bg-green-100.text-green-800 {
+  background-color: #065f46 !important;
+  color: #34d399 !important;
+}
+
+body.dark-mode .bg-red-100.text-red-800 {
+  background-color: #7f1d1d !important;
+  color: #f87171 !important;
+}
+
+body.dark-mode .text-gray-600.text-sm.pt-1 {
+  color: #a0aec0 !important;
+  border-color: #4a5568 !important;
+}
+
+body.dark-mode .text-blue-600.hover\:text-blue-800 {
+  color: #60a5fa !important;
+}
+
+body.dark-mode .text-blue-600.hover\:text-blue-800:hover {
+  color: #93c5fd !important;
+}
+
+body.dark-mode .text-red-600.hover\:text-red-800 {
+  color: #f87171 !important;
+}
+
+body.dark-mode .text-red-600.hover\:text-red-800:hover {
+  color: #fca5a5 !important;
+}
+
+body.dark-mode .hover\:bg-blue-50:hover {
+  background-color: #1e3a8a !important;
+}
+
+body.dark-mode .hover\:bg-red-50:hover {
+  background-color: #7f1d1d !important;
+}
+
+/* Estilos para os cards do painel admin com CSS Modules */
+body.dark-mode .text-lg.font-semibold.mt-2 {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-sm.text-gray-500 {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode .text-indigo-600 {
+  color: #818cf8 !important;
+}
+
+body.dark-mode .text-green-600 {
+  color: #34d399 !important;
+}
+
+body.dark-mode .text-blue-600 {
+  color: #60a5fa !important;
+}
 
 /* Cores dos ícones e bordas */
 .modernCardBlue {

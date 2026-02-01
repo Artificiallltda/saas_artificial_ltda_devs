@@ -3,10 +3,397 @@
 @import "./theme.css";
 @import "./base.css";
 
+/* Estilos base */
 :root {
   --color-success: #10B981;
 }
 
+/* Modo escuro simples */
+body.dark-mode {
+  background-color: #1a202c !important;
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .bg-white {
+  background-color: #2d3748 !important;
+}
+
+body.dark-mode .bg-gray-50 {
+  background-color: #1a202c !important;
+}
+
+body.dark-mode .text-gray-900 {
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .text-gray-700 {
+  color: #cbd5e0 !important;
+}
+
+body.dark-mode .text-gray-600 {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode .text-gray-500 {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode .border-gray-200 {
+  border-color: #4a5568 !important;
+}
+
+body.dark-mode .border-gray-300 {
+  border-color: #4a5568 !important;
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #2d3748 !important;
+  color: #e2e8f0 !important;
+  border-color: #4a5568 !important;
+}
+
+body.dark-mode .hover\:bg-gray-100:hover {
+  background-color: #4a5568 !important;
+}
+
+body.dark-mode .hover\:bg-gray-200:hover {
+  background-color: #4a5568 !important;
+}
+
+body.dark-mode .hover\:text-black:hover {
+  color: #e2e8f0 !important;
+}
+
+/* Estilos para os cards do painel admin */
+body.dark-mode .grid .bg-white {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+}
+
+body.dark-mode .grid .rounded-xl {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+}
+
+body.dark-mode .grid .text-lg {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .grid .text-sm {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode .grid .text-indigo-600 {
+  color: #818cf8 !important;
+}
+
+body.dark-mode .grid .text-green-600 {
+  color: #34d399 !important;
+}
+
+body.dark-mode .grid .text-blue-600 {
+  color: #60a5fa !important;
+}
+
+/* Estilos para os cards do painel admin - mais específicos */
+body.dark-mode div[class*="modernCard"] {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode div[class*="modernCard"] .text-lg {
+  color: #f8fafc !important;
+}
+
+body.dark-mode div[class*="modernCard"] .text-sm {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode div[class*="modernCard"] .text-indigo-600 {
+  color: #818cf8 !important;
+}
+
+body.dark-mode div[class*="modernCard"] .text-green-600 {
+  color: #34d399 !important;
+}
+
+body.dark-mode div[class*="modernCard"] .text-blue-600 {
+  color: #60a5fa !important;
+}
+
+body.dark-mode div[class*="modernCard"] svg {
+  color: inherit !important;
+}
+
+/* Estilos para o grid do admin */
+body.dark-mode .grid div[role="button"] {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+}
+
+body.dark-mode .grid div[role="button"] .text-lg {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .grid div[role="button"] .text-sm {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode .grid div[role="button"] .text-indigo-600 {
+  color: #818cf8 !important;
+}
+
+body.dark-mode .grid div[role="button"] .text-green-600 {
+  color: #34d399 !important;
+}
+
+body.dark-mode .grid div[role="button"] .text-blue-600 {
+  color: #60a5fa !important;
+}
+
+/* Estilo universal para qualquer elemento dentro do grid do admin */
+body.dark-mode .grid div {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+}
+
+body.dark-mode .grid div .text-lg {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .grid div .text-sm {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode .grid div .text-indigo-600 {
+  color: #818cf8 !important;
+}
+
+body.dark-mode .grid div .text-green-600 {
+  color: #34d399 !important;
+}
+
+body.dark-mode .grid div .text-blue-600 {
+  color: #60a5fa !important;
+}
+
+body.dark-mode .grid div svg {
+  color: inherit !important;
+}
+
+/* Estilo específico para o título Admin Panel */
+body.dark-mode h1,
+body.dark-mode .text-3xl,
+body.dark-mode .title {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-3xl.font-bold {
+  color: #f8fafc !important;
+}
+
+/* Estilos adicionais para títulos */
+/* Estilo para o ícone de menu (três pontos) no modo escuro */
+body.dark-mode .w-4.h-4 {
+  color: #a0aec0 !important;
+}
+
+/* Estilo específico para o ícone de menu no chat */
+body.dark-mode .chat-item .opacity-0.group-hover\:opacity-100 .w-4.h-4 {
+  color: #a0aec0 !important;
+}
+
+/* Estilos para o ícone de menu quando o item está selecionado */
+body.dark-mode .bg-\[var\(--color-primary\)\] .opacity-0.group-hover\:opacity-100 .w-4.h-4 {
+  color: #ffffff !important;
+}
+
+/* Estilo para o texto dos chats no modo escuro */
+body.dark-mode .chat-item {
+  color: #ffffff !important;
+}
+
+/* Estilo para o texto dos chats quando não selecionado */
+body.dark-mode .chat-item:not(.bg-\[var\(--color-primary\)\]) {
+  color: #e2e8f0 !important;
+}
+
+/* Estilo para o texto dos chats quando em hover */
+body.dark-mode .chat-item:hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Estilo para a mensagem de boas-vindas */
+body.dark-mode .bg-white .whitespace-pre-wrap {
+  color: #000000 !important;
+}
+
+body.dark-mode .font-bold {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-xl {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-2xl {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-4xl {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-5xl {
+  color: #f8fafc !important;
+}
+
+/* Estilos para os cards da página de perfil */
+body.dark-mode div[class*="panelGrid"] {
+  background-color: transparent !important;
+}
+
+body.dark-mode div[class*="modernCard"] {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode div[class*="cardTitle"] {
+  color: #f8fafc !important;
+}
+
+body.dark-mode div[class*="iconSecurity"] {
+  color: #3b82f6 !important;
+}
+
+body.dark-mode div[class*="iconSubscription"] {
+  color: #10b981 !important;
+}
+
+body.dark-mode div[class*="iconProjects"] {
+  color: #8b5cf6 !important;
+}
+
+body.dark-mode div[class*="iconSupport"] {
+  color: #f59e0b !important;
+}
+
+body.dark-mode div[class*="modernCard"] p {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode div[class*="modernCard"] svg {
+  color: inherit !important;
+}
+
+/* Estilos adicionais para os cards de perfil */
+body.dark-mode div[class*="panelGrid"] div {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+}
+
+body.dark-mode div[class*="panelGrid"] div h2 {
+  color: #f8fafc !important;
+}
+
+body.dark-mode div[class*="panelGrid"] div p {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode div[class*="panelGrid"] div svg {
+  color: inherit !important;
+}
+
+/* Estilos universais para todos os cards */
+body.dark-mode a[class*="modernCard"],
+body.dark-mode div[class*="modernCard"] {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode a[class*="modernCard"]:hover,
+body.dark-mode div[class*="modernCard"]:hover {
+  background-color: #4a5568 !important;
+}
+
+/* Estilos para todos os elementos dentro dos cards */
+body.dark-mode [class*="modernCard"] h2,
+body.dark-mode [class*="modernCard"] .cardTitle {
+  color: #f8fafc !important;
+}
+
+body.dark-mode [class*="modernCard"] p {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode [class*="modernCard"] svg {
+  color: inherit !important;
+}
+
+/* Estilos específicos para os ícones */
+body.dark-mode .iconSecurity,
+body.dark-mode [class*="iconSecurity"] {
+  color: #3b82f6 !important;
+}
+
+body.dark-mode .iconSubscription,
+body.dark-mode [class*="iconSubscription"] {
+  color: #10b981 !important;
+}
+
+body.dark-mode .iconProjects,
+body.dark-mode [class*="iconProjects"] {
+  color: #8b5cf6 !important;
+}
+
+body.dark-mode .iconSupport,
+body.dark-mode [class*="iconSupport"] {
+  color: #f59e0b !important;
+}
+
+/* Seletor super universal para capturar tudo */
+body.dark-mode * {
+  /* Não afeta tudo, mas os estilos específicos abaixo vão funcionar */
+}
+
+body.dark-mode a,
+body.dark-mode div[role="button"] {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode a:hover,
+body.dark-mode div[role="button"]:hover {
+  background-color: #4a5568 !important;
+}
+
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4 {
+  color: #f8fafc !important;
+}
+
+body.dark-mode p {
+  color: #a0aec0 !important;
+}
+
+/* Forçar os cards específicos */
+body.dark-mode [class*="modernCardSecurity"],
+body.dark-mode [class*="modernCardSubscription"],
+body.dark-mode [class*="modernCardProjects"],
+body.dark-mode [class*="modernCardSupport"] {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+}
+
+/* Estilos para o Toastify */
 .Toastify__toast--success {
   background-color: white !important;
   color: var(--color-primary) !important;
@@ -14,6 +401,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   font-weight: 500;
 }
+
 .Toastify__toast--success .Toastify__toast-icon svg path {
   stroke: var(--color-primary) !important;
   fill: var(--color-primary) !important;
@@ -26,4 +414,95 @@
 
 .Toastify__progress-bar--success {
   background: var(--color-primary) !important;
+}
+
+/* Estilos para Recent Projects no dashboard */
+body.dark-mode div[class*="blockCard"] {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+}
+
+body.dark-mode div[class*="blockCard"] .flex {
+  background-color: #2d3748 !important;
+}
+
+body.dark-mode div[class*="blockCard"] .hover\:bg-gray-50:hover {
+  background-color: #4a5568 !important;
+}
+
+body.dark-mode div[class*="blockCard"] .font-semibold {
+  color: #f8fafc !important;
+}
+
+body.dark-mode div[class*="blockCard"] .text-black {
+  color: #f8fafc !important;
+}
+
+body.dark-mode div[class*="statSubtext"] {
+  color: #a0aec0 !important;
+}
+
+body.dark-mode div[class*="blockCard"] .divide-gray-300 {
+  border-color: #4a5568 !important;
+}
+
+/* Estilos para botões Start mais brancos no modo escuro */
+body.dark-mode button[class*="start"],
+body.dark-mode button[class*="Start"],
+body.dark-mode .bg-blue-600,
+body.dark-mode .bg-blue-500,
+body.dark-mode button.text-white {
+  background-color: #ffffff !important;
+  color: #1a202c !important;
+  border: 2px solid #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+body.dark-mode button[class*="start"]:hover,
+body.dark-mode button[class*="Start"]:hover,
+body.dark-mode .bg-blue-600:hover,
+body.dark-mode .bg-blue-500:hover,
+body.dark-mode button.text-white:hover {
+  background-color: #f7fafc !important;
+  color: #1a202c !important;
+  border-color: #cbd5e0 !important;
+  box-shadow: 0 6px 8px -1px rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Estilos para botões verdes mais brancos */
+body.dark-mode .bg-green-600,
+body.dark-mode .bg-green-500 {
+  background-color: #ffffff !important;
+  color: #065f46 !important;
+  border: 2px solid #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.2) !important;
+}
+
+body.dark-mode .bg-green-600:hover,
+body.dark-mode .bg-green-500:hover {
+  background-color: #f7fafc !important;
+  color: #065f46 !important;
+  border-color: #cbd5e0 !important;
+  box-shadow: 0 6px 8px -1px rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Estilos para botões roxos mais brancos */
+body.dark-mode .bg-purple-600,
+body.dark-mode .bg-purple-500 {
+  background-color: #ffffff !important;
+  color: #5b21b6 !important;
+  border: 2px solid #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.2) !important;
+}
+
+body.dark-mode .bg-purple-600:hover,
+body.dark-mode .bg-purple-500:hover {
+  background-color: #f7fafc !important;
+  color: #5b21b6 !important;
+  border-color: #cbd5e0 !important;
+  box-shadow: 0 6px 8px -1px rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-1px) !important;
 }
