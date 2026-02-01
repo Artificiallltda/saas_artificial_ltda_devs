@@ -8,7 +8,8 @@ import {
   CreditCard,
   User,
   Settings,
-  ShieldCheck
+  ShieldCheck,
+  Download
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -20,6 +21,7 @@ const getNavItems = (t) => [
   { label: t("sidebar.text_generation"), icon: FileText, path: "/text-generation" },
   { label: t("sidebar.image_generation"), icon: Image, path: "/image-generation" },
   { label: t("sidebar.video_generation"), icon: Video, path: "/video-generation" },
+  { label: t("sidebar.download_bot"), icon: Download, path: "/download-bot" },
   { label: t("sidebar.subscription"), icon: CreditCard, path: "/subscription" },
   { label: t("sidebar.profile"), icon: User, path: "/profile" },
   { label: t("sidebar.settings"), icon: Settings, path: "/settings" }

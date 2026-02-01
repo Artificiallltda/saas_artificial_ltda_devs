@@ -1,0 +1,4 @@
+# Automation bot
+automation_bot/backend/.env
+automation_bot/backend/__pycache__/
+credentials.json

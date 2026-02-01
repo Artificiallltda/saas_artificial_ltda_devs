@@ -88,3 +88,8 @@ export const chatRoutes = {
   messages: (chatId) => `${API_BASE}/chats/${chatId}?with_messages=true`, // GET → lista mensagens
   attachments: (attachmentId) => `${API_BASE}/chats/attachments/${attachmentId}`,
 };
+
+export const downloadRoutes = {
+  process: `${API_BASE}/downloads/process`,           // POST → processar download
+  status: `${API_BASE}/downloads/status`,            // GET → status do serviço
+};
