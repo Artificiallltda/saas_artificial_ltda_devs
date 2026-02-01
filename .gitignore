@@ -1,0 +1,61 @@
+# Credenciais e secrets
+credentials.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!eslint.config.js
+*.pem
+*.key
+.env
+.env.local
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Downloads e arquivos temporários
+downloads/
+*.tmp
+*.temp
+
+# Database
+*.db
+*.sqlite3
+*.sqlite
+
+# Playwright
+.playwright/
+.playwright-local/
+.pw/

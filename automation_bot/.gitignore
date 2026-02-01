@@ -1,0 +1,39 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual envs
+.env
+.venv/
+venv/
+ENV/
+
+# Secrets / credentials
+credentials.json
+.env*
+.env.local
+*.pem
+*.key
+
+# Downloads / runtime
+downloads/
+*.log
+
+# Playwright local browsers/cache
+.playwright/
+.playwright-local/
+.pw/
+# optional: if you store browser binaries elsewhere
+# .cache/
+
+# IDEs / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Packaging
+dist/
+build/
+*.egg-info/
