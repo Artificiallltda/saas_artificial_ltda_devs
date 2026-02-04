@@ -9,7 +9,7 @@ import {
   User,
   Settings,
   ShieldCheck,
-  Lock
+  Lock,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -19,14 +19,14 @@ import { backendMessageKeyMap } from "../../i18n";
 import UpgradeModal from "../common/UpgradeModal";
 
 const getNavItems = (t) => [
-  { label: t("sidebar.dashboard"), icon: LayoutDashboard, path: "/", feature: null },
-  { label: t("sidebar.text_generation"), icon: FileText, path: "/text-generation", feature: "text_generation" },
-  { label: t("sidebar.image_generation"), icon: Image, path: "/image-generation", feature: "image_generation" },
-  { label: t("sidebar.video_generation"), icon: Video, path: "/video-generation", feature: "video_generation" },
+  { label: t("sidebar.dashboard"), icon: LayoutDashboard, path: "/", feature: null, feature: null },
+  { label: t("sidebar.text_generation"), icon: FileText, path: "/text-generation", feature: "text_generation", feature: "text_generation" },
+  { label: t("sidebar.image_generation"), icon: Image, path: "/image-generation", feature: "image_generation", feature: "image_generation" },
+  { label: t("sidebar.video_generation"), icon: Video, path: "/video-generation", feature: "video_generation", feature: "video_generation" },
   { label: t("sidebar.download_bot"), icon: Download, path: "/download-bot" },
-  { label: t("sidebar.subscription"), icon: CreditCard, path: "/subscription", feature: null },
-  { label: t("sidebar.profile"), icon: User, path: "/profile", feature: null },
-  { label: t("sidebar.settings"), icon: Settings, path: "/settings", feature: null }
+  { label: t("sidebar.subscription"), icon: CreditCard, path: "/subscription", feature: null, feature: null },
+  { label: t("sidebar.profile"), icon: User, path: "/profile", feature: null, feature: null },
+  { label: t("sidebar.settings"), icon: Settings, path: "/settings", feature: null, feature: null }
 ];
 
 function ChatToggleButton({ collapsed, t }) {
