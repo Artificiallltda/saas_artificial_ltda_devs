@@ -11,8 +11,6 @@ import { useLanguage } from '../../../context/LanguageContext';
 import DeepResearchWarning from "../components/chat/DeepResearchWarning";
 import { useFeatureRestriction } from '../../../hooks/useFeatureRestriction';
 import UpgradeModal from '../../../components/common/UpgradeModal';
-import { useFeatureRestriction } from '../../../hooks/useFeatureRestriction';
-import UpgradeModal from '../../../components/common/UpgradeModal';
 
 function TextGeneration() {
   const { chats, chatId, messages, setMessages, chatVisible, chatIdSetter, loadChat, createNewChat, updateChatList } = useChats();
