@@ -158,6 +158,7 @@ export default function Sidebar({
         className={`
           fixed z-40
           h-full
+          top-0 bottom-0
           bg-white px-4
           flex flex-col justify-between
           transition-all duration-300 ease-in-out
