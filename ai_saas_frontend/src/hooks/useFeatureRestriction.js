@@ -24,6 +24,16 @@ const PLAN_FEATURES = {
     custom_temperature: true,
     high_resolution: true
   },
+  'Bot': {
+    text_generation: false,
+    image_generation: false,
+    video_generation: false,
+    audio_generation: false,
+    file_attachments: false,
+    advanced_models: false,
+    custom_temperature: false,
+    high_resolution: false
+  },
   'Básico': {
     text_generation: true,
     image_generation: false,
@@ -38,6 +48,10 @@ const PLAN_FEATURES = {
 
 // Mapeamento de features para mensagens de upgrade
 const FEATURE_MESSAGES = {
+  text_generation: {
+    title: 'upgrade_modal.text_generation.title',
+    description: 'upgrade_modal.text_generation.description'
+  },
   video_generation: {
     title: 'upgrade_modal.video_generation.title',
     description: 'upgrade_modal.video_generation.description'
@@ -84,6 +98,7 @@ const FEATURE_DISPLAY_NAMES = {
 const PLAN_MODELS = {
   'Pro': [], // Todos os modelos disponíveis
   'Premium': [], // Todos os modelos exceto vídeo
+  'Bot': [],
   'Básico': [
     'gpt-4o',
     'deepseek/deepseek-r1-0528:free',

@@ -14,7 +14,7 @@ import UpgradeModal from '../../../components/common/UpgradeModal';
 
 function TextGeneration() {
   const { chats, chatId, messages, setMessages, chatVisible, chatIdSetter, loadChat, createNewChat, updateChatList } = useChats();
-  const { hasModelAccess, checkModelAccess, upgradeModal, closeUpgradeModal } = useFeatureRestriction();
+  const { hasModelAccess, checkModelAccess, checkFeatureAccess, upgradeModal, closeUpgradeModal } = useFeatureRestriction();
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("gpt-4o");
   const [temperature, setTemperature] = useState(0.7);
@@ -112,6 +112,10 @@ function TextGeneration() {
   }, []);
 
   const handleGenerate = async () => {
+    if (!checkFeatureAccess('text_generation')) {
+      return;
+    }
+
     if (!prompt.trim()) {
       toast.warning("Digite um prompt antes de gerar!");
       return;
