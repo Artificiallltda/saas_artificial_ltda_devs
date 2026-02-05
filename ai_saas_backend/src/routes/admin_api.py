@@ -150,15 +150,7 @@ def update_user_status(user_id):
 @jwt_required()
 @admin_required
 def usage_report():
-    # Restringe ao admin específico, se desejado
-    current_user_id = getattr(jwt_required, "__wrapped__", None) and None  # dummy, já validado
-    # Validação adicional: admin fixo "GeanSantos" (opcional forte)
-    # Busca o usuário autenticado pelo JWT
-    from flask_jwt_extended import get_jwt_identity
-    uid = get_jwt_identity()
-    me = User.query.get(uid)
-    if not me or me.username != "GeanSantos":
-        return jsonify({"error": "Acesso restrito ao administrador responsável"}), 403
+    # Admin já validado pelo decorator @admin_required
 
     start = request.args.get("start")
     end = request.args.get("end")
