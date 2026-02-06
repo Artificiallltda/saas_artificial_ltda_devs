@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import TourGuide from "../tour/TourGuide";
 
 export default function Layout({ children, mainSidebarCollapsed }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile
@@ -61,11 +62,18 @@ export default function Layout({ children, mainSidebarCollapsed }) {
   }, [sidebarOpen, isTextGeneration]);
 
   return (
+
+    <div className="flex min-h-screen w-full">
+      {/* TOUR GUIDE */}
+      <TourGuide />
+
+
     <div className="flex h-screen w-full">
+
       {/* OVERLAY MOBILE */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}

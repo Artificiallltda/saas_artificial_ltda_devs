@@ -1,0 +1,80 @@
+/* Estilos customizados para o Tour Guide */
+
+/* Overlay principal com desfoque */
+.react-joyride__overlay {
+  background: rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Área destacada (spotlight) */
+.react-joyride__spotlight {
+  border-radius: 8px !important;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Tooltip do tour */
+.react-joyride__tooltip {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  max-width: 320px !important;
+}
+
+/* Botões do tour */
+.react-joyride__tooltip button {
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-joyride__tooltip button[data-action="primary"] {
+  background: #2563eb !important;
+  border: 1px solid #2563eb !important;
+}
+
+.react-joyride__tooltip button[data-action="primary"]:hover {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+
+/* Progress bar */
+.react-joyride__tooltip progress {
+  height: 3px !important;
+  border-radius: 3px !important;
+}
+
+/* Modal de boas-vindas */
+.tour-welcome-overlay {
+  background: rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+}
+
+/* Animações suaves */
+@keyframes tourFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.react-joyride__tooltip {
+  animation: tourFadeIn 0.3s ease-out !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .react-joyride__tooltip {
+    max-width: 280px !important;
+    font-size: 14px !important;
+  }
+  
+  .react-joyride__spotlight {
+    border-radius: 6px !important;
+  }
+}
