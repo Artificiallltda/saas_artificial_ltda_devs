@@ -9,7 +9,8 @@ import {
   Menu,
   MessageSquare,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  PlayCircle
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
@@ -22,6 +23,7 @@ import {
 } from "../../services/apiRoutes";
 import { useNotifications } from "../../context/NotificationContext";
 import LanguageSelector from "../common/LanguageSelector";
+import TourButton from "../tour/TourButton";
 
 export default function Header({
   onMenuClick,
@@ -140,7 +142,7 @@ export default function Header({
 
   return (
       <header
-        className="flex items-center justify-between px-6 py-4 bg-white w-full relative z-50 border-0 border-b-0 shadow-none outline-none"
+        className="flex items-center justify-between px-6 py-4 bg-white w-full relative z-40 border-0 border-b-0 shadow-none outline-none"
         ref={menuRef}
       >
       {/* ESQUERDA */}
@@ -207,7 +209,7 @@ export default function Header({
           />
 
           {searchOpen && searchResults.length > 0 && (
-            <div className="absolute mt-1 w-full bg-white border rounded-md shadow-lg z-50">
+            <div className="absolute mt-1 w-full bg-white border rounded-md shadow-lg z-40">
               <ul className="max-h-80 overflow-y-auto divide-y">
                 {searchResults.map(item => (
                   <li
@@ -234,6 +236,8 @@ export default function Header({
 
       {/* DIREITA */}
       <div className="flex items-center gap-2 relative">
+        <TourButton className="hidden md:flex" />
+        
         <button
           onClick={() => {
             const isDark = document.body.classList.toggle('dark-mode');
@@ -276,7 +280,7 @@ export default function Header({
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-sm border border-gray-200/60 rounded-xl shadow-xl shadow-black/5 ring-1 ring-black/5 text-sm z-50 overflow-hidden">
+          <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-sm border border-gray-200/60 rounded-xl shadow-xl shadow-black/5 ring-1 ring-black/5 text-sm z-40 overflow-hidden">
             <ul className="py-1">
               <li>
                 <Link to="/profile" className="flex gap-2 px-4 py-2 hover:bg-gray-50 focus:bg-gray-50 transition-colors outline-none">
@@ -287,6 +291,17 @@ export default function Header({
                 <Link to="/settings" className="flex gap-2 px-4 py-2 hover:bg-gray-50 focus:bg-gray-50 transition-colors outline-none">
                   <Settings className="w-4 h-4" /> {t("header.settings")}
                 </Link>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('hasSeenTour');
+                    window.location.reload();
+                  }}
+                  className="w-full text-left flex gap-2 px-4 py-2 hover:bg-blue-50 text-blue-600 transition-colors outline-none"
+                >
+                  <PlayCircle className="w-4 h-4" /> {t('tour.restart_tour') || 'Tour Guiado'}
+                </button>
               </li>
               <li>
                 <button
