@@ -558,10 +558,7 @@
   "tour.last": "Finish",
   "tour.next": "Next",
   "tour.open": "Open",
-  "tour.restart_tour": "Guided Tour"
-}   
-
-  "admin.create_user.breadcrumb": "Manage Users",
+  "tour.restart_tour": "Guided Tour",
   "upgrade_modal.text_generation.title": "Text Generation",
   "upgrade_modal.text_generation.description": "Unlock AI text generation. Available in Basic, Premium, and Pro plans.",
   "upgrade_modal.video_generation.title": "Exclusive Video Generation",
@@ -594,5 +591,4 @@
   "upgrade_modal.benefits.higher_limits": "Higher usage limits",
   "upgrade_modal.upgrade_button": "Upgrade Now",
   "upgrade_modal.not_now_button": "Not Now"
-}   
-
+}
