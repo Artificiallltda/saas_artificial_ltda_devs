@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import BotPopup from "../common/BotPopup";
 
 export default function Layout({ children, mainSidebarCollapsed }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile
@@ -107,6 +108,8 @@ export default function Layout({ children, mainSidebarCollapsed }) {
           <div className="w-full h-full">{children}</div>
         </main>
       </div>
+
+      <BotPopup />
     </div>
   );
 }

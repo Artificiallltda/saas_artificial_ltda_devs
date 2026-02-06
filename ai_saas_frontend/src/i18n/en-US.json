@@ -542,5 +542,18 @@
   "upgrade_modal.benefits.priority_support": "Priority support",
   "upgrade_modal.benefits.higher_limits": "Higher usage limits",
   "upgrade_modal.upgrade_button": "Upgrade Now",
-  "upgrade_modal.not_now_button": "Not Now"
+  "upgrade_modal.not_now_button": "Not Now",
+  "bot_popup.title": "Artificiall Support",
+  "bot_popup.button_label": "Support",
+  "bot_popup.open": "Open support",
+  "bot_popup.close": "Close support",
+  "bot_popup.coming_soon_message": "Hi! Soon you'll be able to chat with our support here.",
+  "bot_popup.input_placeholder": "Type your message...",
+  "bot_popup.send": "Send",
+  "bot_popup.coming_soon": "Coming soon",
+  "bot_popup.category_label": "Choose a category",
+  "bot_popup.category.complaint": "Complaint",
+  "bot_popup.category.support": "Support",
+  "bot_popup.category.sales": "Sales",
+  "bot_popup.category.billing": "Billing"
 }   

@@ -563,5 +563,18 @@
   "upgrade_modal.benefits.priority_support": "Suporte prioritário",
   "upgrade_modal.benefits.higher_limits": "Limites mais altos de uso",
   "upgrade_modal.upgrade_button": "Fazer Upgrade",
-  "upgrade_modal.not_now_button": "Agora não"
+  "upgrade_modal.not_now_button": "Agora não",
+  "bot_popup.title": "Atendimento Artificiall",
+  "bot_popup.button_label": "Atendimento",
+  "bot_popup.open": "Abrir atendimento",
+  "bot_popup.close": "Fechar atendimento",
+  "bot_popup.coming_soon_message": "Olá! Em breve você poderá conversar com o nosso atendimento por aqui.",
+  "bot_popup.input_placeholder": "Digite sua mensagem...",
+  "bot_popup.send": "Enviar",
+  "bot_popup.coming_soon": "Em breve",
+  "bot_popup.category_label": "Escolha uma categoria",
+  "bot_popup.category.complaint": "Reclamação",
+  "bot_popup.category.support": "Suporte",
+  "bot_popup.category.sales": "Comercial",
+  "bot_popup.category.billing": "Financeiro"
 }
