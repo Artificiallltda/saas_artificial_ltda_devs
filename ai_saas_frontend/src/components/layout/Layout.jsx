@@ -62,13 +62,12 @@ export default function Layout({ children, mainSidebarCollapsed }) {
   }, [sidebarOpen, isTextGeneration]);
 
   return (
-
     <div className="flex min-h-screen w-full">
       {/* TOUR GUIDE */}
       <TourGuide />
 
 
-    <div className="flex h-screen w-full">
+      <div className="flex h-screen w-full">
 
       {/* OVERLAY MOBILE */}
       {sidebarOpen && (
@@ -114,6 +113,7 @@ export default function Layout({ children, mainSidebarCollapsed }) {
         <main className="flex-1 overflow-y-auto bg-gray-50 w-full">
           <div className="w-full h-full">{children}</div>
         </main>
+      </div>
       </div>
     </div>
   );
