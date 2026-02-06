@@ -11,8 +11,7 @@ export default function AdminPanel() {
 
   return (
     <Layout>
-
-      <section className="px-4 sm:px-6 space-y-6 py-8 min-h-[calc(100vh-64px-64px)]">
+      <div className="p-6 space-y-6">
         <h1 className={styles.title}>{t("admin.title")}</h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
@@ -58,7 +57,7 @@ export default function AdminPanel() {
             </p>
           </div>
         </div>
-      </section>
+      </div>
     </Layout>
   );
 }

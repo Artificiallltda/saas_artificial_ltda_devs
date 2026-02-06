@@ -13,14 +13,14 @@ export default function DeepResearchWarning() {
           <Search className="w-4 h-4 text-blue-500" />
         </div>
         <span className="text-sm font-semibold text-blue-800">
-          Deep Research
+          {t("deep_research.title", "Deep Research")}
         </span>
       </div>
       
       <div className="flex items-center gap-2 text-blue-700">
         <Loader2 className="w-4 h-4 animate-spin" />
         <span className="text-sm">
-          Este Modelo de IA faz pesquisas online, aguarde enquanto realizamos todas as buscas necessárias para fornecer sua resposta.
+          {t("deep_research.loading_message", "Este Modelo de IA faz pesquisas online, aguarde enquanto realizamos todas as buscas necessárias para fornecer sua resposta.")}
         </span>
       </div>
       
@@ -29,7 +29,7 @@ export default function DeepResearchWarning() {
         <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></span>
         <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></span>
         <span className="text-xs text-blue-600 ml-2">
-          Buscando informações...
+          {t("deep_research.searching", "Buscando informações...")}
         </span>
       </div>
     </div>

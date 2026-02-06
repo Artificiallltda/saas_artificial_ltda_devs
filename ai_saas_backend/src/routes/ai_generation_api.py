@@ -333,6 +333,11 @@ def generate_text():
             plan_name = (user.plan.name if user and user.plan else "").strip().lower()
         except Exception as _e:
             plan_name = ""
+        if plan_name == "bot":
+            return jsonify({
+                "error": "Plano Bot não permite geração de texto"
+            }), 403
+
         if plan_name in ("básico", "basico"):
             if not is_model_allowed_for_basic_plan(model):
                 return jsonify({
@@ -865,6 +870,10 @@ def generate_image():
     user = User.query.get(current_user_id)
     if not user:
         return jsonify({"error": "Usuário inválido"}), 403
+
+    plan_name = (user.plan.name if user.plan else "").strip().lower()
+    if plan_name == "bot":
+        return jsonify({"error": "Plano Bot não permite geração de imagem"}), 403
 
     # Verifica se é FormData (com imagem) ou JSON (sem imagem)
     content_type = request.content_type or ""

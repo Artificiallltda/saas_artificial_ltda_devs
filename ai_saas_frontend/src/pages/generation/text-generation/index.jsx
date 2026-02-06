@@ -8,9 +8,13 @@ import { TEXT_MODELS } from '../../../utils/constants';
 import Sidebar from "../components/chat/Sidebar";
 import useChats from "../hooks/useChats";
 import { useLanguage } from '../../../context/LanguageContext';
+import DeepResearchWarning from "../components/chat/DeepResearchWarning";
+import { useFeatureRestriction } from '../../../hooks/useFeatureRestriction';
+import UpgradeModal from '../../../components/common/UpgradeModal';
 
 function TextGeneration() {
   const { chats, chatId, messages, setMessages, chatVisible, chatIdSetter, loadChat, createNewChat, updateChatList } = useChats();
+  const { hasModelAccess, checkModelAccess, checkFeatureAccess, upgradeModal, closeUpgradeModal } = useFeatureRestriction();
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("gpt-4o");
   const [temperature, setTemperature] = useState(0.7);
@@ -18,9 +22,33 @@ function TextGeneration() {
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [showDeepResearchWarning, setShowDeepResearchWarning] = useState(false);
   const settingsRef = useRef(null);
 
   const { t, language } = useLanguage();
+
+  // Filtrar modelos disponíveis com base no plano do usuário
+  const availableModels = TEXT_MODELS.filter(modelInfo => 
+    hasModelAccess(modelInfo.value)
+  );
+
+  // Verificar se o modelo atual ainda está disponível
+  useEffect(() => {
+    if (!hasModelAccess(model)) {
+      // Mudar para o primeiro modelo disponível
+      const firstAvailable = availableModels[0];
+      if (firstAvailable) {
+        setModel(firstAvailable.value);
+      }
+    }
+  }, [model, hasModelAccess, availableModels]);
+
+  // Função para lidar com mudança de modelo
+  const handleModelChange = (newModel) => {
+    if (checkModelAccess(newModel)) {
+      setModel(newModel);
+    }
+  };
 
   // Update welcome message when language changes or component mounts
   useEffect(() => {
@@ -84,6 +112,10 @@ function TextGeneration() {
   }, []);
 
   const handleGenerate = async () => {
+    if (!checkFeatureAccess('text_generation')) {
+      return;
+    }
+
     if (!prompt.trim()) {
       toast.warning("Digite um prompt antes de gerar!");
       return;
@@ -97,6 +129,11 @@ function TextGeneration() {
     
     setMessages(prev => [...prev, userMessage]);
     setLoading(true);
+
+    // Mostrar aviso do Deep Research se for o modelo selecionado
+    if (model === "sonar-deep-research") {
+      setShowDeepResearchWarning(true);
+    }
 
     // Chamada real ao backend (substitui o bloco de simulação)
     try {
@@ -140,6 +177,7 @@ function TextGeneration() {
       toast.error(err.message || "Erro ao gerar resposta");
     } finally {
       setLoading(false);
+      setShowDeepResearchWarning(false);
     }
   };
 
@@ -207,6 +245,12 @@ function TextGeneration() {
                     </div>
                   </div>
                 ))}
+                
+                {/* Deep Research Warning */}
+                {showDeepResearchWarning && (
+                  <DeepResearchWarning />
+                )}
+                
                 {loading && (
                   <div className="flex items-center gap-2 p-3 text-gray-500">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
@@ -236,10 +280,10 @@ function TextGeneration() {
                           <label className="block text-sm font-medium text-gray-700 mb-1">{t('generation.text.settings.model')}</label>
                           <select
                             value={model}
-                            onChange={(e) => setModel(e.target.value)}
+                            onChange={(e) => handleModelChange(e.target.value)}
                             className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                           >
-                            {TEXT_MODELS.map((m) => (
+                            {availableModels.map((m) => (
                               <option key={m.value} value={m.value}>
                                 {m.label}
                               </option>
@@ -319,6 +363,15 @@ function TextGeneration() {
           />
         )}
       </div>
+      
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={upgradeModal.isOpen}
+        onClose={closeUpgradeModal}
+        title={upgradeModal.title}
+        description={upgradeModal.description}
+        feature={upgradeModal.feature}
+      />
     </Layout>
   );
 }

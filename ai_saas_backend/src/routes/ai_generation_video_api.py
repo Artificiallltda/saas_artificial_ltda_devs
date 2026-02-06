@@ -64,6 +64,10 @@ def generate_video():
     if not user:
         return jsonify({"error": "Usuário inválido"}), 404
 
+    plan_name = (user.plan.name if user.plan else "").strip().lower()
+    if plan_name == "bot":
+        return jsonify({"error": "Plano Bot não permite geração de vídeo"}), 403
+
     # Verifica se é FormData (com imagem) ou JSON (sem imagem)
     content_type = request.content_type or ""
     reference_image_path = None

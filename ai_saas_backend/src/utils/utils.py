@@ -33,6 +33,7 @@ def create_default_plans():
         "customization": "Personalização das respostas (temperatura)",
         "generate_image": "Geração de imagem",
         "generate_video": "Geração de vídeo",
+        "download_bot": "Freepik/Envato Artificiall",
         # Acessos por modelo (Gemini)
         "gemini_25_pro": "Acesso ao Gemini 2.5 Pro",
         "gemini_25_flash": "Acesso ao Gemini 2.5 Flash",
@@ -51,7 +52,7 @@ def create_default_plans():
         feature_objs[key] = f
 
     # Planos base
-    plan_names = ["Básico", "Pro", "Premium"]
+    plan_names = ["Básico", "Pro", "Premium", "Bot"]
 
     # Conjunto das chaves Gemini (para gating por plano)
     GEMINI_KEYS = {"gemini_25_pro", "gemini_25_flash", "gemini_25_flash_lite", "gemini_30"}
@@ -59,7 +60,10 @@ def create_default_plans():
     for name in plan_names:
         plan = Plan.query.filter_by(name=name).first()
         if not plan:
-            plan = Plan(name=name)
+            if name == "Bot" and Plan.query.get(4) is None:
+                plan = Plan(id=4, name=name)
+            else:
+                plan = Plan(name=name)
             db.session.add(plan)
             db.session.flush()
 
@@ -67,7 +71,15 @@ def create_default_plans():
             existing = PlanFeature.query.filter_by(plan_id=plan.id, feature_id=f.id).first()
 
             # Regras por plano (sempre aplicadas, atualizando se já existir)
-            if key in GEMINI_KEYS:
+            if plan.name == "Bot":
+                if key == "download_bot":
+                    value = "true"
+                elif key == "token_quota_monthly":
+                    value = "0"
+                else:
+                    value = "false"
+
+            elif key in GEMINI_KEYS:
                 if plan.name == "Básico":
                     allow = key in {"gemini_25_pro", "gemini_25_flash_lite"}
                 elif plan.name in ("Pro", "Premium"):

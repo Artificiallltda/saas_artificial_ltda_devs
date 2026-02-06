@@ -43,7 +43,7 @@ export default function Home() {
 
   return (
     <Layout>
-      <section className="px-4 sm:px-8 lg:px-16 xl:px-24 space-y-6 max-w-6xl mx-auto w-full">
+      <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -212,7 +212,7 @@ export default function Home() {
             </div>
           )}
         </div>
-      </section>
+      </div>
 
       {/* Modal Novo Projeto */}
       <NewProjectModal

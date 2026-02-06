@@ -14,12 +14,27 @@ export default function Subscription() {
   const [user, setUser] = useState(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const isProPlan = user?.plan?.name?.toLowerCase().includes("pro");
+  const upgradeModalKeyPrefix = isProPlan
+    ? "subscription.best_plan_modal"
+    : user?.plan?.name?.toLowerCase().includes("premium")
+      ? "subscription.pro_modal"
+      : "subscription.premium_modal";
 
   const translateBackendText = (text) => {
     if (!text) return text;
     const key = backendMessageKeyMap[text];
     if (key) return t(key);
     return text;
+  };
+
+  const formatFeatureValue = (value) => {
+    if (value == null) return value;
+    const numericValue = Number(value);
+    if (Number.isFinite(numericValue)) {
+      return numericValue.toLocaleString(t("dates.locale"));
+    }
+    return translateBackendText(value);
   };
 
   useEffect(() => {
@@ -35,16 +50,26 @@ export default function Subscription() {
   }, []);
 
   const renderFeatures = (features) => {
+    const filteredFeatures = features.filter((pf) => {
+      const featureKey = backendMessageKeyMap[pf.description];
+      return (
+        featureKey !== "subscription.features.gemini_2_5_flash" &&
+        featureKey !== "subscription.features.gemini_2_5_pro" &&
+        pf.description !== "Acesso ao Gemini 2.5 Flash" &&
+        pf.description !== "Acesso ao Gemini 2.5 Pro"
+      );
+    });
     return (
       <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-        {features.map((pf) => {
-          const isEnabled = pf.value === "true";
+        {filteredFeatures.map((pf, index) => {
+          const isEnabled =
+            pf.value === "true" || (pf.value !== "false" && pf.value != null);
           const displayValue =
             pf.value !== "true" && pf.value !== "false" ? pf.value : null;
 
           return (
             <li
-              key={pf.id}
+              key={pf.id || `feature-${index}`}
               className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-shadow shadow-sm hover:shadow-md text-sm"
             >
               {isEnabled ? (
@@ -61,7 +86,7 @@ export default function Subscription() {
                 </span>
                 {displayValue && (
                   <span className="text-gray-600 dark:text-gray-300 text-xs">
-                    {translateBackendText(displayValue)}
+                    {formatFeatureValue(displayValue)}
                   </span>
                 )}
               </div>
@@ -158,19 +183,21 @@ export default function Subscription() {
       <SettingsModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        title={t("subscription.premium_modal.title")}
-        description={t("subscription.premium_modal.description")}
+        title={t(`${upgradeModalKeyPrefix}.title`)}
+        description={t(`${upgradeModalKeyPrefix}.description`)}
       >
         <p className={styles.upgradeText}>
-          {t("subscription.premium_modal.body")}
+          {t(`${upgradeModalKeyPrefix}.body`)}
         </p>
-        <button
-          disabled
-          className={styles.upgradeBtn}
-          title={t("common.not_implemented")}
-        >
-          {t("subscription.premium_modal.cta")}
-        </button>
+        {!isProPlan && (
+          <button
+            disabled
+            className={styles.upgradeBtn}
+            title={t("common.not_implemented")}
+          >
+            {t(`${upgradeModalKeyPrefix}.cta`)}
+          </button>
+        )}
       </SettingsModal>
     </Layout>
   );

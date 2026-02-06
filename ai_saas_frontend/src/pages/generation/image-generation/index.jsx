@@ -8,9 +8,12 @@ import { aiRoutes, generatedContentRoutes } from '../../../services/apiRoutes';
 import { apiFetch } from '../../../services/apiService';
 import { IMAGE_MODELS, IMAGE_STYLES, IMAGE_RATIOS } from '../../../utils/constants';
 import { useLanguage } from '../../../context/LanguageContext';
+import { useFeatureRestriction } from '../../../hooks/useFeatureRestriction';
+import UpgradeModal from '../../../components/common/UpgradeModal';
 
 function ImageGeneration() {
   const { t } = useLanguage();
+  const { checkFeatureAccess, upgradeModal, closeUpgradeModal } = useFeatureRestriction();
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("gpt-image-1");
   const [style, setStyle] = useState("auto");
@@ -79,6 +82,11 @@ function ImageGeneration() {
   };
 
   const handleGenerate = async () => {
+    // Verificar se o usuário tem acesso à geração de imagem
+    if (!checkFeatureAccess('image_generation')) {
+      return;
+    }
+
     if (!prompt.trim() && !referenceImage) {
       toast.warning(t('generation.common.prompt_required'));
       return;
@@ -368,6 +376,15 @@ function ImageGeneration() {
           </div>
         </div>
       </section>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={upgradeModal.isOpen}
+        onClose={closeUpgradeModal}
+        title={upgradeModal.title}
+        description={upgradeModal.description}
+        feature={upgradeModal.feature}
+      />
     </Layout>
   );
 }
