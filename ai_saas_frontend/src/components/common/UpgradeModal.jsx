@@ -117,8 +117,7 @@ export default function UpgradeModal({
           <div className="flex flex-col gap-2">
             <button
               onClick={() => {
-                // Redirecionar para página de assinatura
-                window.location.href = '/subscription';
+                window.location.href = 'https://clkdmg.site/subscribe/plataforma-premium';
               }}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-[1.02] shadow-lg text-sm"
             >

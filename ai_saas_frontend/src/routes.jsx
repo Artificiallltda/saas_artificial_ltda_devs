@@ -250,7 +250,9 @@ function MainRoutes(){
       />
       <Route path="/login/forgot-password" element={<ForgotPassword />} />
       <Route path="/login/reset-password/:token" element={<ResetPassword />} />
-
+      <Route path="/verify-email" element={<EmailVerification />} />
+      <Route path="/verify-code" element={<VerifyCode />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
     </Routes>
   );

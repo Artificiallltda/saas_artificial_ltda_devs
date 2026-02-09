@@ -43,6 +43,16 @@ const PLAN_FEATURES = {
     advanced_models: false,
     custom_temperature: false,
     high_resolution: false
+  },
+  'Grátis': {
+    text_generation: true,
+    image_generation: true,
+    video_generation: false,
+    audio_generation: false,
+    file_attachments: false,
+    advanced_models: false,
+    custom_temperature: false,
+    high_resolution: false
   }
 };
 
@@ -107,6 +117,11 @@ const PLAN_MODELS = {
     'sonar-deep-research',
     'claude-haiku-4-5',
     'gemini-2.5-flash-lite'
+  ],
+  'Grátis': [
+    'gpt-4o',
+    'deepseek/deepseek-r1-0528:free',
+    'claude-haiku-4-5'
   ]
 };
 
@@ -160,7 +175,7 @@ export function useFeatureRestriction() {
   }, [hasModelAccess, t]);
 
   // Mostrar modal de upgrade para uma feature específica
-  const showUpgradeModal = useCallback((feature) => {
+  const showUpgradeModal = useCallback((feature, override = null) => {
     const featureInfo = FEATURE_MESSAGES[feature];
     
     if (!featureInfo) {
@@ -169,20 +184,26 @@ export function useFeatureRestriction() {
     }
 
     // Mensagem personalizada baseada no plano atual
-    let description = t(featureInfo.description);
+    let description = override?.description || t(featureInfo.description);
     
-    if (userPlan === 'Básico' && feature !== 'text_generation') {
-      description = t('upgrade_modal.basic_restriction', { 
-        feature: FEATURE_DISPLAY_NAMES[feature] || feature 
-      });
-    } else if (userPlan === 'Premium' && feature === 'video_generation') {
-      description = t('upgrade_modal.premium_video_restriction');
+    if (!override?.description) {
+      if (userPlan === 'Básico' && feature !== 'text_generation') {
+        description = t('upgrade_modal.basic_restriction', { 
+          feature: FEATURE_DISPLAY_NAMES[feature] || feature 
+        });
+      } else if (userPlan === 'Grátis' && feature !== 'text_generation') {
+        description = t('upgrade_modal.free_restriction', { 
+          feature: FEATURE_DISPLAY_NAMES[feature] || feature 
+        });
+      } else if (userPlan === 'Premium' && feature === 'video_generation') {
+        description = t('upgrade_modal.premium_video_restriction');
+      }
     }
 
     setUpgradeModal({
       isOpen: true,
       feature,
-      title: t(featureInfo.title),
+      title: override?.title || t(featureInfo.title),
       description
     });
   }, [userPlan, t]);

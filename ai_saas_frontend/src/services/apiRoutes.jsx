@@ -7,7 +7,7 @@ const API_BASE = `${normalizedBase}/api`;
 
 
 export const authRoutes = {
-  // register: `${API_BASE}/auth/`,                                 // POST → criar usuário
+  register: `${API_BASE}/auth/register`,                        // POST → criar usuário
   login: `${API_BASE}/auth/login`,                               // POST → login
   logout: `${API_BASE}/auth/logout`,                             // POST → logout (JWT)
   verifyPassword: `${API_BASE}/auth/verify-password`,            // POST → verificar senha atual

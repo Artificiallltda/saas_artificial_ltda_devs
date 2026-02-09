@@ -108,6 +108,12 @@ function Login() {
               Recuperar
             </Link>
           </p>
+          <p className={styles.statSubtext}>
+            Ainda não tem conta?
+            <Link to="/verify-email" className={`${styles.linkSuccess} ${styles.linkSuccessWide}`}>
+              Registrar-se
+            </Link>
+          </p>
         </div>
       </section>
     </main>

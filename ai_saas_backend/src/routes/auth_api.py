@@ -14,6 +14,74 @@ auth_api = Blueprint("auth_api", __name__)
 
 load_dotenv()
 
+# Cadastro
+@auth_api.route("/register", methods=["POST"])
+@limiter.limit("5 per minute")
+def register():
+    data = request.form
+    file = request.files.get("perfil_photo")
+
+    def is_valid_email(email):
+        return re.match(r"[^@]+@[^@]+\.[^@]+", email)
+
+    required_fields = ["full_name", "username", "email", "password"]
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({"error": f"Campo obrigatório: {field}"}), 400
+
+    email = data.get("email", "").strip()
+    if not is_valid_email(email):
+        return jsonify({"error": "Email inválido"}), 400
+
+    verified = redis_client.get(f"email_verified:{email}")
+    if isinstance(verified, bytes):
+        verified = verified.decode()
+    if verified != "true":
+        return jsonify({"error": "Email não verificado"}), 400
+
+    if User.query.filter_by(username=data["username"]).first():
+        return jsonify({"error": "Username já existe"}), 400
+    if User.query.filter_by(email=email).first():
+        return jsonify({"error": "Email já cadastrado"}), 400
+
+    password = data["password"]
+    pattern = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W).{8,}$"
+    if not re.match(pattern, password):
+        return jsonify({"error": "Senha fraca"}), 400
+
+    perfil_filename = None
+    if file:
+        filename = f"{uuid.uuid4()}_{file.filename}"
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        upload_dir = os.path.abspath(os.path.join(base_dir, "..", "static", "uploads"))
+        os.makedirs(upload_dir, exist_ok=True)
+        filepath = os.path.join(upload_dir, filename)
+        file.save(filepath)
+        perfil_filename = filename
+
+    free_plan = Plan.query.filter_by(name="Grátis").first()
+    if not free_plan:
+        return jsonify({"error": "Plano Grátis não encontrado"}), 500
+
+    hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
+    new_user = User(
+        id=str(uuid.uuid4()),
+        full_name=data["full_name"],
+        username=data["username"],
+        email=email,
+        password=hashed_password,
+        perfil_photo=perfil_filename,
+        plan=free_plan,
+        role="user",
+        is_active=True
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+    redis_client.delete(f"email_verified:{email}")
+
+    return jsonify({"message": "Usuário criado com sucesso", "id": new_user.id}), 201
+
 # Login
 @auth_api.route("/login", methods=["POST"])
 @limiter.limit("10 per minute")
@@ -131,7 +199,8 @@ def request_password_reset():
 
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
     reset_link = f"{frontend_url}/login/reset-password/{token}"
-    send_reset_password_email(user.email, reset_link)
+    if not send_reset_password_email(user.email, reset_link):
+        return jsonify({"error": "Falha ao enviar email"}), 500
 
     return jsonify({"message": "Link de redefinição enviado para o email"}), 200
 

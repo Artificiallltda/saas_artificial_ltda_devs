@@ -18,6 +18,9 @@ SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 465))
 
 def send_verification_email(email, code):
+    if not EMAIL_USER or not EMAIL_PASS:
+        print("Erro ao enviar email: credenciais SMTP não configuradas")
+        return False
     msg = MIMEText(f"Seu código de verificação é: {code}")
     msg["Subject"] = "Código de verificação - AI SaaS"
     msg["From"] = EMAIL_USER
@@ -27,8 +30,10 @@ def send_verification_email(email, code):
         with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
             server.login(EMAIL_USER, EMAIL_PASS)
             server.sendmail(EMAIL_USER, [email], msg.as_string())
+        return True
     except Exception as e:
         print("Erro ao enviar email:", e)
+        return False
 
 # Rota para solicitar código de verificação de email (para cadastro)
 @email_api.route("/request-email-code", methods=["POST"])
@@ -44,7 +49,8 @@ def request_email_code():
 
     code = str(uuid.uuid4().int)[-6:]
     redis_client.setex(f"email_code:{email}", timedelta(minutes=10), code)
-    send_verification_email(email, code)
+    if not send_verification_email(email, code):
+        return jsonify({"error": "Falha ao enviar email"}), 500
     return jsonify({"message": "Código enviado com sucesso"}), 200
 
 # Rota para verificar código de email
@@ -80,7 +86,8 @@ def send_security_code():
 
     code = str(uuid.uuid4().int)[-6:]
     redis_client.setex(f"security_code:{user.email}", timedelta(minutes=10), code)
-    send_verification_email(user.email, code)
+    if not send_verification_email(user.email, code):
+        return jsonify({"error": "Falha ao enviar email"}), 500
     return jsonify({"message": "Código de segurança enviado"}), 200
 
 # Verificar código de segurança
@@ -112,6 +119,9 @@ def verify_security_code():
     return jsonify({"message": "Código verificado com sucesso"}), 200
 
 def send_reset_password_email(to_email, link):
+    if not EMAIL_USER or not EMAIL_PASS:
+        print("Erro ao enviar email de redefinição: credenciais SMTP não configuradas")
+        return False
     msg = MIMEText(
         f"Olá,\n\nClique no link abaixo para redefinir sua senha. Esse link expira em 1 hora.\n\n{link}\n\n"
         "Se você não solicitou essa redefinição, ignore esse email."
@@ -124,5 +134,7 @@ def send_reset_password_email(to_email, link):
         with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
             server.login(EMAIL_USER, EMAIL_PASS)
             server.send_message(msg)
+        return True
     except Exception as e:
         print(f"Erro ao enviar email de redefinição: {e}")
+        return False
