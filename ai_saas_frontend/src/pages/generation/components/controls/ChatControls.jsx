@@ -63,7 +63,7 @@ export default function ChatControls({
   };
   const hiddenValues = (planNameLower === "básico" || planNameLower === "basico") ? new Set() : (HIDE_GEMINI_BY_PLAN[planName] || new Set());
 
-  // 3) regras de plano Básico: exibir todos os modelos, mas bloquear os não permitidos
+  // 3) regras por plano: exibir todos os modelos, mas bloquear os não permitidos
   const BASIC_ALLOWED = new Set([
     "gpt-4o",
     "deepseek/deepseek-r1-0528:free",
@@ -71,6 +71,11 @@ export default function ChatControls({
     "sonar-reasoning",
     "claude-haiku-4-5",
     "gemini-2.5-flash-lite",
+  ]);
+  const FREE_ALLOWED = new Set([
+    "gpt-4o",
+    "deepseek/deepseek-r1-0528:free",
+    "claude-haiku-4-5",
   ]);
 
   // aplica ocultação (se houver) e, se for Básico, marca como bloqueado os não permitidos (sem ocultar)
@@ -83,7 +88,15 @@ export default function ChatControls({
           ? ""
           : "Disponível nos planos Pro/Premium",
       }))
-    : afterHidden;
+    : (planNameLower === "grátis" || planNameLower === "gratis")
+      ? afterHidden.map((m) => ({
+          ...m,
+          isAllowed: FREE_ALLOWED.has(m.value),
+          tooltip: FREE_ALLOWED.has(m.value)
+            ? ""
+            : "Disponível no plano Premium",
+        }))
+      : afterHidden;
 
   // 4) se o modelo atual não está disponível para o plano, ajusta para o primeiro permitido
   useEffect(() => {

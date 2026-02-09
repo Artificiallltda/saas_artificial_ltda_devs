@@ -13,7 +13,7 @@ import UpgradeModal from '../../../components/common/UpgradeModal';
 
 function ImageGeneration() {
   const { t } = useLanguage();
-  const { checkFeatureAccess, upgradeModal, closeUpgradeModal } = useFeatureRestriction();
+  const { checkFeatureAccess, upgradeModal, closeUpgradeModal, showUpgradeModal, userPlan } = useFeatureRestriction();
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("gpt-image-1");
   const [style, setStyle] = useState("auto");
@@ -140,6 +140,22 @@ function ImageGeneration() {
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       console.error(err);
+      let payload = null;
+      try {
+        payload = JSON.parse(err.message);
+      } catch {}
+
+      if (payload?.error === "IMAGE_LIMIT_REACHED") {
+        const limitDescription = userPlan === "Premium"
+          ? t("upgrade_modal.image_limit.premium")
+          : t("upgrade_modal.image_limit.free");
+        showUpgradeModal("image_generation", {
+          title: t("upgrade_modal.image_limit.title"),
+          description: limitDescription
+        });
+        return;
+      }
+
       toast.error(t('generation.image.error_toast'));
       const errorMessage = {
         id: Date.now() + 1,

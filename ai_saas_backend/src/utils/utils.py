@@ -52,7 +52,7 @@ def create_default_plans():
         feature_objs[key] = f
 
     # Planos base
-    plan_names = ["Básico", "Pro", "Premium", "Bot"]
+    plan_names = ["Grátis", "Básico", "Pro", "Premium", "Bot"]
 
     # Conjunto das chaves Gemini (para gating por plano)
     GEMINI_KEYS = {"gemini_25_pro", "gemini_25_flash", "gemini_25_flash_lite", "gemini_30"}
@@ -76,6 +76,14 @@ def create_default_plans():
                     value = "true"
                 elif key == "token_quota_monthly":
                     value = "0"
+                else:
+                    value = "false"
+
+            elif plan.name == "Grátis":
+                if key == "token_quota_monthly":
+                    value = str(30000)  # 30k
+                elif key in {"generate_text", "generate_image", "download_bot"}:
+                    value = "true"
                 else:
                     value = "false"
 

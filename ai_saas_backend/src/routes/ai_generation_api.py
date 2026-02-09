@@ -92,6 +92,19 @@ def is_model_allowed_for_basic_plan(model: str) -> bool:
         return True
     return False
 
+def is_model_allowed_for_free_plan(model: str) -> bool:
+    # Grátis: gpt-4o, deepseek/deepseek-r1-0528:free, claude-haiku-4-5
+    if not model:
+        return False
+    m = model.strip().lower()
+    if m == "gpt-4o":
+        return True
+    if m == "deepseek/deepseek-r1-0528:free":
+        return True
+    if m.startswith("claude-haiku-4-5"):
+        return True
+    return False
+
 def supports_vision(model: str) -> bool:
     res = model.startswith("gpt-4o") or model.startswith("o") or model.startswith("gpt-5") or is_gemini_model(model)
     print(f"[DEBUG] supports_vision({model}) -> {res}")
@@ -337,6 +350,17 @@ def generate_text():
             return jsonify({
                 "error": "Plano Bot não permite geração de texto"
             }), 403
+
+        if plan_name in ("grátis", "gratis"):
+            if not is_model_allowed_for_free_plan(model):
+                return jsonify({
+                    "error": "Modelo não disponível no plano Grátis",
+                    "allowed_models": [
+                        "gpt-4o",
+                        "deepseek/deepseek-r1-0528:free",
+                        "claude-haiku-4-5"
+                    ]
+                }), 403
 
         if plan_name in ("básico", "basico"):
             if not is_model_allowed_for_basic_plan(model):
@@ -874,6 +898,20 @@ def generate_image():
     plan_name = (user.plan.name if user.plan else "").strip().lower()
     if plan_name == "bot":
         return jsonify({"error": "Plano Bot não permite geração de imagem"}), 403
+
+    if plan_name in ("grátis", "gratis"):
+        total_images = (
+            db.session.query(GeneratedImageContent)
+            .filter_by(user_id=user.id)
+            .count()
+        )
+        if total_images >= 10:
+            return jsonify({
+                "error": "IMAGE_LIMIT_REACHED",
+                "message": "Limite de imagens do plano Grátis atingido",
+                "limit": 10,
+                "next_plan": "Premium"
+            }), 403
 
     # Verifica se é FormData (com imagem) ou JSON (sem imagem)
     content_type = request.content_type or ""

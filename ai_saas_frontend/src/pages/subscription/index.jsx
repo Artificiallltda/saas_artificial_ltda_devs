@@ -145,9 +145,14 @@ export default function Subscription() {
               {t("subscription.upgrade.description")}
             </p>
             <button
-              disabled
               className={styles.upgradeBtn}
-              title={t("common.not_implemented")}
+              onClick={(e) => {
+                e.stopPropagation();
+                const isPremiumPlan = user?.plan?.name?.toLowerCase().includes("premium");
+                window.location.href = isPremiumPlan
+                  ? "https://clkdmg.site/subscribe/plataforma-pro"
+                  : "https://clkdmg.site/subscribe/plataforma-premium";
+              }}
             >
               {t("subscription.upgrade.contact_us")}
             </button>
@@ -191,9 +196,13 @@ export default function Subscription() {
         </p>
         {!isProPlan && (
           <button
-            disabled
             className={styles.upgradeBtn}
-            title={t("common.not_implemented")}
+            onClick={() => {
+              const isPremiumPlan = user?.plan?.name?.toLowerCase().includes("premium");
+              window.location.href = isPremiumPlan
+                ? "https://clkdmg.site/subscribe/plataforma-pro"
+                : "https://clkdmg.site/subscribe/plataforma-premium";
+            }}
           >
             {t(`${upgradeModalKeyPrefix}.cta`)}
           </button>
