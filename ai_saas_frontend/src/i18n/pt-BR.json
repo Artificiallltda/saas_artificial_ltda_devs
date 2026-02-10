@@ -144,6 +144,7 @@
   "generation.common.prompt_required": "Digite um prompt antes de gerar!",
   "generation.common.reference_image.invalid_type": "Apenas imagens (.png, .jpg, .jpeg, .webp) são permitidas como referência.",
   "generation.common.reference_image.invalid_size": "A imagem deve ter no máximo 5MB.",
+  "generation.common.reference_image.max_files": "Você pode anexar no máximo {maxFiles} imagens de referência.",
   "generation.common.reference_image.alt": "Referência",
   "generation.common.reference_image.label": "Imagem de referência",
   "generation.common.reference_image.remove": "Remover imagem",

@@ -21,7 +21,7 @@ function ImageGeneration() {
   const [loading, setLoading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [referenceImage, setReferenceImage] = useState(null);
+  const [referenceImages, setReferenceImages] = useState([]);
   const fileInputRef = useRef(null);
   const settingsRef = useRef(null);
   const [messages, setMessages] = useState([
@@ -56,26 +56,43 @@ function ImageGeneration() {
   }, []);
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error(t('generation.common.reference_image.invalid_type'));
-      return;
-    }
-
     const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      toast.error(t('generation.common.reference_image.invalid_size'));
-      return;
+    const maxFiles = 2;
+
+    const validFiles = [];
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(t('generation.common.reference_image.invalid_type'));
+        continue;
+      }
+      if (file.size > maxSize) {
+        toast.error(t('generation.common.reference_image.invalid_size'));
+        continue;
+      }
+      validFiles.push(file);
     }
 
-    setReferenceImage(file);
+    setReferenceImages(prev => {
+      const combined = [...prev, ...validFiles];
+      if (combined.length > maxFiles) {
+        const key = 'generation.common.reference_image.max_files';
+        const translated = t(key, { maxFiles });
+        const message = translated === key ? `Máximo de ${maxFiles} imagens de referência.` : translated;
+        toast.warning(message);
+        return combined.slice(0, maxFiles);
+      }
+      return combined;
+    });
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const removeReferenceImage = () => {
-    setReferenceImage(null);
+  const removeReferenceImage = (index) => {
+    setReferenceImages(prev => prev.filter((_, i) => i !== index));
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -87,17 +104,17 @@ function ImageGeneration() {
       return;
     }
 
-    if (!prompt.trim() && !referenceImage) {
+    if (!prompt.trim() && referenceImages.length === 0) {
       toast.warning(t('generation.common.prompt_required'));
       return;
     }
 
-    // Mensagem do usuário (mostra a imagem anexada como preview)
+    // Mensagem do usuário (mostra as imagens anexadas como preview)
     const userMessage = {
       id: Date.now(),
       role: 'user',
       content: prompt,
-      ...(referenceImage ? { image: URL.createObjectURL(referenceImage) } : {}),
+      ...(referenceImages.length > 0 ? { images: referenceImages.map(f => URL.createObjectURL(f)) } : {}),
     };
     setMessages(prev => [...prev, userMessage]);
 
@@ -110,9 +127,9 @@ function ImageGeneration() {
       formData.append('model', model);
       formData.append('style', style);
       formData.append('ratio', ratio);
-      if (referenceImage) {
-        formData.append('reference_image', referenceImage);
-      }
+      referenceImages.forEach(img => {
+        formData.append('reference_image', img);
+      });
 
       const res = await apiFetch(aiRoutes.generateImage, {
         method: "POST",
@@ -136,7 +153,7 @@ function ImageGeneration() {
 
       toast.success(t('generation.image.success_toast'));
       setPrompt('');
-      setReferenceImage(null);
+      setReferenceImages([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       console.error(err);
@@ -210,6 +227,18 @@ function ImageGeneration() {
                 }`}
               >
                 {message.content && <p className="whitespace-pre-wrap">{message.content}</p>}
+                {message.images && message.images.length > 0 && (
+                  <div className="mt-2 flex gap-2 flex-wrap">
+                    {message.images.map((img, idx) => (
+                      <img 
+                        key={idx}
+                        src={img} 
+                        alt={t('generation.common.reference_image.label')} 
+                        className="max-h-48 rounded-lg shadow-md" 
+                      />
+                    ))}
+                  </div>
+                )}
                 {message.image && (
                   <div className="mt-2">
                     <img 
@@ -253,24 +282,28 @@ function ImageGeneration() {
         </div>
 
         <div className="border-t border-gray-200 p-4 bg-white relative">
-          {referenceImage && (
-            <div className="mb-2 flex items-center gap-2 p-2 bg-gray-50 rounded-lg max-w-[calc(100%-200px)]">
-              <img 
-                src={URL.createObjectURL(referenceImage)} 
-                alt={t('generation.common.reference_image.alt')} 
-                className="w-10 h-10 object-cover rounded-lg border border-gray-200 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-700 truncate">{t('generation.common.reference_image.label')}</p>
-                <p className="text-xs text-gray-500 truncate">{referenceImage.name}</p>
-              </div>
-              <button
-                onClick={removeReferenceImage}
-                className="p-1 text-red-500 hover:text-red-700 transition-colors flex-shrink-0"
-                title={t('generation.common.reference_image.remove')}
-              >
-                <X className="w-4 h-4" />
-              </button>
+          {referenceImages.length > 0 && (
+            <div className="mb-2 flex items-center gap-2 flex-wrap max-w-[calc(100%-200px)]">
+              {referenceImages.map((file, index) => (
+                <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <img 
+                    src={URL.createObjectURL(file)} 
+                    alt={t('generation.common.reference_image.alt')} 
+                    className="w-10 h-10 object-cover rounded-lg border border-gray-200 flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-700 truncate">{t('generation.common.reference_image.label')}</p>
+                    <p className="text-xs text-gray-500 truncate">{file.name}</p>
+                  </div>
+                  <button
+                    onClick={() => removeReferenceImage(index)}
+                    className="p-1 text-red-500 hover:text-red-700 transition-colors flex-shrink-0"
+                    title={t('generation.common.reference_image.remove')}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
           
@@ -350,6 +383,7 @@ function ImageGeneration() {
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 accept=".png,.jpg,.jpeg,.webp"
+                multiple
                 className="hidden"
               />
               
@@ -359,7 +393,7 @@ function ImageGeneration() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && !loading && (prompt.trim() || referenceImage)) {
+                    if (e.key === 'Enter' && !e.shiftKey && !loading && (prompt.trim() || referenceImages.length > 0)) {
                       e.preventDefault();
                       handleGenerate();
                     }
@@ -375,9 +409,9 @@ function ImageGeneration() {
               
               <button
                 onClick={handleGenerate}
-                disabled={loading || (!prompt.trim() && !referenceImage)}
+                disabled={loading || (!prompt.trim() && referenceImages.length === 0)}
                 className={`p-3 rounded-xl ${
-                  loading || (!prompt.trim() && !referenceImage)
+                  loading || (!prompt.trim() && referenceImages.length === 0)
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
                 } transition-colors`}
