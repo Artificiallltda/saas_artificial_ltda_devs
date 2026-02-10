@@ -5,9 +5,12 @@ import { toast } from 'react-toastify';
 import { downloadRoutes } from '../../../services/apiRoutes';
 import { apiFetch } from '../../../services/apiService';
 import { useLanguage } from '../../../context/LanguageContext';
+import { useFeatureRestriction } from '../../../hooks/useFeatureRestriction';
+import UpgradeModal from '../../../components/common/UpgradeModal';
 
 function DownloadBot() {
   const { t } = useLanguage();
+  const { checkFeatureAccess, upgradeModal, closeUpgradeModal } = useFeatureRestriction();
   const [messages, setMessages] = useState([]);
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,6 +40,10 @@ function DownloadBot() {
   const checkStatus = async () => {
     setCheckingStatus(true);
     try {
+      if (!checkFeatureAccess('download_bot')) {
+        setCheckingStatus(false);
+        return;
+      }
       const data = await apiFetch(downloadRoutes.status, {
         method: "GET"
       });
@@ -97,6 +104,10 @@ function DownloadBot() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!checkFeatureAccess('download_bot')) {
+      return;
+    }
+
     if (!url.trim()) {
       toast.warning(t('generation.download.error.url_required'));
       return;
@@ -326,6 +337,13 @@ function DownloadBot() {
           </form>
         </div>
       </div>
+      <UpgradeModal
+        isOpen={upgradeModal.isOpen}
+        onClose={closeUpgradeModal}
+        title={upgradeModal.title}
+        description={upgradeModal.description}
+        feature={upgradeModal.feature}
+      />
     </Layout>
   );
 }

@@ -12,7 +12,8 @@ const PLAN_FEATURES = {
     file_attachments: true,
     advanced_models: true,
     custom_temperature: true,
-    high_resolution: true
+    high_resolution: true,
+    download_bot: true
   },
   'Premium': {
     text_generation: true,
@@ -22,7 +23,8 @@ const PLAN_FEATURES = {
     file_attachments: true,
     advanced_models: true,
     custom_temperature: true,
-    high_resolution: true
+    high_resolution: true,
+    download_bot: true
   },
   'Bot': {
     text_generation: false,
@@ -32,7 +34,8 @@ const PLAN_FEATURES = {
     file_attachments: false,
     advanced_models: false,
     custom_temperature: false,
-    high_resolution: false
+    high_resolution: false,
+    download_bot: true
   },
   'Básico': {
     text_generation: true,
@@ -42,7 +45,8 @@ const PLAN_FEATURES = {
     file_attachments: false,
     advanced_models: false,
     custom_temperature: false,
-    high_resolution: false
+    high_resolution: false,
+    download_bot: true
   },
   'Grátis': {
     text_generation: true,
@@ -52,7 +56,8 @@ const PLAN_FEATURES = {
     file_attachments: false,
     advanced_models: false,
     custom_temperature: false,
-    high_resolution: false
+    high_resolution: false,
+    download_bot: false
   }
 };
 
@@ -69,6 +74,10 @@ const FEATURE_MESSAGES = {
   image_generation: {
     title: 'upgrade_modal.image_generation.title',
     description: 'upgrade_modal.image_generation.description'
+  },
+  download_bot: {
+    title: 'upgrade_modal.download_bot.title',
+    description: 'upgrade_modal.download_bot.description'
   },
   audio_generation: {
     title: 'upgrade_modal.audio_generation.title',
@@ -96,6 +105,7 @@ const FEATURE_MESSAGES = {
 const FEATURE_DISPLAY_NAMES = {
   'text_generation': 'Geração de Texto',
   'image_generation': 'Geração de Imagem',
+  'download_bot': 'Freepik/Envato Artificiall',
   'video_generation': 'Geração de Vídeo',
   'audio_generation': 'Geração de Áudio',
   'file_attachments': 'Anexos de Arquivos',

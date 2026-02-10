@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from extensions import jwt_required, get_jwt_identity
+from models.user import User
 import asyncio
 import sys
 from pathlib import Path
@@ -159,6 +160,14 @@ def get_automation_app():
             raise
     return automation_app
 
+def _has_download_access(user: User) -> bool:
+    if not user or not user.plan or not getattr(user.plan, "features", None):
+        return False
+    for pf in user.plan.features:
+        if getattr(pf, "feature", None) and pf.feature.key == "download_bot":
+            return pf.value == "true"
+    return False
+
 @download_api.route("/status", methods=["GET"])
 @jwt_required()
 def get_status():
@@ -166,6 +175,10 @@ def get_status():
     Retorna o status do serviço de download e das conexões
     """
     try:
+        user = User.query.get(get_jwt_identity())
+        if not _has_download_access(user):
+            return jsonify({"error": "Recurso não disponível no seu plano"}), 403
+
         app = get_automation_app()
         if app is None:
             return jsonify({
@@ -226,8 +239,11 @@ def process_download():
                 "error": "URL deve ser do Freepik ou Envato"
             }), 400
         
-        # Obter usuário atual (opcional, para logs)
+        # Obter usuário atual e validar plano
         user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        if not _has_download_access(user):
+            return jsonify({"success": False, "error": "Recurso não disponível no seu plano"}), 403
         logger.info(f"Usuário {user_id} solicitou download de: {url}")
         
         # Obter instância do app

@@ -82,7 +82,7 @@ def create_default_plans():
             elif plan.name == "Grátis":
                 if key == "token_quota_monthly":
                     value = str(30000)  # 30k
-                elif key in {"generate_text", "generate_image", "download_bot"}:
+                elif key in {"generate_text", "generate_image"}:
                     value = "true"
                 else:
                     value = "false"
