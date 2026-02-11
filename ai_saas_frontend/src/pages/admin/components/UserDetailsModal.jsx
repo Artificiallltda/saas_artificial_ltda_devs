@@ -16,6 +16,30 @@ export default function UserDetailsModal({ user, onClose, onUpdate }) {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Função para mapear nomes de planos para chaves de tradução
+  const getPlanTranslationKey = (planName) => {
+    if (!planName) return planName;
+    
+    // Normalizar o nome do plano para lowercase e remover acentos
+    const normalizedName = planName.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+    
+    const planMappings = {
+      "gratuito": "subscription.plan.free",
+      "grátis": "subscription.plan.free", 
+      "free": "subscription.plan.free",
+      "basico": "subscription.plan.basic",
+      "básico": "subscription.plan.basic",
+      "basic": "subscription.plan.basic",
+      "freepik/envato": "subscription.plan.bot",
+      "bot": "subscription.plan.bot"
+    };
+    
+    return planMappings[normalizedName] || planName;
+  };
+
   useEffect(() => {
     const fetchPlans = async () => {
       try {
@@ -80,7 +104,7 @@ export default function UserDetailsModal({ user, onClose, onUpdate }) {
     }
   };
 
-  const planOptions = plans.map((p) => ({ value: p.id, label: p.name }));
+  const planOptions = plans.map((p) => ({ value: p.id, label: t(getPlanTranslationKey(p.name)) }));
   const activeOptions = [
     { value: true, label: t("common.yes") },
     { value: false, label: t("common.no") },

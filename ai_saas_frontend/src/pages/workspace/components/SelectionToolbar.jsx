@@ -1,9 +1,12 @@
+import { useLanguage } from "../../../context/LanguageContext";
+
 export default function SelectionToolbar({
   count,
   confirmLabel,
   onConfirm,
   confirmColor = "blue",
   icon = null,
+  selectedText,
 
   // Props opcionais para o botão secundário
   secondaryConfirmLabel,
@@ -11,6 +14,7 @@ export default function SelectionToolbar({
   secondaryConfirmColor = "blue",
   secondaryIcon = null,
 }) {
+  const { t } = useLanguage();
   if (count === 0) return null;
 
   const bgColor = confirmColor === "red" ? "bg-red-600" : "bg-blue-600";
@@ -39,7 +43,7 @@ export default function SelectionToolbar({
       aria-label="Barra de ações de seleção"
     >
       <span className="text-sm font-semibold text-gray-800 drop-shadow-sm">
-        {count} selecionado{count > 1 ? "s" : ""}
+        {count} {selectedText}
       </span>
 
       <button
