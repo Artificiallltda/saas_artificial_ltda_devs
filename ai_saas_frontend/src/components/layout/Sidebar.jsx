@@ -5,6 +5,11 @@ import {
   FileText,
   Image,
   Video,
+  Building2,
+  Search,
+  FolderKanban,
+  CheckSquare,
+  Plug,
   CreditCard,
   User,
   Settings,
@@ -28,6 +33,14 @@ const getNavItems = (t) => [
   { label: t("sidebar.subscription"), icon: CreditCard, path: "/subscription", feature: null },
   { label: t("sidebar.profile"), icon: User, path: "/profile", feature: null },
   { label: t("sidebar.settings"), icon: Settings, path: "/settings", feature: null }
+];
+
+const getProEmpresaItems = () => [
+  { label: "Pro Empresa", icon: Building2, path: "/pro-empresa", feature: "pro_empresa" },
+  { label: "SEO", icon: Search, path: "/pro-empresa/seo", feature: "seo_keyword_research" },
+  { label: "Workspaces", icon: FolderKanban, path: "/pro-empresa/workspaces", feature: "collab_workspaces" },
+  { label: "Aprovações", icon: CheckSquare, path: "/pro-empresa/approvals", feature: "collab_approval_flow" },
+  { label: "Integrações", icon: Plug, path: "/pro-empresa/integrations", feature: "cms_integration_wordpress" },
 ];
 
 function ChatToggleButton({ collapsed, t }) {
@@ -121,10 +134,11 @@ export default function Sidebar({
   const { t } = useLanguage();
   const location = useLocation();
   const { user } = useAuth();
-  const { hasFeatureAccess, checkFeatureAccess, upgradeModal, closeUpgradeModal, showUpgradeModal } = useFeatureRestriction();
+  const { hasFeatureAccess, upgradeModal, closeUpgradeModal, showUpgradeModal } = useFeatureRestriction();
   const touchStartX = useRef(null);
   const [planName, setPlanName] = useState(user?.plan?.name || t("common.plan_default"));
   const navItems = getNavItems(t);
+  const proEmpresaItems = getProEmpresaItems();
 
   const translatePlanName = (planName) => {
     if (!planName) return t("common.plan_default");
@@ -227,6 +241,57 @@ export default function Sidebar({
                 </div>
               );
             })}
+
+            <>
+              <div className="my-3 border-t border-gray-200" />
+              {!collapsed && (
+                <div className="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Pro Empresa
+                </div>
+              )}
+
+              {proEmpresaItems.map(({ label, icon: Icon, path, feature }) => {
+                const isActive =
+                  location.pathname === path ||
+                  (path !== "/pro-empresa" && location.pathname.startsWith(path));
+                const hasAccess = !feature || hasFeatureAccess(feature);
+
+                return (
+                  <div key={label}>
+                    {feature && !hasAccess ? (
+                      <div
+                        className={`
+                          flex items-center gap-3 px-4 py-3 rounded-lg cursor-not-allowed
+                          ${isActive ? "bg-gray-100 text-gray-400" : "text-gray-400"}
+                        `}
+                        title={`${label} - Não disponível no seu plano`}
+                        onClick={() => showUpgradeModal(feature)}
+                      >
+                        <div className="relative">
+                          <Icon className="w-5 h-5" />
+                          <Lock className="w-3 h-3 absolute -bottom-1 -right-1 text-red-500" />
+                        </div>
+                        {!collapsed && <span className="text-sm">{label}</span>}
+                      </div>
+                    ) : (
+                      <Link
+                        to={path}
+                        onClick={onClose}
+                        className={`
+                          flex items-center gap-3 px-4 py-3 rounded-lg
+                          transition
+                          hover:bg-gray-100
+                          ${isActive ? "bg-gray-200 text-gray-900" : "text-gray-700"}
+                        `}
+                      >
+                        <Icon className="w-5 h-5 text-gray-600" />
+                        {!collapsed && <span>{label}</span>}
+                      </Link>
+                    )}
+                  </div>
+                );
+              })}
+            </>
 
             {user?.role === "admin" && (
               <Link

@@ -12,7 +12,17 @@ const getFeatureDisplayName = (feature, t) => {
     'file_attachments': t('upgrade_modal.feature_names.file_attachments'),
     'advanced_models': t('upgrade_modal.feature_names.advanced_models'),
     'custom_temperature': t('upgrade_modal.feature_names.custom_temperature'),
-    'high_resolution': t('upgrade_modal.feature_names.high_resolution')
+    'high_resolution': t('upgrade_modal.feature_names.high_resolution'),
+
+    // Pro Empresa (keys reais do backend / spec)
+    'seo_keyword_research': 'SEO: Pesquisa de palavras‑chave',
+    'seo_briefing': 'SEO: Briefing automático',
+    'seo_realtime_score': 'SEO: Score em tempo real',
+    'collab_workspaces': 'Colaboração: Workspaces',
+    'collab_approval_flow': 'Colaboração: Aprovações',
+    'cms_integration_wordpress': 'Integração: WordPress',
+    'crm_integration_basic': 'Integração: CRM/Webhook',
+    'pro_empresa': 'Pro Empresa',
   };
   return featureNames[feature] || feature;
 };

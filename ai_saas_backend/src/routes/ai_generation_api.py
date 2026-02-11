@@ -17,6 +17,14 @@ from PIL import Image
 load_dotenv()
 OPENAI_API_KEY = os.getenv("API_KEY")
 
+def _has_plan_feature(user: User, feature_key: str) -> bool:
+    if not user or not user.plan or not getattr(user.plan, "features", None):
+        return False
+    for pf in user.plan.features:
+        if getattr(pf, "feature", None) and pf.feature.key == feature_key:
+            return (pf.value or "").strip().lower() == "true"
+    return False
+
 def _mask_key(k: str) -> str:
     if not k:
         return "EMPTY(len=0)"
@@ -340,16 +348,20 @@ def generate_text():
 
         user_id = get_jwt_identity()
 
-        # Restrição por plano: Básico só pode usar modelos permitidos
+        # Restrição por feature/Plano (fonte da verdade: PlanFeature)
         try:
             user = User.query.get(user_id)
+        except Exception:
+            user = None
+        if not _has_plan_feature(user, "generate_text"):
+            return jsonify({"error": "Recurso não disponível no seu plano"}), 403
+
+        # Restrição por plano: Básico só pode usar modelos permitidos
+        try:
             plan_name = (user.plan.name if user and user.plan else "").strip().lower()
         except Exception as _e:
             plan_name = ""
-        if plan_name == "bot":
-            return jsonify({
-                "error": "Plano Bot não permite geração de texto"
-            }), 403
+        # (bot já é bloqueado pelo feature-check acima)
 
         if plan_name in ("grátis", "gratis"):
             if not is_model_allowed_for_free_plan(model):
@@ -920,10 +932,11 @@ def generate_image():
     if not user:
         return jsonify({"error": "Usuário inválido"}), 403
 
-    plan_name = (user.plan.name if user.plan else "").strip().lower()
-    if plan_name == "bot":
-        return jsonify({"error": "Plano Bot não permite geração de imagem"}), 403
+    if not _has_plan_feature(user, "generate_image"):
+        return jsonify({"error": "Recurso não disponível no seu plano"}), 403
 
+    # Plano Grátis: limite total de 10 imagens geradas
+    plan_name = (user.plan.name if user.plan else "").strip().lower()
     if plan_name in ("grátis", "gratis"):
         total_images = (
             db.session.query(GeneratedImageContent)

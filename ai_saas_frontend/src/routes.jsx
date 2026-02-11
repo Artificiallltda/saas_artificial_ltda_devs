@@ -35,6 +35,13 @@ import AdminUsersList from "./pages/admin/users/AdminUsersList";
 import AdminCreateUser from "./pages/admin/users/AdminCreateUser";
 import AdminUsage from "./pages/admin/AdminUsage";
 
+// Pro Empresa (placeholders / MVP UI)
+import ProEmpresaHome from "./pages/pro-empresa";
+import ProEmpresaSEO from "./pages/pro-empresa/seo";
+import ProEmpresaWorkspaces from "./pages/pro-empresa/workspaces";
+import ProEmpresaApprovals from "./pages/pro-empresa/approvals";
+import ProEmpresaIntegrations from "./pages/pro-empresa/integrations";
+
 function MainRoutes(){
   const { user, loading } = useAuth();
 
@@ -184,6 +191,48 @@ function MainRoutes(){
         element={
           <PrivateRoute>
             <NotificationsList />
+          </PrivateRoute>
+        }
+      />
+
+      {/* PRO EMPRESA */}
+      <Route
+        path="/pro-empresa"
+        element={
+          <PrivateRoute>
+            <ProEmpresaHome />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/pro-empresa/seo"
+        element={
+          <PrivateRoute>
+            <ProEmpresaSEO />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/pro-empresa/workspaces"
+        element={
+          <PrivateRoute>
+            <ProEmpresaWorkspaces />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/pro-empresa/approvals"
+        element={
+          <PrivateRoute>
+            <ProEmpresaApprovals />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/pro-empresa/integrations"
+        element={
+          <PrivateRoute>
+            <ProEmpresaIntegrations />
           </PrivateRoute>
         }
       />

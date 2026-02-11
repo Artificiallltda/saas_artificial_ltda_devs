@@ -30,6 +30,14 @@ UPLOAD_DIR = os.path.join(BASE_DIR, "..", "static", "uploads")
 VIDEO_UPLOAD_DIR = os.path.join(UPLOAD_DIR, "videos")
 os.makedirs(VIDEO_UPLOAD_DIR, exist_ok=True)
 
+def _has_plan_feature(user: User, feature_key: str) -> bool:
+    if not user or not user.plan or not getattr(user.plan, "features", None):
+        return False
+    for pf in user.plan.features:
+        if getattr(pf, "feature", None) and pf.feature.key == feature_key:
+            return (pf.value or "").strip().lower() == "true"
+    return False
+
 def _describe_reference_image(client, image_path: str) -> str:
     if not client or not image_path or not os.path.exists(image_path):
         return ""
@@ -64,9 +72,8 @@ def generate_video():
     if not user:
         return jsonify({"error": "Usuário inválido"}), 404
 
-    plan_name = (user.plan.name if user.plan else "").strip().lower()
-    if plan_name == "bot":
-        return jsonify({"error": "Plano Bot não permite geração de vídeo"}), 403
+    if not _has_plan_feature(user, "generate_video"):
+        return jsonify({"error": "Recurso não disponível no seu plano"}), 403
 
     # Verifica se é FormData (com imagem) ou JSON (sem imagem)
     content_type = request.content_type or ""

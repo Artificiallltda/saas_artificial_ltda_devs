@@ -2,6 +2,46 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
+// -----------------------------
+// Fonte da verdade (backend)
+// -----------------------------
+// O backend devolve `user.plan.features` como array:
+// [{ key: "generate_text", value: "true" }, { key: "token_quota_monthly", value: "30000" }, ...]
+// Aqui fazemos uma ponte entre os nomes "UI" (históricos do frontend) e as keys reais do backend.
+const UI_FEATURE_TO_BACKEND_KEY = {
+  text_generation: 'generate_text',
+  image_generation: 'generate_image',
+  video_generation: 'generate_video',
+  file_attachments: 'attach_files',
+  download_bot: 'download_bot',
+  custom_temperature: 'customization',
+};
+
+function normalizeFeatureValue(raw) {
+  if (raw == null) return { raw: null, enabled: false, numeric: null };
+  const v = String(raw).trim().toLowerCase();
+
+  if (v === 'true') return { raw, enabled: true, numeric: null };
+  if (v === 'false') return { raw, enabled: false, numeric: null };
+
+  const n = Number(v);
+  if (Number.isFinite(n)) return { raw, enabled: n > 0, numeric: n };
+
+  // fallback conservador: qualquer string não vazia (diferente de "false") habilita
+  return { raw, enabled: Boolean(v), numeric: null };
+}
+
+function buildBackendFeatureMap(planFeatures) {
+  const map = {};
+  if (!Array.isArray(planFeatures)) return map;
+  for (const pf of planFeatures) {
+    const key = pf?.key;
+    if (!key) continue;
+    map[key] = normalizeFeatureValue(pf?.value);
+  }
+  return map;
+}
+
 // Definição das features disponíveis por plano
 const PLAN_FEATURES = {
   'Pro': {
@@ -46,7 +86,7 @@ const PLAN_FEATURES = {
     advanced_models: false,
     custom_temperature: false,
     high_resolution: false,
-    download_bot: true
+    download_bot: false
   },
   'Grátis': {
     text_generation: true,
@@ -147,12 +187,27 @@ export function useFeatureRestriction() {
 
   // Obter o nome do plano do usuário
   const userPlan = user?.plan?.name || 'Básico';
+  const backendFeatureMap = buildBackendFeatureMap(user?.plan?.features);
+
+  const resolveBackendKey = useCallback((featureKey) => {
+    // suporta tanto keys de UI (ex.: "text_generation") quanto keys reais do backend (ex.: "seo_keyword_research")
+    return UI_FEATURE_TO_BACKEND_KEY[featureKey] || featureKey;
+  }, []);
 
   // Verificar se o usuário tem acesso a uma feature
   const hasFeatureAccess = useCallback((feature) => {
+    const backendKey = resolveBackendKey(feature);
+    const backendValue = backendFeatureMap?.[backendKey];
+
+    // Se o backend informou explicitamente a feature, usamos como fonte da verdade
+    if (backendValue && typeof backendValue.enabled === 'boolean') {
+      return backendValue.enabled;
+    }
+
+    // Fallback (legacy): mantém comportamento por plano no frontend
     const features = PLAN_FEATURES[userPlan];
     return features?.[feature] || false;
-  }, [userPlan]);
+  }, [backendFeatureMap, resolveBackendKey, userPlan]);
 
   // Verificar se o usuário tem acesso a um modelo específico
   const hasModelAccess = useCallback((model) => {
@@ -187,14 +242,19 @@ export function useFeatureRestriction() {
   // Mostrar modal de upgrade para uma feature específica
   const showUpgradeModal = useCallback((feature, override = null) => {
     const featureInfo = FEATURE_MESSAGES[feature];
-    
-    if (!featureInfo) {
-      console.error(`Feature ${feature} não encontrada nas mensagens de upgrade`);
-      return;
-    }
+
+    // Fallback: se não existir copy dedicada, usa uma mensagem genérica (evita quebrar em features novas do Pro Empresa)
+    const defaultTitle = override?.title || 'Recurso indisponível no seu plano';
+    const defaultDescription =
+      override?.description ||
+      (userPlan === 'Básico'
+        ? t('upgrade_modal.basic_restriction', { feature: FEATURE_DISPLAY_NAMES[feature] || feature })
+        : userPlan === 'Grátis'
+          ? t('upgrade_modal.free_restriction', { feature: FEATURE_DISPLAY_NAMES[feature] || feature })
+        : 'Faça upgrade para liberar este recurso.');
 
     // Mensagem personalizada baseada no plano atual
-    let description = override?.description || t(featureInfo.description);
+    let description = featureInfo ? (override?.description || t(featureInfo.description)) : defaultDescription;
     
     if (!override?.description) {
       if (userPlan === 'Básico' && feature !== 'text_generation') {
@@ -213,7 +273,7 @@ export function useFeatureRestriction() {
     setUpgradeModal({
       isOpen: true,
       feature,
-      title: override?.title || t(featureInfo.title),
+      title: featureInfo ? (override?.title || t(featureInfo.title)) : defaultTitle,
       description
     });
   }, [userPlan, t]);
@@ -240,8 +300,16 @@ export function useFeatureRestriction() {
 
   // Obter features disponíveis para o plano do usuário
   const getAvailableFeatures = useCallback(() => {
+    // preferir backend, quando disponível
+    if (user?.plan?.features?.length) {
+      const m = {};
+      for (const [k, v] of Object.entries(backendFeatureMap)) {
+        m[k] = v?.raw;
+      }
+      return m;
+    }
     return PLAN_FEATURES[userPlan] || {};
-  }, [userPlan]);
+  }, [backendFeatureMap, user?.plan?.features?.length, userPlan]);
 
   return {
     hasFeatureAccess,
