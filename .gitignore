@@ -59,3 +59,4 @@ downloads/
 .playwright/
 .playwright-local/
 .pw/
+docs
