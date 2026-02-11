@@ -32,7 +32,7 @@ export default function Subscription() {
     if (value == null) return value;
     const numericValue = Number(value);
     if (Number.isFinite(numericValue)) {
-      return numericValue.toLocaleString(t("dates.locale"));
+      return numericValue.toString();
     }
     return translateBackendText(value);
   };
@@ -60,7 +60,7 @@ export default function Subscription() {
       );
     });
     return (
-      <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+      <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 subscription-feature-card">
         {filteredFeatures.map((pf, index) => {
           const isEnabled =
             pf.value === "true" || (pf.value !== "false" && pf.value != null);
@@ -70,7 +70,12 @@ export default function Subscription() {
           return (
             <li
               key={pf.id || `feature-${index}`}
-              className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-shadow shadow-sm hover:shadow-md text-sm"
+              className="flex items-center gap-2 p-2 bg-gray-800 rounded-md border border-gray-700 text-sm min-h-[3rem]"
+              style={{
+                backgroundColor: '#1f2937 !important',
+                background: '#1f2937 !important',
+                cursor: 'default !important'
+              }}
             >
               {isEnabled ? (
                 <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
@@ -79,8 +84,7 @@ export default function Subscription() {
               )}
               <div className="flex flex-col">
                 <span
-                  className="font-medium text-gray-900 dark:text-gray-100 line-clamp-3"
-                  style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", overflow: "hidden" }}
+                  className="font-medium text-white text-xs leading-tight"
                 >
                   {translateBackendText(pf.description)}
                 </span>
@@ -99,7 +103,48 @@ export default function Subscription() {
 
   return (
     <Layout>
-      <section className={styles.container}>
+      <style>
+        {`
+          /* Regras específicas para os cards de recursos da página de assinatura */
+          [data-page="subscription"] li[class*="gap-2"][class*="p-2"]:hover,
+          [data-page="subscription"] li[class*="gap-2"][class*="p-2"]:hover *,
+          [data-page="subscription"] li[class*="gap-2"][class*="p-2"]:active,
+          [data-page="subscription"] li[class*="gap-2"][class*="p-2"]:active *,
+          [data-page="subscription"] li[class*="gap-2"][class*="p-2"]:focus,
+          [data-page="subscription"] li[class*="gap-2"][class*="p-2"]:focus *,
+          [data-page="subscription"] li[class*="gap-2"][class*="p-2"],
+          [data-page="subscription"] li[class*="gap-2"][class*="p-2"] *,
+          .subscription-feature-card li:hover,
+          .subscription-feature-card li:hover *,
+          .subscription-feature-card li:active,
+          .subscription-feature-card li:active *,
+          .subscription-feature-card li:focus,
+          .subscription-feature-card li:focus *,
+          .subscription-feature-card li,
+          .subscription-feature-card li *,
+          li[class*="gap-2"][class*="p-2"]:hover,
+          li[class*="gap-2"][class*="p-2"]:hover *,
+          li[class*="gap-2"][class*="p-2"],
+          li[class*="gap-2"][class*="p-2"] * {
+            background-color: #1f2937 !important;
+            background: #1f2937 !important;
+            background-image: none !important;
+            box-shadow: none !important;
+            border-color: #374151 !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            outline: none !important;
+            text-decoration: none !important;
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            transform: none !important;
+            transition: none !important;
+          }
+        `}
+      </style>
+      <section className={styles.container} data-page="subscription">
         <h1 className={styles.title}>{t("subscription.title")}</h1>
 
         <div className={styles.grid}>
@@ -169,15 +214,56 @@ export default function Subscription() {
       >
         {user ? (
           <>
-            <p className="text-gray-700 text-sm">
-              <strong className="font-semibold text-gray-900 text-sm">
+            <p className="text-white text-xs bg-gray-800 px-2 py-1 rounded-md mb-4 leading-tight text-center">
+              <strong className="font-semibold text-white text-xs">
                 {t("subscription.info_modal.plan_label")}
               </strong>{" "}
               {user.plan?.name ? translateBackendText(user.plan.name) : t("common.not_informed")}
             </p>
             {Array.isArray(user.plan?.features) &&
-              user.plan.features.length > 0 &&
-              renderFeatures(user.plan.features)}
+              user.plan.features.length > 0 && (
+                <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {user.plan.features
+                    .filter((pf) => {
+                      const featureKey = backendMessageKeyMap[pf.description];
+                      return (
+                        featureKey !== "subscription.features.gemini_2_5_flash" &&
+                        featureKey !== "subscription.features.gemini_2_5_pro" &&
+                        pf.description !== "Acesso ao Gemini 2.5 Flash" &&
+                        pf.description !== "Acesso ao Gemini 2.5 Pro"
+                      );
+                    })
+                    .map((pf, index) => {
+                    const isEnabled =
+                      pf.value === "true" || (pf.value !== "false" && pf.value != null);
+                    const displayValue =
+                      pf.value !== "true" && pf.value !== "false" ? pf.value : null;
+
+                    return (
+                      <li
+                        key={pf.id || `modal-feature-${index}`}
+                        className="flex items-start gap-2 p-2 rounded-md border border-gray-200 dark:border-gray-700 min-h-[2.5rem]"
+                      >
+                        {isEnabled ? (
+                          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                        )}
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <span className="font-medium text-gray-900 dark:text-gray-100 text-xs leading-tight break-words">
+                            {translateBackendText(pf.description)}
+                          </span>
+                          {displayValue && (
+                            <span className="text-gray-600 dark:text-gray-300 text-xs mt-0.5 break-words">
+                              {formatFeatureValue(displayValue)}
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
           </>
         ) : (
           <p>{t("common.loading")}</p>
