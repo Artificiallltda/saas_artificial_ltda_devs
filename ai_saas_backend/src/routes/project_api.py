@@ -84,6 +84,9 @@ def update_project(project_id):
         project.name = data["name"]
     if "description" in data:
         project.description = data["description"]
+    if "workspace_id" in data:
+        # MVP: apenas vincula por ID; valida ownership no workspace_api
+        project.workspace_id = data["workspace_id"]
 
     db.session.commit()
     return jsonify({"message": "Projeto atualizado com sucesso", "project": project.to_dict()}), 200

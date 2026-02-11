@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import Layout from "../../../components/layout/Layout";
 import { useFeatureRestriction } from "../../../hooks/useFeatureRestriction";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function ProEmpresaSEO() {
   const { checkFeatureAccess } = useFeatureRestriction();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // qualquer uma dessas flags habilita parte do módulo SEO
@@ -14,33 +16,30 @@ export default function ProEmpresaSEO() {
     <Layout>
       <div className="p-6">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">SEO</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{t("pro_empresa.seo.title")}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Placeholder de UI para: keyword research, briefing e score em tempo
-            real.
+            {t("pro_empresa.seo.subtitle")}
           </p>
 
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Panel title="Pesquisa de keywords">
+            <Panel title={t("pro_empresa.seo.panels.keyword_research")}>
               <div className="text-sm text-gray-700">
-                Campo de keyword + locale/country + botão “Pesquisar”.
+                {t("pro_empresa.seo.panels.keyword_research.desc")}
               </div>
             </Panel>
-            <Panel title="Score on-page">
+            <Panel title={t("pro_empresa.seo.panels.on_page_score")}>
               <div className="text-sm text-gray-700">
-                Score 0–100 + checklist (título, headings, densidade, tamanho,
-                FAQ, meta description).
+                {t("pro_empresa.seo.panels.on_page_score.desc")}
               </div>
             </Panel>
-            <Panel title="Briefing SEO (LLM)">
+            <Panel title={t("pro_empresa.seo.panels.briefing")}>
               <div className="text-sm text-gray-700">
-                Modal com: keyword, persona, tipo de conteúdo → retorna título,
-                headings, tópicos e FAQs.
+                {t("pro_empresa.seo.panels.briefing.desc")}
               </div>
             </Panel>
-            <Panel title="Logs e limites">
+            <Panel title={t("pro_empresa.seo.panels.logs_limits")}>
               <div className="text-sm text-gray-700">
-                Indicadores de consumo (seo_requests) e mensagens de limite.
+                {t("pro_empresa.seo.panels.logs_limits.desc")}
               </div>
             </Panel>
           </div>

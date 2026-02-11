@@ -37,13 +37,18 @@ const getNavItems = (t) => [
   { label: t("sidebar.settings"), icon: Settings, path: "/settings", feature: null }
 ];
 
-const PRO_EMPRESA_PARENT = { label: "Pro Empresa", icon: Building2, path: "/pro-empresa", feature: "pro_empresa" };
+const getProEmpresaParent = (t) => ({
+  label: t("sidebar.pro_empresa"),
+  icon: Building2,
+  path: "/pro-empresa",
+  feature: "pro_empresa",
+});
 
-const getProEmpresaChildren = () => [
-  { label: "SEO", icon: Search, path: "/pro-empresa/seo", feature: "seo_keyword_research" },
-  { label: "Workspaces", icon: FolderKanban, path: "/pro-empresa/workspaces", feature: "collab_workspaces" },
-  { label: "Aprovações", icon: CheckSquare, path: "/pro-empresa/approvals", feature: "collab_approval_flow" },
-  { label: "Integrações", icon: Plug, path: "/pro-empresa/integrations", feature: "cms_integration_wordpress" },
+const getProEmpresaChildren = (t) => [
+  { label: t("sidebar.pro_empresa.seo"), icon: Search, path: "/pro-empresa/seo", feature: "seo_keyword_research" },
+  { label: t("sidebar.pro_empresa.workspaces"), icon: FolderKanban, path: "/pro-empresa/workspaces", feature: "collab_workspaces" },
+  { label: t("sidebar.pro_empresa.approvals"), icon: CheckSquare, path: "/pro-empresa/approvals", feature: "collab_approval_flow" },
+  { label: t("sidebar.pro_empresa.integrations"), icon: Plug, path: "/pro-empresa/integrations", feature: "cms_integration_wordpress" },
 ];
 
 function ChatToggleButton({ collapsed, t }) {
@@ -141,7 +146,8 @@ export default function Sidebar({
   const touchStartX = useRef(null);
   const [planName, setPlanName] = useState(user?.plan?.name || t("common.plan_default"));
   const navItems = getNavItems(t);
-  const proEmpresaChildren = getProEmpresaChildren();
+  const proEmpresaParent = getProEmpresaParent(t);
+  const proEmpresaChildren = getProEmpresaChildren(t);
   const [proEmpresaOpen, setProEmpresaOpen] = useState(location.pathname.startsWith("/pro-empresa"));
 
   const translatePlanName = (planName) => {
@@ -257,27 +263,27 @@ export default function Sidebar({
               <div className="my-3 border-t border-gray-200" />
               {!collapsed && (
                 <div className="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Pro Empresa
+                  {t("sidebar.pro_empresa")}
                 </div>
               )}
 
               {/* Parent (toggle dropdown) */}
               <div>
-                {PRO_EMPRESA_PARENT.feature && !hasFeatureAccess(PRO_EMPRESA_PARENT.feature) ? (
+                {proEmpresaParent.feature && !hasFeatureAccess(proEmpresaParent.feature) ? (
                   <div
                     className={`
                       flex items-center justify-between gap-3 px-4 py-3 rounded-lg cursor-not-allowed
                       ${location.pathname.startsWith("/pro-empresa") ? "bg-gray-100 text-gray-400" : "text-gray-400"}
                     `}
-                    title={`${PRO_EMPRESA_PARENT.label} - Não disponível no seu plano`}
-                    onClick={() => showUpgradeModal(PRO_EMPRESA_PARENT.feature)}
+                    title={`${proEmpresaParent.label} - Não disponível no seu plano`}
+                    onClick={() => showUpgradeModal(proEmpresaParent.feature)}
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <Building2 className="w-5 h-5" />
                         <Lock className="w-3 h-3 absolute -bottom-1 -right-1 text-red-500" />
                       </div>
-                      {!collapsed && <span className="text-sm">{PRO_EMPRESA_PARENT.label}</span>}
+                      {!collapsed && <span className="text-sm">{proEmpresaParent.label}</span>}
                     </div>
                     {!collapsed && <ChevronRight className="w-4 h-4 opacity-60" />}
                   </div>
@@ -290,11 +296,11 @@ export default function Sidebar({
                       transition hover:bg-gray-100
                       ${location.pathname.startsWith("/pro-empresa") ? "bg-gray-200 text-gray-900" : "text-gray-700"}
                     `}
-                    title={PRO_EMPRESA_PARENT.label}
+                    title={proEmpresaParent.label}
                   >
                     <div className="flex items-center gap-3">
                       <Building2 className="w-5 h-5 text-gray-600" />
-                      {!collapsed && <span>{PRO_EMPRESA_PARENT.label}</span>}
+                      {!collapsed && <span>{proEmpresaParent.label}</span>}
                     </div>
                     {!collapsed && (
                       proEmpresaOpen ? (

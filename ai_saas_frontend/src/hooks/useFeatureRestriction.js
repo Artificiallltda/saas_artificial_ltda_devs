@@ -158,6 +158,7 @@ const FEATURE_DISPLAY_NAMES = {
 const PLAN_MODELS = {
   'Pro': [], // Todos os modelos disponíveis
   'Premium': [], // Todos os modelos exceto vídeo
+  'Pro Empresa': [], // Todos os modelos disponíveis
   'Bot': [],
   'Básico': [
     'gpt-4o',
@@ -212,7 +213,7 @@ export function useFeatureRestriction() {
   // Verificar se o usuário tem acesso a um modelo específico
   const hasModelAccess = useCallback((model) => {
     // Se for plano Pro ou Premium, tem acesso a todos os modelos
-    if (userPlan === 'Pro' || userPlan === 'Premium') {
+    if (userPlan === 'Pro' || userPlan === 'Premium' || userPlan === 'Pro Empresa') {
       return true;
     }
     

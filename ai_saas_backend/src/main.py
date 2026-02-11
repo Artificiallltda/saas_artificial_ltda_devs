@@ -7,10 +7,11 @@ from dotenv import load_dotenv
 from pathlib import Path
 from extensions import bcrypt, jwt, db, limiter, jwt_required, get_jwt_identity, create_access_token
 from utils import check_if_token_revoked, create_default_plans
+from utils.schema_upgrades import run_schema_upgrades
 from routes import (
     user_api, admin_api, auth_api, email_api, profile_api, project_api,
     generated_content_api, notification_api, plan_api, ai_generation_api,
-    ai_generation_video_api, chat_api, download_api
+    ai_generation_video_api, chat_api, download_api, workspace_api
 )
 from models import User, Plan
 import os, uuid
@@ -155,6 +156,7 @@ def create_default_admin():
 
 with app.app_context():
     db.create_all()
+    run_schema_upgrades()
     create_default_plans()
     create_default_admin()
 
@@ -199,6 +201,7 @@ app.register_blueprint(ai_generation_api, url_prefix="/api/ai")
 app.register_blueprint(ai_generation_video_api, url_prefix="/api/ai")
 app.register_blueprint(chat_api, url_prefix="/api/chats")
 app.register_blueprint(download_api, url_prefix="/api/downloads")
+app.register_blueprint(workspace_api, url_prefix="/api/workspaces")
 
 print("🚀 Ambiente:", "DESENVOLVIMENTO" if ENV == "dev" else "PRODUÇÃO")
 

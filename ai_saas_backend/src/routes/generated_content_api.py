@@ -7,6 +7,9 @@ from models import (
     GeneratedVideoContent,
     User
 )
+from utils.feature_flags import has_plan_feature
+from utils.decorators import admin_required
+from datetime import datetime
 import os
 
 generated_content_api = Blueprint("generated_content_api", __name__)
@@ -102,6 +105,132 @@ def list_generated_contents():
 
     contents = base_query.all()
     return jsonify([c.to_dict() for c in contents]), 200
+
+
+# ============================
+# Colaboração / Aprovação (MVP)
+# ============================
+
+@generated_content_api.route("/review/inbox", methods=["GET"])
+@jwt_required()
+@admin_required
+def review_inbox():
+    """Lista conteúdos em revisão (admin)."""
+    current_user_id = get_jwt_identity()
+    admin_user = User.query.get(current_user_id)
+    if not has_plan_feature(admin_user, "collab_approval_flow"):
+        return jsonify({"error": "Recurso não disponível no seu plano"}), 403
+
+    q = (request.args.get("q") or "").strip().lower()
+    status_param = (request.args.get("status") or "").strip().lower()
+    if not status_param:
+        statuses = ["in_review"]
+    else:
+        statuses = [s.strip() for s in status_param.split(",") if s.strip()]
+
+    allowed_status = {"draft", "in_review", "approved", "rejected"}
+    statuses = [s for s in statuses if s in allowed_status] or ["in_review"]
+
+    base = GeneratedContent.query.filter(GeneratedContent.status.in_(statuses))
+    if q:
+        base = base.filter(GeneratedContent.prompt.ilike(f"%{q}%"))
+
+    # Ordenação: para inbox de revisão, prioriza submitted_at; senão ordena por created_at.
+    if statuses == ["in_review"]:
+        items = base.order_by(
+            GeneratedContent.submitted_at.desc().nullslast(),
+            GeneratedContent.created_at.desc()
+        ).all()
+    else:
+        items = base.order_by(GeneratedContent.created_at.desc()).all()
+    return jsonify([c.to_dict() for c in items]), 200
+
+
+@generated_content_api.route("/<content_id>/submit-review", methods=["POST"])
+@jwt_required()
+def submit_review(content_id):
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    if not user:
+        return jsonify({"error": "Usuário inválido"}), 403
+    if not has_plan_feature(user, "collab_approval_flow"):
+        return jsonify({"error": "Recurso não disponível no seu plano"}), 403
+
+    content = GeneratedContent.query.get(content_id)
+    if not content:
+        return jsonify({"error": "Conteúdo não encontrado"}), 404
+    if content.user_id != current_user_id:
+        return jsonify({"error": "Acesso negado"}), 403
+
+    # apenas textos no MVP
+    if content.content_type != "text":
+        return jsonify({"error": "Apenas conteúdos de texto podem ser enviados para revisão"}), 400
+
+    if content.status == "approved":
+        return jsonify({"error": "Conteúdo já aprovado"}), 400
+
+    content.status = "in_review"
+    content.submitted_at = datetime.utcnow()
+    content.submitted_by = current_user_id
+    content.approved_at = None
+    content.approved_by = None
+    content.rejected_at = None
+    content.rejected_by = None
+
+    db.session.commit()
+    return jsonify({"message": "Enviado para revisão", "content": content.to_dict()}), 200
+
+
+@generated_content_api.route("/<content_id>/approve", methods=["POST"])
+@jwt_required()
+@admin_required
+def approve_content(content_id):
+    current_user_id = get_jwt_identity()
+    admin_user = User.query.get(current_user_id)
+    if not has_plan_feature(admin_user, "collab_approval_flow"):
+        return jsonify({"error": "Recurso não disponível no seu plano"}), 403
+
+    content = GeneratedContent.query.get(content_id)
+    if not content:
+        return jsonify({"error": "Conteúdo não encontrado"}), 404
+
+    if content.status != "in_review":
+        return jsonify({"error": "Conteúdo não está em revisão"}), 400
+
+    content.status = "approved"
+    content.approved_at = datetime.utcnow()
+    content.approved_by = current_user_id
+    content.rejected_at = None
+    content.rejected_by = None
+
+    db.session.commit()
+    return jsonify({"message": "Aprovado", "content": content.to_dict()}), 200
+
+
+@generated_content_api.route("/<content_id>/reject", methods=["POST"])
+@jwt_required()
+@admin_required
+def reject_content(content_id):
+    current_user_id = get_jwt_identity()
+    admin_user = User.query.get(current_user_id)
+    if not has_plan_feature(admin_user, "collab_approval_flow"):
+        return jsonify({"error": "Recurso não disponível no seu plano"}), 403
+
+    content = GeneratedContent.query.get(content_id)
+    if not content:
+        return jsonify({"error": "Conteúdo não encontrado"}), 404
+
+    if content.status != "in_review":
+        return jsonify({"error": "Conteúdo não está em revisão"}), 400
+
+    content.status = "rejected"
+    content.rejected_at = datetime.utcnow()
+    content.rejected_by = current_user_id
+    content.approved_at = None
+    content.approved_by = None
+
+    db.session.commit()
+    return jsonify({"message": "Rejeitado", "content": content.to_dict()}), 200
 
 
 # OBTER DETALHES DE UM CONTEÚDO ESPECÍFICO

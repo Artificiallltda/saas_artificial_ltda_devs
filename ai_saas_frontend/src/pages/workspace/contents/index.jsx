@@ -6,6 +6,11 @@ import useContentsFetch from "../hooks/useContentsFetch";
 export default function GeneratedContentsList() {
   const { t } = useLanguage();
   const { loading, allContents, setAllContents, handleDeleteContent } = useContentsFetch();
+
+  const statusLabel = (status) => {
+    const s = (status || "draft").toLowerCase();
+    return t(`pro_empresa.status.${s}`);
+  };
   
   // Estados para abas e busca
   const [activeTab, setActiveTab] = useState("text");
@@ -138,6 +143,22 @@ export default function GeneratedContentsList() {
                         {new Date(content.created_at).toLocaleDateString()}
                       </p>
                     </div>
+                    {content?.content_type === "text" && (
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                          (content.status || "draft") === "approved"
+                            ? "bg-green-50 text-green-700 border-green-200"
+                            : (content.status || "draft") === "rejected"
+                              ? "bg-red-50 text-red-700 border-red-200"
+                              : (content.status || "draft") === "in_review"
+                                ? "bg-amber-50 text-amber-800 border-amber-200"
+                                : "bg-gray-50 text-gray-700 border-gray-200"
+                        }`}
+                        title={`${t("pro_empresa.status.label")} ${statusLabel(content.status)}`}
+                      >
+                        {statusLabel(content.status)}
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-gray-600 line-clamp-3">
                     {content.prompt || content.description || "No description available"}

@@ -4,6 +4,14 @@ import { formatDateTime } from "../../../utils/dateUtils";
 import { TEXT_MODELS } from "../../../utils/constants";
 import { useLanguage } from "../../../context/LanguageContext";
 
+function statusBadge(status, t) {
+  const s = (status || "draft").toLowerCase();
+  if (s === "approved") return { label: t("pro_empresa.status.approved"), cls: "bg-green-50 text-green-700 border-green-200" };
+  if (s === "rejected") return { label: t("pro_empresa.status.rejected"), cls: "bg-red-50 text-red-700 border-red-200" };
+  if (s === "in_review") return { label: t("pro_empresa.status.in_review"), cls: "bg-amber-50 text-amber-800 border-amber-200" };
+  return { label: t("pro_empresa.status.draft"), cls: "bg-gray-50 text-gray-700 border-gray-200" };
+}
+
 export default function ContentCard({
   content,
   onSelect,
@@ -14,6 +22,7 @@ export default function ContentCard({
   showDelete = true // nova prop
 }) {
   const { t, language } = useLanguage();
+  const badge = statusBadge(content?.status, t);
   return (
     <div
       className={`relative rounded-lg p-4 bg-white shadow hover:shadow-md transition ${
@@ -59,6 +68,14 @@ export default function ContentCard({
           <span className="text-xs text-gray-600">
             {formatDateTime(content.created_at, language)}
           </span>
+          {content?.content_type === "text" && (
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded-full border ${badge.cls}`}
+              title={`Status: ${content.status || "draft"}`}
+            >
+              {badge.label}
+            </span>
+          )}
         </div>
 
         <div className="flex-grow mb-3">

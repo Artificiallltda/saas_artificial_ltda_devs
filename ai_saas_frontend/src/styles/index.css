@@ -46,6 +46,53 @@ body.dark-mode .border-gray-300 {
   border-color: #4a5568 !important;
 }
 
+/* Badges / chips (status) no modo escuro */
+body.dark-mode .bg-green-50 {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+}
+body.dark-mode .text-green-700 {
+  color: #34d399 !important;
+}
+body.dark-mode .border-green-200 {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+body.dark-mode .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.14) !important;
+}
+body.dark-mode .text-red-700 {
+  color: #f87171 !important;
+}
+body.dark-mode .border-red-200 {
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+body.dark-mode .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+}
+body.dark-mode .text-amber-800 {
+  color: #fbbf24 !important;
+}
+body.dark-mode .border-amber-200 {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+body.dark-mode .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.14) !important;
+}
+body.dark-mode .text-blue-800 {
+  color: #93c5fd !important;
+}
+body.dark-mode .text-blue-700 {
+  color: #93c5fd !important;
+}
+body.dark-mode .border-blue-300 {
+  border-color: rgba(59, 130, 246, 0.35) !important;
+}
+body.dark-mode .border-blue-200 {
+  border-color: rgba(59, 130, 246, 0.30) !important;
+}
+
 body.dark-mode input,
 body.dark-mode select,
 body.dark-mode textarea {

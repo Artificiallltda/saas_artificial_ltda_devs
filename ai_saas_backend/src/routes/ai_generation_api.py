@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from extensions import jwt_required, db
 from models.chat import Chat, ChatMessage, ChatAttachment, SenderType
-from models.generated_content import GeneratedImageContent
+from models.generated_content import GeneratedImageContent, GeneratedTextContent
 from models.user import User  # <--- corrigido, import do modelo User
 from flask_jwt_extended import get_jwt_identity
 import os, uuid, base64, requests, time
@@ -808,6 +808,23 @@ def generate_text():
             db.session.add(ai_msg)
             db.session.commit()
             print(f"[MSG AI] Chat {chat.id} - Mensagem gerada: {generated_text[:50]} (ID {ai_msg.id})")
+
+            # MVP Colaboração: também salvar texto em generated_contents (para aparecer em /api/contents e Aprovações)
+            try:
+                if safe_text and safe_text.strip():
+                    gen_text = GeneratedTextContent(
+                        user_id=chat.user_id,
+                        prompt=user_input or "",
+                        model_used=used_model,
+                        content_data=safe_text,
+                        file_path=None,
+                        temperature=ai_msg.temperature,
+                    )
+                    db.session.add(gen_text)
+                    db.session.commit()
+            except Exception as ge:
+                db.session.rollback()
+                print(f"[WARN] Falha ao salvar GeneratedTextContent: {ge}")
 
             # agora salva os anexos da IA (se houver)
             for img in uploaded_images:

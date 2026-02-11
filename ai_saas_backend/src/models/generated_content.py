@@ -20,6 +20,15 @@ class GeneratedContent(db.Model):
     file_path = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Colaboração / Aprovação (MVP)
+    status = db.Column(db.String(20), nullable=False, default="draft")  # draft | in_review | approved | rejected
+    submitted_at = db.Column(db.DateTime, nullable=True)
+    submitted_by = db.Column(db.String, nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
+    approved_by = db.Column(db.String, nullable=True)
+    rejected_at = db.Column(db.DateTime, nullable=True)
+    rejected_by = db.Column(db.String, nullable=True)
+
     user = db.relationship("User", backref=db.backref("generated_contents", lazy=True))
     projects = db.relationship(
         "Project",
@@ -46,6 +55,15 @@ class GeneratedContent(db.Model):
             "content_data": self.content_data,
             "file_path": self.file_path,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "status": self.status,
+            "review": {
+                "submitted_at": self.submitted_at.isoformat() if self.submitted_at else None,
+                "submitted_by": self.submitted_by,
+                "approved_at": self.approved_at.isoformat() if self.approved_at else None,
+                "approved_by": self.approved_by,
+                "rejected_at": self.rejected_at.isoformat() if self.rejected_at else None,
+                "rejected_by": self.rejected_by,
+            },
             "projects": [p.id for p in self.projects]
         }
 

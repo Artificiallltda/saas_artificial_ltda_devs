@@ -63,6 +63,10 @@ export const generatedContentRoutes = {
   deleteBatch: `${API_BASE}/contents/batch`, // NOVA ROTA
   getImage: (contentId) => `${API_BASE}/contents/images/${contentId}`,
   getVideo: (id) => `${API_BASE}/contents/videos/${id}`,
+  submitReview: (contentId) => `${API_BASE}/contents/${contentId}/submit-review`,
+  approve: (contentId) => `${API_BASE}/contents/${contentId}/approve`,
+  reject: (contentId) => `${API_BASE}/contents/${contentId}/reject`,
+  reviewInbox: (qs = "") => `${API_BASE}/contents/review/inbox${qs ? `?${qs}` : ""}`,
 };
 
 export const notificationRoutes = {
@@ -98,4 +102,12 @@ export const chatRoutes = {
 export const downloadRoutes = {
   process: `${API_BASE}/downloads/process`,           // POST → processar download
   status: `${API_BASE}/downloads/status`,            // GET → status do serviço
+};
+
+export const workspaceRoutes = {
+  list: `${API_BASE}/workspaces/`,
+  create: `${API_BASE}/workspaces/`,
+  update: (workspaceId) => `${API_BASE}/workspaces/${workspaceId}`,
+  delete: (workspaceId) => `${API_BASE}/workspaces/${workspaceId}`,
+  projects: (workspaceId) => `${API_BASE}/workspaces/${workspaceId}/projects`,
 };

@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import Layout from "../../components/layout/Layout";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { useFeatureRestriction } from "../../hooks/useFeatureRestriction";
 
 export default function ProEmpresaHome() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { hasFeatureAccess } = useFeatureRestriction();
 
   const canSEO =
@@ -21,33 +23,33 @@ export default function ProEmpresaHome() {
     <Layout>
       <div className="p-6">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">Pro Empresa</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{t("pro_empresa.home.title")}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Área B2B para times: SEO, colaboração, aprovações e integrações.
+            {t("pro_empresa.home.subtitle")}
           </p>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card
-              title="SEO"
-              description="Pesquisa de keywords, briefing e score on-page."
+              title={t("pro_empresa.home.cards.seo.title")}
+              description={t("pro_empresa.home.cards.seo.description")}
               to="/pro-empresa/seo"
               enabled={canSEO}
             />
             <Card
-              title="Workspaces"
-              description="Organização por time/campanha."
+              title={t("pro_empresa.home.cards.workspaces.title")}
+              description={t("pro_empresa.home.cards.workspaces.description")}
               to="/pro-empresa/workspaces"
               enabled={canWorkspaces}
             />
             <Card
-              title="Aprovações"
-              description="Fluxo: rascunho → revisão → aprovado."
+              title={t("pro_empresa.home.cards.approvals.title")}
+              description={t("pro_empresa.home.cards.approvals.description")}
               to="/pro-empresa/approvals"
               enabled={canApprovals}
             />
             <Card
-              title="Integrações"
-              description="WordPress e Webhooks/CRM."
+              title={t("pro_empresa.home.cards.integrations.title")}
+              description={t("pro_empresa.home.cards.integrations.description")}
               to="/pro-empresa/integrations"
               enabled={canIntegrations}
             />
@@ -55,12 +57,11 @@ export default function ProEmpresaHome() {
 
           <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
             <div className="text-sm text-gray-700">
-              <span className="font-medium">Plano atual:</span>{" "}
+              <span className="font-medium">{t("pro_empresa.home.current_plan")}</span>{" "}
               {user?.plan?.name || "—"}
             </div>
             <div className="mt-2 text-xs text-gray-500">
-              Dica: essas telas podem ser exibidas bloqueadas/ocultas conforme
-              feature flags vindas do backend.
+              {t("pro_empresa.home.tip")}
             </div>
           </div>
         </div>
@@ -70,6 +71,7 @@ export default function ProEmpresaHome() {
 }
 
 function Card({ title, description, to, enabled }) {
+  const { t } = useLanguage();
   return (
     <Link
       to={to}
@@ -88,7 +90,7 @@ function Card({ title, description, to, enabled }) {
               : "bg-gray-100 border-gray-200 text-gray-600"
           }`}
         >
-          {enabled ? "Ativo" : "Bloqueado"}
+          {enabled ? t("pro_empresa.home.card.enabled") : t("pro_empresa.home.card.disabled")}
         </span>
       </div>
       <p className="mt-1 text-sm text-gray-600">{description}</p>

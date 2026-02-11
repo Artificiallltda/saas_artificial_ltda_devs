@@ -14,6 +14,7 @@ class Project(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.String, db.ForeignKey("users.id"), nullable=False)
+    workspace_id = db.Column(db.String, nullable=True, index=True)  # FK lógica (SQLite legacy)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -34,6 +35,7 @@ class Project(db.Model):
             "name": self.name,
             "description": self.description,
             "user_id": self.user_id,
+            "workspace_id": self.workspace_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "contents": [c.to_dict() for c in self.contents]

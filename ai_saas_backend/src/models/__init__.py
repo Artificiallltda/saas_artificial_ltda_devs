@@ -14,6 +14,7 @@ from .plan import (
     PlanFeature,
 ) 
 from .chat import Chat, ChatMessage, ChatAttachment
+from .workspace import Workspace
 
 __all__ = [
     "User",
@@ -27,7 +28,8 @@ __all__ = [
     "GeneratedVideoContent",
     "project_content_association",
     "Notification",
-    "Chat"
+    "Chat",
     "ChatMessage",
     "ChatAttachment",
+    "Workspace",
 ]
