@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from extensions import db, jwt_required, get_jwt_identity
-from models import Project, User, GeneratedContent
+from models import Project, User, GeneratedContent, Workspace
+from utils.feature_flags import has_plan_feature
 from datetime import datetime
 
 project_api = Blueprint("project_api", __name__)
@@ -72,6 +73,7 @@ def get_project(project_id):
 def update_project(project_id):
     current_user_id = get_jwt_identity()
     project = Project.query.get(project_id)
+    user = User.query.get(current_user_id)
 
     if not project:
         return jsonify({"error": "Projeto não encontrado"}), 404
@@ -79,14 +81,32 @@ def update_project(project_id):
     if project.user_id != current_user_id:
         return jsonify({"error": "Acesso negado"}), 403
 
-    data = request.get_json()
+    if not user:
+        return jsonify({"error": "Usuário inválido"}), 403
+
+    data = request.get_json(silent=True) or {}
     if "name" in data:
         project.name = data["name"]
     if "description" in data:
         project.description = data["description"]
     if "workspace_id" in data:
-        # MVP: apenas vincula por ID; valida ownership no workspace_api
-        project.workspace_id = data["workspace_id"]
+        # MVP: workspace_id é um recurso Pro Empresa (collab_workspaces)
+        if not has_plan_feature(user, "collab_workspaces"):
+            return jsonify({"error": "Recurso não disponível no seu plano"}), 403
+
+        ws_id = data.get("workspace_id")
+        # normaliza "null"/"" para None (desvincular)
+        if isinstance(ws_id, str) and ws_id.strip().lower() in ("", "null", "none"):
+            ws_id = None
+
+        if ws_id is not None:
+            ws = Workspace.query.get(ws_id)
+            if not ws:
+                return jsonify({"error": "Workspace não encontrado"}), 404
+            if ws.user_id != user.id:
+                return jsonify({"error": "Acesso negado"}), 403
+
+        project.workspace_id = ws_id
 
     db.session.commit()
     return jsonify({"message": "Projeto atualizado com sucesso", "project": project.to_dict()}), 200

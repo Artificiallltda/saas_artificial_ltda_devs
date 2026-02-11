@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import Layout from "../../../components/layout/Layout";
 import { useFeatureRestriction } from "../../../hooks/useFeatureRestriction";
 import { apiFetch } from "../../../services/apiService";
-import { workspaceRoutes } from "../../../services/apiRoutes";
+import { projectRoutes, workspaceRoutes } from "../../../services/apiRoutes";
 import { toast } from "react-toastify";
 import { useLanguage } from "../../../context/LanguageContext";
+import ConfirmModal from "../../../components/modals/ConfirmModal";
 
 export default function ProEmpresaWorkspaces() {
   const { checkFeatureAccess } = useFeatureRestriction();
@@ -13,6 +14,25 @@ export default function ProEmpresaWorkspaces() {
   const [items, setItems] = useState([]);
   const [name, setName] = useState("");
   const [type, setType] = useState("team");
+
+  const [allProjectsLoading, setAllProjectsLoading] = useState(false);
+  const [allProjects, setAllProjects] = useState([]);
+
+  const [expandedId, setExpandedId] = useState(null);
+  const [workspaceProjects, setWorkspaceProjects] = useState({}); // { [workspaceId]: Project[] }
+  const [workspaceProjectsLoading, setWorkspaceProjectsLoading] = useState({}); // { [workspaceId]: boolean }
+  const [selectedProjectByWorkspace, setSelectedProjectByWorkspace] = useState({}); // { [workspaceId]: projectId }
+
+  const [confirm, setConfirm] = useState({
+    isOpen: false,
+    title: "",
+    description: "",
+    confirmText: "",
+    cancelText: "",
+    variant: "primary",
+    onConfirm: null,
+  });
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   useEffect(() => {
     checkFeatureAccess("collab_workspaces");
@@ -36,6 +56,105 @@ export default function ProEmpresaWorkspaces() {
 
   const canCreate = useMemo(() => name.trim().length >= 2, [name]);
 
+  async function loadAllProjects() {
+    setAllProjectsLoading(true);
+    try {
+      const data = await apiFetch(projectRoutes.list);
+      setAllProjects(Array.isArray(data) ? data : []);
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.workspaces.toast.load_projects_error"));
+    } finally {
+      setAllProjectsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadAllProjects();
+  }, []);
+
+  async function loadWorkspaceProjects(workspaceId) {
+    setWorkspaceProjectsLoading((prev) => ({ ...prev, [workspaceId]: true }));
+    try {
+      const data = await apiFetch(workspaceRoutes.projects(workspaceId));
+      setWorkspaceProjects((prev) => ({ ...prev, [workspaceId]: Array.isArray(data) ? data : [] }));
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.workspaces.toast.load_workspace_projects_error"));
+    } finally {
+      setWorkspaceProjectsLoading((prev) => ({ ...prev, [workspaceId]: false }));
+    }
+  }
+
+  async function toggleWorkspace(workspaceId) {
+    const next = expandedId === workspaceId ? null : workspaceId;
+    setExpandedId(next);
+    if (next && !workspaceProjects[next]) {
+      await loadWorkspaceProjects(next);
+    }
+  }
+
+  async function handleMoveProjectToWorkspace(projectId, workspaceId) {
+    if (!projectId) return;
+
+    const proj = allProjects.find((p) => p.id === projectId);
+    if (!proj) return;
+
+    const doMove = async () => {
+      try {
+        await apiFetch(projectRoutes.update(projectId), {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workspace_id: workspaceId }),
+        });
+        toast.success(t("pro_empresa.workspaces.toast.project_moved"));
+        setSelectedProjectByWorkspace((prev) => ({ ...prev, [workspaceId]: "" }));
+        await Promise.all([loadAllProjects(), loadWorkspaceProjects(workspaceId)]);
+      } catch (e) {
+        toast.error(e?.message || t("pro_empresa.workspaces.toast.project_move_error"));
+      }
+    };
+
+    if (proj.workspace_id && proj.workspace_id !== workspaceId) {
+      setConfirm({
+        isOpen: true,
+        title: t("pro_empresa.workspaces.modal.move_project.title"),
+        description: t("pro_empresa.workspaces.confirm_move_project"),
+        confirmText: t("common.confirm"),
+        cancelText: t("common.cancel"),
+        variant: "primary",
+        onConfirm: doMove,
+      });
+      return;
+    }
+
+    await doMove();
+  }
+
+  async function handleRemoveProjectFromWorkspace(projectId, workspaceId) {
+    const doRemove = async () => {
+      try {
+        await apiFetch(projectRoutes.update(projectId), {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workspace_id: null }),
+        });
+        toast.success(t("pro_empresa.workspaces.toast.project_removed"));
+        await Promise.all([loadAllProjects(), loadWorkspaceProjects(workspaceId)]);
+      } catch (e) {
+        toast.error(e?.message || t("pro_empresa.workspaces.toast.project_remove_error"));
+      }
+    };
+
+    setConfirm({
+      isOpen: true,
+      title: t("pro_empresa.workspaces.modal.remove_project.title"),
+      description: t("pro_empresa.workspaces.confirm_remove_project"),
+      confirmText: t("common.remove"),
+      cancelText: t("common.cancel"),
+      variant: "danger",
+      onConfirm: doRemove,
+    });
+  }
+
   async function handleCreate() {
     if (!canCreate) return;
     try {
@@ -54,14 +173,25 @@ export default function ProEmpresaWorkspaces() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm(t("pro_empresa.workspaces.confirm_remove"))) return;
-    try {
-      await apiFetch(workspaceRoutes.delete(id), { method: "DELETE" });
-      await load();
-      toast.success(t("pro_empresa.workspaces.toast.removed"));
-    } catch (e) {
-      toast.error(e?.message || t("pro_empresa.workspaces.toast.remove_error"));
-    }
+    const doDelete = async () => {
+      try {
+        await apiFetch(workspaceRoutes.delete(id), { method: "DELETE" });
+        await load();
+        toast.success(t("pro_empresa.workspaces.toast.removed"));
+      } catch (e) {
+        toast.error(e?.message || t("pro_empresa.workspaces.toast.remove_error"));
+      }
+    };
+
+    setConfirm({
+      isOpen: true,
+      title: t("pro_empresa.workspaces.modal.remove_workspace.title"),
+      description: t("pro_empresa.workspaces.confirm_remove"),
+      confirmText: t("common.remove"),
+      cancelText: t("common.cancel"),
+      variant: "danger",
+      onConfirm: doDelete,
+    });
   }
 
   return (
@@ -126,27 +256,120 @@ export default function ProEmpresaWorkspaces() {
                 ) : (
                   <div className="space-y-2">
                     {items.map((w) => (
-                      <div
-                        key={w.id}
-                        className="flex items-center justify-between rounded-lg border border-gray-200 p-3"
-                      >
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium text-gray-900 truncate">
-                            {w.name}
+                      <div key={w.id} className="rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between p-3">
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {w.name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {t("pro_empresa.workspaces.fields.type")}:{" "}
+                              {w.type === "campaign"
+                                ? t("pro_empresa.workspaces.type.campaign")
+                                : t("pro_empresa.workspaces.type.team")}
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {t("pro_empresa.workspaces.fields.type")}:{" "}
-                            {w.type === "campaign"
-                              ? t("pro_empresa.workspaces.type.campaign")
-                              : t("pro_empresa.workspaces.type.team")}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => toggleWorkspace(w.id)}
+                              className="text-xs px-2 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50"
+                            >
+                              {expandedId === w.id
+                                ? t("pro_empresa.workspaces.projects.hide")
+                                : t("pro_empresa.workspaces.projects.view")}
+                            </button>
+                            <button
+                              onClick={() => handleDelete(w.id)}
+                              className="text-xs px-2 py-1 rounded-md border border-red-200 text-red-700 hover:bg-red-50"
+                            >
+                              {t("pro_empresa.workspaces.remove")}
+                            </button>
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleDelete(w.id)}
-                          className="text-xs px-2 py-1 rounded-md border border-red-200 text-red-700 hover:bg-red-50"
-                        >
-                          {t("pro_empresa.workspaces.remove")}
-                        </button>
+
+                        {expandedId === w.id && (
+                          <div className="border-t border-gray-200 p-3 space-y-3">
+                            <div className="text-sm font-semibold text-gray-900">
+                              {t("pro_empresa.workspaces.projects.title")}
+                            </div>
+
+                            <div className="rounded-lg border border-gray-200 p-3 bg-white">
+                              <div className="text-xs font-semibold text-gray-700">
+                                {t("pro_empresa.workspaces.projects.add.title")}
+                              </div>
+                              <div className="mt-2 flex flex-col sm:flex-row gap-2">
+                                <select
+                                  value={selectedProjectByWorkspace[w.id] || ""}
+                                  onChange={(e) =>
+                                    setSelectedProjectByWorkspace((prev) => ({
+                                      ...prev,
+                                      [w.id]: e.target.value,
+                                    }))
+                                  }
+                                  className="flex-1 h-10 px-3 rounded-lg border border-gray-300 text-sm bg-white"
+                                  disabled={allProjectsLoading}
+                                >
+                                  <option value="">
+                                    {allProjectsLoading
+                                      ? t("common.loading")
+                                      : t("pro_empresa.workspaces.projects.add.placeholder")}
+                                  </option>
+                                  {allProjects
+                                    .filter((p) => p.workspace_id !== w.id)
+                                    .map((p) => (
+                                      <option key={p.id} value={p.id}>
+                                        {p.name}
+                                      </option>
+                                    ))}
+                                </select>
+                                <button
+                                  onClick={() =>
+                                    handleMoveProjectToWorkspace(selectedProjectByWorkspace[w.id], w.id)
+                                  }
+                                  disabled={!selectedProjectByWorkspace[w.id]}
+                                  className="h-10 px-3 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-50"
+                                >
+                                  {t("pro_empresa.workspaces.projects.add.cta")}
+                                </button>
+                              </div>
+                              <div className="mt-2 text-xs text-gray-500">
+                                {t("pro_empresa.workspaces.projects.add.hint")}
+                              </div>
+                            </div>
+
+                            {workspaceProjectsLoading[w.id] ? (
+                              <div className="text-sm text-gray-500">{t("common.loading")}</div>
+                            ) : (workspaceProjects[w.id] || []).length === 0 ? (
+                              <div className="text-sm text-gray-500">
+                                {t("pro_empresa.workspaces.projects.empty")}
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {(workspaceProjects[w.id] || []).map((p) => (
+                                  <div
+                                    key={p.id}
+                                    className="flex items-center justify-between rounded-lg border border-gray-200 p-3 bg-white"
+                                  >
+                                    <div className="min-w-0">
+                                      <div className="text-sm font-medium text-gray-900 truncate">
+                                        {p.name}
+                                      </div>
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {p.description || t("common.no_description")}
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={() => handleRemoveProjectFromWorkspace(p.id, w.id)}
+                                      className="text-xs px-2 py-1 rounded-md border border-gray-200 hover:bg-gray-50"
+                                    >
+                                      {t("pro_empresa.workspaces.projects.remove")}
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -156,6 +379,30 @@ export default function ProEmpresaWorkspaces() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirm.isOpen}
+        onClose={() => {
+          if (confirmLoading) return;
+          setConfirm((prev) => ({ ...prev, isOpen: false, onConfirm: null }));
+        }}
+        title={confirm.title}
+        description={confirm.description}
+        confirmText={confirm.confirmText}
+        cancelText={confirm.cancelText}
+        variant={confirm.variant}
+        loading={confirmLoading}
+        onConfirm={async () => {
+          if (!confirm.onConfirm) return;
+          setConfirmLoading(true);
+          try {
+            await confirm.onConfirm();
+          } finally {
+            setConfirmLoading(false);
+            setConfirm((prev) => ({ ...prev, isOpen: false, onConfirm: null }));
+          }
+        }}
+      />
     </Layout>
   );
 }
