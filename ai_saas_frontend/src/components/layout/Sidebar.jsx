@@ -30,98 +30,111 @@ const getNavItems = (t) => [
   { label: t("sidebar.settings"), icon: Settings, path: "/settings", feature: null }
 ];
 
+/**
+ * BOTÃO DO CHAT (AZUL + SUAVE + SEM PULO)
+ * - Não usa setInterval
+ * - Não usa state para mover (left) -> evita “teleporte”
+ * - Move com requestAnimationFrame + transition de left
+ */
 function ChatToggleButton({ collapsed, t }) {
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
-  const [leftPos, setLeftPos] = useState(0);
 
   useEffect(() => {
-    // Função para atualizar o estado quando a sidebar de chat abrir/fechar
-    const update = () => {
-      const mainSidebar = document.querySelector('[data-main-sidebar]');
-      const chatSidebar = document.querySelector('[data-chat-sidebar]');
-      const isOpen = !!chatSidebar && chatSidebar.offsetWidth > 0;
+    const btn = document.getElementById("chat-toggle-btn");
+    const mainSidebar = document.querySelector('[data-main-sidebar]');
+    const chatSidebar = document.querySelector('[data-chat-sidebar]');
+
+    if (!btn || !mainSidebar) return;
+
+    let raf = 0;
+
+    const measure = () => {
+      const mainW = mainSidebar.offsetWidth || 0;
+
+      // width real (mesmo com translate)
+      const chatW = Math.round(chatSidebar?.getBoundingClientRect?.().width || 0);
+      const isOpen = chatW > 20;
       setChatSidebarOpen(isOpen);
-      const left = (mainSidebar?.offsetWidth || 0) + (chatSidebar?.offsetWidth || 0);
-      setLeftPos(left);
+
+      const left = mainW + (isOpen ? chatW : 0);
+
+      // Atualiza direto no style => não dá pulo
+      btn.style.left = `${Math.max(0, left - 6)}px`;
     };
 
-    // Verificar inicialmente
-    update();
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(measure);
+    };
 
-    // Observar mudanças
-    const chatSidebarEl = document.querySelector('[data-chat-sidebar]');
-    const mainSidebarEl = document.querySelector('[data-main-sidebar]');
-    const observer = new MutationObserver(update);
-    const observerMain = new MutationObserver(update);
+    // inicial
+    schedule();
 
-    if (chatSidebarEl) {
-      observer.observe(chatSidebarEl, { 
-        attributes: true, 
-        attributeFilter: ['class', 'style'] 
-      });
-    }
+    // observa mudanças de tamanho
+    const ro = new ResizeObserver(schedule);
+    ro.observe(mainSidebar);
+    if (chatSidebar) ro.observe(chatSidebar);
 
-    if (mainSidebarEl) {
-      observerMain.observe(mainSidebarEl, {
-        attributes: true,
-        attributeFilter: ['class', 'style']
-      });
-    }
+    // observa troca de classe/style no chat sidebar (abre/fecha)
+    const mo = new MutationObserver(schedule);
+    if (chatSidebar) mo.observe(chatSidebar, { attributes: true, attributeFilter: ["class", "style"] });
 
-    const onResize = () => update();
-    window.addEventListener('resize', onResize);
-
-    // Atualizar periodicamente como fallback
-    const interval = setInterval(update, 200);
+    window.addEventListener("resize", schedule);
 
     return () => {
-      observer.disconnect();
-      observerMain.disconnect();
-      clearInterval(interval);
-      window.removeEventListener('resize', onResize);
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      mo.disconnect();
+      window.removeEventListener("resize", schedule);
     };
   }, [collapsed]);
 
   return createPortal(
     <button
+      id="chat-toggle-btn"
       onClick={() => window.toggleChatSidebar?.()}
       title={t("sidebar.chat_toggle")}
+      aria-label={t("sidebar.chat_toggle")}
       className={`
-        group hidden md:flex
-        fixed z-40
-        h-16 w-9
-        items-center justify-center
-        bg-blue-600 hover:bg-blue-700 text-white
-        rounded-r-xl rounded-l-none shadow-lg
-        ring-1 ring-black/10
-        transition-all
+        hidden md:flex
+        fixed z-[60]
         top-1/2 -translate-y-1/2
-        hover:scale-[1.02]
+
+        h-16 w-9 items-center justify-center
+        rounded-r-xl rounded-l-none
+
+        bg-blue-600 text-white
+        shadow-lg ring-1 ring-black/10
+
+        transition-[left,transform,background,box-shadow] duration-300
+        ease-[cubic-bezier(.4,0,.2,1)]
+        hover:bg-blue-700 hover:shadow-xl
+        active:scale-[0.98]
       `}
-      style={{ left: Math.max(0, leftPos - 6) }}
+      style={{
+        left: 0,
+        willChange: "left",
+      }}
     >
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        className={`${chatSidebarOpen ? "rotate-180" : ""} transition-transform`}
-        aria-hidden="true"
+      <span
+        className={`
+          text-xl leading-none select-none
+          transition-transform duration-300 ease-[cubic-bezier(.4,0,.2,1)]
+          ${chatSidebarOpen ? "rotate-180" : ""}
+        `}
       >
-        <path d="M5 4 L19 12 L5 20 Z" className="fill-black" />
-      </svg>
+        ‹
+      </span>
     </button>,
     document.body
   );
 }
-export default function Sidebar({
-  collapsed = false,
-  isOpen = false,
-  onClose
-}) {
+
+export default function Sidebar({ collapsed = false, isOpen = false, onClose }) {
   const { t } = useLanguage();
   const location = useLocation();
   const { user } = useAuth();
-  const { hasFeatureAccess, checkFeatureAccess, upgradeModal, closeUpgradeModal, showUpgradeModal } = useFeatureRestriction();
+  const { hasFeatureAccess, upgradeModal, closeUpgradeModal, showUpgradeModal } = useFeatureRestriction();
   const touchStartX = useRef(null);
   const [planName, setPlanName] = useState(user?.plan?.name || t("common.plan_default"));
   const navItems = getNavItems(t);
@@ -134,7 +147,7 @@ export default function Sidebar({
 
   useEffect(() => {
     setPlanName(user?.plan?.name || t("common.plan_default"));
-  }, [user]);
+  }, [user, t]);
 
   // swipe mobile
   const handleTouchStart = (e) => {
@@ -143,15 +156,13 @@ export default function Sidebar({
 
   const handleTouchEnd = (e) => {
     if (!touchStartX.current) return;
-    if (touchStartX.current - e.changedTouches[0].clientX > 80) {
-      onClose?.();
-    }
+    if (touchStartX.current - e.changedTouches[0].clientX > 80) onClose?.();
     touchStartX.current = null;
   };
 
   return (
     <>
-      {/* BOTÃO DO CHAT – SEMPRE VISÍVEL */}
+      {/* BOTÃO DO CHAT – APENAS NA ROTA DO CHAT */}
       {location.pathname === "/text-generation" && (
         <ChatToggleButton collapsed={collapsed} t={t} />
       )}
@@ -160,11 +171,8 @@ export default function Sidebar({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         className={`
-          fixed z-40
-          h-full
-          top-0 bottom-0
-          bg-white px-4
-          flex flex-col justify-between
+          fixed z-40 h-full top-0 bottom-0
+          bg-white px-4 flex flex-col justify-between
           transition-all duration-300 ease-in-out
           ${collapsed ? "w-20" : "w-64"}
           ${isOpen ? "left-0" : "-left-full"}
@@ -185,17 +193,14 @@ export default function Sidebar({
             {navItems.map(({ label, icon: Icon, path, feature }) => {
               const isActive = location.pathname === path;
               const hasAccess = !feature || hasFeatureAccess(feature);
-              
+
               return (
                 <div key={label}>
                   {feature && !hasAccess ? (
-                    // Item bloqueado - mostra como desabilitado com ícone de cadeado
                     <div
                       className={`
                         flex items-center gap-3 px-4 py-3 rounded-lg cursor-not-allowed
-                        ${isActive
-                          ? "bg-gray-100 text-gray-400"
-                          : "text-gray-400"}
+                        ${isActive ? "bg-gray-100 text-gray-400" : "text-gray-400"}
                       `}
                       title={`${label} - Não disponível no seu plano`}
                       onClick={() => showUpgradeModal(feature)}
@@ -207,17 +212,13 @@ export default function Sidebar({
                       {!collapsed && <span className="text-sm">{label}</span>}
                     </div>
                   ) : (
-                    // Item normal ou sem restrição
                     <Link
                       to={path}
                       onClick={onClose}
                       className={`
                         flex items-center gap-3 px-4 py-3 rounded-lg
-                        transition
-                        hover:bg-gray-100
-                        ${isActive
-                          ? "bg-gray-200 text-gray-900"
-                          : "text-gray-700"}
+                        transition hover:bg-gray-100
+                        ${isActive ? "bg-gray-200 text-gray-900" : "text-gray-700"}
                       `}
                     >
                       <Icon className="w-5 h-5 text-gray-600" />
@@ -253,7 +254,6 @@ export default function Sidebar({
         </div>
       </aside>
 
-      {/* Upgrade Modal */}
       <UpgradeModal
         isOpen={upgradeModal.isOpen}
         onClose={closeUpgradeModal}
@@ -264,4 +264,3 @@ export default function Sidebar({
     </>
   );
 }
-   
