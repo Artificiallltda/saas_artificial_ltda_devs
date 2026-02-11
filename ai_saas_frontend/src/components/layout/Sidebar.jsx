@@ -6,6 +6,8 @@ import {
   Image,
   Video,
   Building2,
+  ChevronDown,
+  ChevronRight,
   Search,
   FolderKanban,
   CheckSquare,
@@ -35,8 +37,9 @@ const getNavItems = (t) => [
   { label: t("sidebar.settings"), icon: Settings, path: "/settings", feature: null }
 ];
 
-const getProEmpresaItems = () => [
-  { label: "Pro Empresa", icon: Building2, path: "/pro-empresa", feature: "pro_empresa" },
+const PRO_EMPRESA_PARENT = { label: "Pro Empresa", icon: Building2, path: "/pro-empresa", feature: "pro_empresa" };
+
+const getProEmpresaChildren = () => [
   { label: "SEO", icon: Search, path: "/pro-empresa/seo", feature: "seo_keyword_research" },
   { label: "Workspaces", icon: FolderKanban, path: "/pro-empresa/workspaces", feature: "collab_workspaces" },
   { label: "Aprovações", icon: CheckSquare, path: "/pro-empresa/approvals", feature: "collab_approval_flow" },
@@ -138,7 +141,8 @@ export default function Sidebar({
   const touchStartX = useRef(null);
   const [planName, setPlanName] = useState(user?.plan?.name || t("common.plan_default"));
   const navItems = getNavItems(t);
-  const proEmpresaItems = getProEmpresaItems();
+  const proEmpresaChildren = getProEmpresaChildren();
+  const [proEmpresaOpen, setProEmpresaOpen] = useState(location.pathname.startsWith("/pro-empresa"));
 
   const translatePlanName = (planName) => {
     if (!planName) return t("common.plan_default");
@@ -149,6 +153,13 @@ export default function Sidebar({
   useEffect(() => {
     setPlanName(user?.plan?.name || t("common.plan_default"));
   }, [user]);
+
+  // Se navegar para uma rota /pro-empresa*, abre o dropdown automaticamente
+  useEffect(() => {
+    if (location.pathname.startsWith("/pro-empresa")) {
+      setProEmpresaOpen(true);
+    }
+  }, [location.pathname]);
 
   // swipe mobile
   const handleTouchStart = (e) => {
@@ -250,47 +261,111 @@ export default function Sidebar({
                 </div>
               )}
 
-              {proEmpresaItems.map(({ label, icon: Icon, path, feature }) => {
-                const isActive =
-                  location.pathname === path ||
-                  (path !== "/pro-empresa" && location.pathname.startsWith(path));
-                const hasAccess = !feature || hasFeatureAccess(feature);
-
-                return (
-                  <div key={label}>
-                    {feature && !hasAccess ? (
-                      <div
-                        className={`
-                          flex items-center gap-3 px-4 py-3 rounded-lg cursor-not-allowed
-                          ${isActive ? "bg-gray-100 text-gray-400" : "text-gray-400"}
-                        `}
-                        title={`${label} - Não disponível no seu plano`}
-                        onClick={() => showUpgradeModal(feature)}
-                      >
-                        <div className="relative">
-                          <Icon className="w-5 h-5" />
-                          <Lock className="w-3 h-3 absolute -bottom-1 -right-1 text-red-500" />
-                        </div>
-                        {!collapsed && <span className="text-sm">{label}</span>}
+              {/* Parent (toggle dropdown) */}
+              <div>
+                {PRO_EMPRESA_PARENT.feature && !hasFeatureAccess(PRO_EMPRESA_PARENT.feature) ? (
+                  <div
+                    className={`
+                      flex items-center justify-between gap-3 px-4 py-3 rounded-lg cursor-not-allowed
+                      ${location.pathname.startsWith("/pro-empresa") ? "bg-gray-100 text-gray-400" : "text-gray-400"}
+                    `}
+                    title={`${PRO_EMPRESA_PARENT.label} - Não disponível no seu plano`}
+                    onClick={() => showUpgradeModal(PRO_EMPRESA_PARENT.feature)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <Building2 className="w-5 h-5" />
+                        <Lock className="w-3 h-3 absolute -bottom-1 -right-1 text-red-500" />
                       </div>
-                    ) : (
-                      <Link
-                        to={path}
-                        onClick={onClose}
-                        className={`
-                          flex items-center gap-3 px-4 py-3 rounded-lg
-                          transition
-                          hover:bg-gray-100
-                          ${isActive ? "bg-gray-200 text-gray-900" : "text-gray-700"}
-                        `}
-                      >
-                        <Icon className="w-5 h-5 text-gray-600" />
-                        {!collapsed && <span>{label}</span>}
-                      </Link>
-                    )}
+                      {!collapsed && <span className="text-sm">{PRO_EMPRESA_PARENT.label}</span>}
+                    </div>
+                    {!collapsed && <ChevronRight className="w-4 h-4 opacity-60" />}
                   </div>
-                );
-              })}
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setProEmpresaOpen((v) => !v)}
+                    className={`
+                      w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg
+                      transition hover:bg-gray-100
+                      ${location.pathname.startsWith("/pro-empresa") ? "bg-gray-200 text-gray-900" : "text-gray-700"}
+                    `}
+                    title={PRO_EMPRESA_PARENT.label}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Building2 className="w-5 h-5 text-gray-600" />
+                      {!collapsed && <span>{PRO_EMPRESA_PARENT.label}</span>}
+                    </div>
+                    {!collapsed && (
+                      proEmpresaOpen ? (
+                        <ChevronDown className="w-4 h-4 text-gray-500" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-gray-500" />
+                      )
+                    )}
+                  </button>
+                )}
+
+                {/* Children (dropdown) */}
+                {proEmpresaOpen && (
+                  <div className="mt-1 space-y-1">
+                    {proEmpresaChildren.map(({ label, icon: Icon, path, feature }) => {
+                      const isActive = location.pathname === path;
+                      const hasAccess = !feature || hasFeatureAccess(feature);
+
+                      const baseClass = `
+                        flex items-center justify-between gap-3 rounded-lg
+                        transition hover:bg-gray-100
+                        ${isActive ? "bg-gray-200 text-gray-900" : "text-gray-700"}
+                      `;
+
+                      // Indent when expanded (desktop). When collapsed, keep icon-only child rows usable.
+                      const paddingClass = collapsed ? "px-4 py-3" : "px-4 py-2 ml-6";
+
+                      if (feature && !hasAccess) {
+                        return (
+                          <div
+                            key={label}
+                            className={`${baseClass} ${paddingClass} cursor-not-allowed text-gray-400 hover:bg-transparent`}
+                            title={`${label} - Não disponível no seu plano`}
+                            onClick={() => showUpgradeModal(feature)}
+                          >
+                            <div className="flex items-center gap-3">
+                              {collapsed ? (
+                                <div className="relative">
+                                  <Icon className="w-5 h-5" />
+                                  <Lock className="w-3 h-3 absolute -bottom-1 -right-1 text-red-500" />
+                                </div>
+                              ) : (
+                                <span className="text-sm">{label}</span>
+                              )}
+                            </div>
+                            {!collapsed && <Lock className="w-4 h-4 text-red-500" />}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <Link
+                          key={label}
+                          to={path}
+                          onClick={onClose}
+                          className={`${baseClass} ${paddingClass}`}
+                          title={label}
+                        >
+                          <div className="flex items-center gap-3">
+                            {collapsed ? (
+                              <Icon className="w-5 h-5 text-gray-600" />
+                            ) : (
+                              <span className="text-sm">{label}</span>
+                            )}
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </>
 
             {user?.role === "admin" && (
