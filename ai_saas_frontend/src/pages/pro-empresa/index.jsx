@@ -18,6 +18,7 @@ export default function ProEmpresaHome() {
   const canIntegrations =
     hasFeatureAccess("cms_integration_wordpress") ||
     hasFeatureAccess("crm_integration_basic");
+  const canCompany = hasFeatureAccess("pro_empresa");
 
   return (
     <Layout>
@@ -29,6 +30,12 @@ export default function ProEmpresaHome() {
           </p>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card
+              title={t("pro_empresa.home.cards.company.title")}
+              description={t("pro_empresa.home.cards.company.description")}
+              to="/pro-empresa/company"
+              enabled={canCompany}
+            />
             <Card
               title={t("pro_empresa.home.cards.seo.title")}
               description={t("pro_empresa.home.cards.seo.description")}

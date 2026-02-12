@@ -45,6 +45,7 @@ const getProEmpresaParent = (t) => ({
 });
 
 const getProEmpresaChildren = (t) => [
+  { label: t("sidebar.pro_empresa.company"), icon: ShieldCheck, path: "/pro-empresa/company", feature: "pro_empresa" },
   { label: t("sidebar.pro_empresa.seo"), icon: Search, path: "/pro-empresa/seo", feature: "seo_keyword_research" },
   { label: t("sidebar.pro_empresa.workspaces"), icon: FolderKanban, path: "/pro-empresa/workspaces", feature: "collab_workspaces" },
   { label: t("sidebar.pro_empresa.approvals"), icon: CheckSquare, path: "/pro-empresa/approvals", feature: "collab_approval_flow" },
