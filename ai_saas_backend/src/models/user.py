@@ -17,3 +17,13 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     plan_id = db.Column(db.Integer, db.ForeignKey('plans.id'), default=1)
     plan = db.relationship("Plan", back_populates="users")
+
+    # B2B / Company (MVP)
+    company_id = db.Column(db.String, db.ForeignKey("companies.id"), nullable=True, index=True)
+    # owner | admin | member (apenas dentro da company)
+    company_role = db.Column(db.String(20), nullable=True)
+    company = db.relationship(
+        "Company",
+        back_populates="users",
+        foreign_keys=[company_id],
+    )

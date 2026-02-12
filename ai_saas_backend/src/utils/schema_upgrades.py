@@ -67,6 +67,11 @@ def run_schema_upgrades():
             # backfill null status
             db.session.execute(text("UPDATE generated_contents SET status='draft' WHERE status IS NULL"))
 
+        # users.company_id + users.company_role (B2B MVP)
+        if "users" in tables:
+            _add_column_if_missing("users", "company_id", _type_string(), None)
+            _add_column_if_missing("users", "company_role", "VARCHAR(20)", None)
+
         db.session.commit()
     except Exception:
         db.session.rollback()

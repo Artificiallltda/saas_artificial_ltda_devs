@@ -12,3 +12,4 @@ from .ai_generation_video_api import ai_generation_video_api
 from .chat_api import chat_api
 from .download_api import download_api
 from .workspace_api import workspace_api
+from .company_api import company_api

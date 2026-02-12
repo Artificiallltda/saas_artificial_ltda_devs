@@ -110,4 +110,13 @@ export const workspaceRoutes = {
   update: (workspaceId) => `${API_BASE}/workspaces/${workspaceId}`,
   delete: (workspaceId) => `${API_BASE}/workspaces/${workspaceId}`,
   projects: (workspaceId) => `${API_BASE}/workspaces/${workspaceId}/projects`,
+  members: (workspaceId) => `${API_BASE}/workspaces/${workspaceId}/members`,
+  updateMember: (workspaceId, memberUserId) => `${API_BASE}/workspaces/${workspaceId}/members/${memberUserId}`,
+  removeMember: (workspaceId, memberUserId) => `${API_BASE}/workspaces/${workspaceId}/members/${memberUserId}`,
+};
+
+export const companyRoutes = {
+  me: `${API_BASE}/company/me`,
+  bootstrap: `${API_BASE}/company/bootstrap`,
+  users: `${API_BASE}/company/users`,
 };

@@ -29,8 +29,29 @@ export async function apiFetch(url, options = {}) {
   try {
     const res = await fetch(url, fetchOptions);
     if (!res.ok) {
+      // IMPORTANT: o body do Response só pode ser lido uma vez.
+      const contentType = res.headers.get("content-type") || "";
       const text = await res.text();
-      throw new Error(text || "Erro na requisição");
+
+      // Prefer JSON errors (clean UX)
+      const tryParseJson =
+        contentType.includes("application/json") || (text || "").trim().startsWith("{");
+
+      let msg = null;
+      if (tryParseJson) {
+        try {
+          const data = JSON.parse(text || "{}");
+          msg =
+            (typeof data?.error === "string" && data.error) ||
+            (typeof data?.message === "string" && data.message) ||
+            (typeof data?.msg === "string" && data.msg) ||
+            null;
+        } catch {
+          // Se não der pra parsear JSON, cai no texto bruto.
+        }
+      }
+
+      throw new Error(msg || text || "Erro na requisição");
     }
     const contentType = res.headers.get("content-type");
     if (contentType?.includes("application/json")) {

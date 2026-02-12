@@ -6,10 +6,12 @@ import { projectRoutes, workspaceRoutes } from "../../../services/apiRoutes";
 import { toast } from "react-toastify";
 import { useLanguage } from "../../../context/LanguageContext";
 import ConfirmModal from "../../../components/modals/ConfirmModal";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function ProEmpresaWorkspaces() {
   const { checkFeatureAccess } = useFeatureRestriction();
   const { t } = useLanguage();
+  const { user: authUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [name, setName] = useState("");
@@ -22,6 +24,11 @@ export default function ProEmpresaWorkspaces() {
   const [workspaceProjects, setWorkspaceProjects] = useState({}); // { [workspaceId]: Project[] }
   const [workspaceProjectsLoading, setWorkspaceProjectsLoading] = useState({}); // { [workspaceId]: boolean }
   const [selectedProjectByWorkspace, setSelectedProjectByWorkspace] = useState({}); // { [workspaceId]: projectId }
+
+  const [workspaceMembers, setWorkspaceMembers] = useState({}); // { [workspaceId]: Member[] }
+  const [workspaceMembersLoading, setWorkspaceMembersLoading] = useState({}); // { [workspaceId]: boolean }
+  const [memberIdentifierByWorkspace, setMemberIdentifierByWorkspace] = useState({}); // { [workspaceId]: string }
+  const [memberRoleByWorkspace, setMemberRoleByWorkspace] = useState({}); // { [workspaceId]: role }
 
   const [confirm, setConfirm] = useState({
     isOpen: false,
@@ -84,11 +91,26 @@ export default function ProEmpresaWorkspaces() {
     }
   }
 
+  async function loadWorkspaceMembers(workspaceId) {
+    setWorkspaceMembersLoading((prev) => ({ ...prev, [workspaceId]: true }));
+    try {
+      const data = await apiFetch(workspaceRoutes.members(workspaceId));
+      setWorkspaceMembers((prev) => ({ ...prev, [workspaceId]: Array.isArray(data) ? data : [] }));
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.workspaces.toast.load_members_error"));
+    } finally {
+      setWorkspaceMembersLoading((prev) => ({ ...prev, [workspaceId]: false }));
+    }
+  }
+
   async function toggleWorkspace(workspaceId) {
     const next = expandedId === workspaceId ? null : workspaceId;
     setExpandedId(next);
     if (next && !workspaceProjects[next]) {
       await loadWorkspaceProjects(next);
+    }
+    if (next && !workspaceMembers[next]) {
+      await loadWorkspaceMembers(next);
     }
   }
 
@@ -148,6 +170,84 @@ export default function ProEmpresaWorkspaces() {
       isOpen: true,
       title: t("pro_empresa.workspaces.modal.remove_project.title"),
       description: t("pro_empresa.workspaces.confirm_remove_project"),
+      confirmText: t("common.remove"),
+      cancelText: t("common.cancel"),
+      variant: "danger",
+      onConfirm: doRemove,
+    });
+  }
+
+  async function handleAddMember(workspaceId) {
+    const ws = items.find((x) => x.id === workspaceId);
+    if (ws && authUser?.id && ws.user_id !== authUser.id) {
+      toast.error(t("pro_empresa.workspaces.toast.only_owner_manage_members"));
+      return;
+    }
+
+    const identifier = (memberIdentifierByWorkspace[workspaceId] || "").trim();
+    const role = (memberRoleByWorkspace[workspaceId] || "editor").trim();
+    if (!identifier) return;
+
+    // MVP UX: adicionar apenas por email (mais simples e evita confusão com username).
+    if (!identifier.includes("@")) {
+      toast.error(t("pro_empresa.workspaces.toast.invalid_member_email"));
+      return;
+    }
+
+    try {
+      await apiFetch(workspaceRoutes.members(workspaceId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, role }),
+      });
+      toast.success(t("pro_empresa.workspaces.toast.member_added"));
+      setMemberIdentifierByWorkspace((prev) => ({ ...prev, [workspaceId]: "" }));
+      setMemberRoleByWorkspace((prev) => ({ ...prev, [workspaceId]: "editor" }));
+      await loadWorkspaceMembers(workspaceId);
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.workspaces.toast.member_add_error"));
+    }
+  }
+
+  async function handleChangeMemberRole(workspaceId, memberUserId, nextRole) {
+    const ws = items.find((x) => x.id === workspaceId);
+    if (ws && authUser?.id && ws.user_id !== authUser.id) {
+      toast.error(t("pro_empresa.workspaces.toast.only_owner_manage_members"));
+      return;
+    }
+    try {
+      await apiFetch(workspaceRoutes.updateMember(workspaceId, memberUserId), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: nextRole }),
+      });
+      toast.success(t("pro_empresa.workspaces.toast.member_role_updated"));
+      await loadWorkspaceMembers(workspaceId);
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.workspaces.toast.member_role_update_error"));
+    }
+  }
+
+  async function handleRemoveMember(workspaceId, memberUserId) {
+    const ws = items.find((x) => x.id === workspaceId);
+    if (ws && authUser?.id && ws.user_id !== authUser.id) {
+      toast.error(t("pro_empresa.workspaces.toast.only_owner_manage_members"));
+      return;
+    }
+    const doRemove = async () => {
+      try {
+        await apiFetch(workspaceRoutes.removeMember(workspaceId, memberUserId), { method: "DELETE" });
+        toast.success(t("pro_empresa.workspaces.toast.member_removed"));
+        await loadWorkspaceMembers(workspaceId);
+      } catch (e) {
+        toast.error(e?.message || t("pro_empresa.workspaces.toast.member_remove_error"));
+      }
+    };
+
+    setConfirm({
+      isOpen: true,
+      title: t("pro_empresa.workspaces.modal.remove_member.title"),
+      description: t("pro_empresa.workspaces.confirm_remove_member"),
       confirmText: t("common.remove"),
       cancelText: t("common.cancel"),
       variant: "danger",
@@ -368,6 +468,125 @@ export default function ProEmpresaWorkspaces() {
                                 ))}
                               </div>
                             )}
+
+                            <div className="pt-2">
+                              <div className="text-sm font-semibold text-gray-900">
+                                {t("pro_empresa.workspaces.members.title")}
+                              </div>
+                              <div className="mt-2 rounded-lg border border-gray-200 p-3 bg-white space-y-2">
+                                <div className="text-xs font-semibold text-gray-700">
+                                  {t("pro_empresa.workspaces.members.add.title")}
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <input
+                                    value={memberIdentifierByWorkspace[w.id] || ""}
+                                    onChange={(e) =>
+                                      setMemberIdentifierByWorkspace((prev) => ({
+                                        ...prev,
+                                        [w.id]: e.target.value,
+                                      }))
+                                    }
+                                    className="flex-1 h-10 px-3 rounded-lg border border-gray-300 text-sm bg-white"
+                                    placeholder={t("pro_empresa.workspaces.members.add.placeholder")}
+                                    disabled={authUser?.id && w.user_id !== authUser.id}
+                                  />
+                                  <select
+                                    value={memberRoleByWorkspace[w.id] || "editor"}
+                                    onChange={(e) =>
+                                      setMemberRoleByWorkspace((prev) => ({
+                                        ...prev,
+                                        [w.id]: e.target.value,
+                                      }))
+                                    }
+                                    className="h-10 px-3 rounded-lg border border-gray-300 text-sm bg-white"
+                                    disabled={authUser?.id && w.user_id !== authUser.id}
+                                  >
+                                    <option value="admin">{t("pro_empresa.workspaces.members.roles.admin")}</option>
+                                    <option value="editor">{t("pro_empresa.workspaces.members.roles.editor")}</option>
+                                    <option value="reviewer">{t("pro_empresa.workspaces.members.roles.reviewer")}</option>
+                                  </select>
+                                  <button
+                                    onClick={() => handleAddMember(w.id)}
+                                    disabled={
+                                      (authUser?.id && w.user_id !== authUser.id) ||
+                                      !((memberIdentifierByWorkspace[w.id] || "").trim().length > 5)
+                                    }
+                                    className="h-10 px-3 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-50"
+                                  >
+                                    {t("pro_empresa.workspaces.members.add.cta")}
+                                  </button>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {t("pro_empresa.workspaces.members.add.hint")}
+                                </div>
+                              </div>
+
+                              <div className="mt-2">
+                                {workspaceMembersLoading[w.id] ? (
+                                  <div className="text-sm text-gray-500">{t("common.loading")}</div>
+                                ) : (workspaceMembers[w.id] || []).length === 0 ? (
+                                  <div className="text-sm text-gray-500">
+                                    {t("pro_empresa.workspaces.members.empty")}
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {(workspaceMembers[w.id] || []).map((m) => (
+                                      <div
+                                        key={`${m.user_id}-${m.role}-${m.is_owner ? "owner" : "member"}`}
+                                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-gray-200 p-3 bg-white"
+                                      >
+                                        <div className="min-w-0">
+                                          <div className="text-sm font-medium text-gray-900 truncate">
+                                            {m.full_name || m.username || m.email || m.user_id}
+                                          </div>
+                                          <div className="text-xs text-gray-500 truncate">
+                                            {m.email || m.username || m.user_id}
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs text-gray-500">
+                                            {t("pro_empresa.workspaces.members.role_label")}:
+                                          </span>
+                                          {m.is_owner ? (
+                                            <span className="text-xs px-2 py-1 rounded-md border border-gray-200 bg-gray-50">
+                                              {t("pro_empresa.workspaces.members.roles.owner")}
+                                            </span>
+                                          ) : (
+                                            <select
+                                              value={m.role}
+                                              onChange={(e) => handleChangeMemberRole(w.id, m.user_id, e.target.value)}
+                                              className="h-8 px-2 rounded-md border border-gray-300 text-xs bg-white"
+                                              disabled={authUser?.id && w.user_id !== authUser.id}
+                                            >
+                                              <option value="admin">
+                                                {t("pro_empresa.workspaces.members.roles.admin")}
+                                              </option>
+                                              <option value="editor">
+                                                {t("pro_empresa.workspaces.members.roles.editor")}
+                                              </option>
+                                              <option value="reviewer">
+                                                {t("pro_empresa.workspaces.members.roles.reviewer")}
+                                              </option>
+                                            </select>
+                                          )}
+
+                                          {!m.is_owner && (
+                                            <button
+                                              onClick={() => handleRemoveMember(w.id, m.user_id)}
+                                              disabled={authUser?.id && w.user_id !== authUser.id}
+                                              className="text-xs px-2 py-1 rounded-md border border-gray-200 hover:bg-gray-50"
+                                            >
+                                              {t("common.remove")}
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>

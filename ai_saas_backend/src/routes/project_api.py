@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from extensions import db, jwt_required, get_jwt_identity
-from models import Project, User, GeneratedContent, Workspace
+from models import Project, User, GeneratedContent, Workspace, WorkspaceMember
 from utils.feature_flags import has_plan_feature
 from datetime import datetime
 
@@ -103,8 +103,16 @@ def update_project(project_id):
             ws = Workspace.query.get(ws_id)
             if not ws:
                 return jsonify({"error": "Workspace não encontrado"}), 404
+
+            # Permissão: owner do workspace OU membro ativo com role admin/editor
             if ws.user_id != user.id:
-                return jsonify({"error": "Acesso negado"}), 403
+                m = WorkspaceMember.query.filter_by(
+                    workspace_id=ws.id,
+                    member_user_id=user.id,
+                    status="active"
+                ).first()
+                if not m or (m.role or "").lower() not in ("admin", "editor"):
+                    return jsonify({"error": "Acesso negado"}), 403
 
         project.workspace_id = ws_id
 

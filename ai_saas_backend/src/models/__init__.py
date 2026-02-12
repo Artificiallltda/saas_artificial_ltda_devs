@@ -1,4 +1,5 @@
 from .user import User
+from .company import Company
 from .project import Project
 from .generated_content import (
     GeneratedContent,
@@ -15,9 +16,11 @@ from .plan import (
 ) 
 from .chat import Chat, ChatMessage, ChatAttachment
 from .workspace import Workspace
+from .workspace_member import WorkspaceMember
 
 __all__ = [
     "User",
+    "Company",
     "Plan",
     "Feature",
     "PlanFeature",
@@ -32,4 +35,5 @@ __all__ = [
     "ChatMessage",
     "ChatAttachment",
     "Workspace",
+    "WorkspaceMember",
 ]
