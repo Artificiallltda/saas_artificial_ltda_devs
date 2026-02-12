@@ -11,6 +11,7 @@ import { useLanguage } from '../../../context/LanguageContext';
 import DeepResearchWarning from "../components/chat/DeepResearchWarning";
 import { useFeatureRestriction } from '../../../hooks/useFeatureRestriction';
 import UpgradeModal from '../../../components/common/UpgradeModal';
+import VoiceInput from '../../../components/common/VoiceInput';
 
 function TextGeneration() {
   const { chats, chatId, messages, setMessages, chatVisible, chatIdSetter, loadChat, createNewChat, updateChatList } = useChats();
@@ -48,6 +49,11 @@ function TextGeneration() {
     if (checkModelAccess(newModel)) {
       setModel(newModel);
     }
+  };
+
+  // Função para lidar com transcrição de voz
+  const handleVoiceTranscript = (transcript) => {
+    setPrompt(prev => prev + (prev ? ' ' : '') + transcript);
   };
 
   // Update welcome message when language changes or component mounts
@@ -332,6 +338,11 @@ function TextGeneration() {
                         <span className="text-xs text-gray-400">{prompt.length}/1000</span>
                       </div>
                     </div>
+                    
+                    {/* Botão de microfone */}
+                    <VoiceInput 
+                      onTranscript={handleVoiceTranscript}
+                    />
                     
                     <button
                       onClick={handleGenerate}
