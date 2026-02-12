@@ -79,6 +79,13 @@ export default function ProEmpresaWorkspaces() {
     loadAllProjects();
   }, []);
 
+  function canManageMembers(ws) {
+    if (!ws || !authUser?.id) return false;
+    if (ws.user_id === authUser.id) return true; // owner do workspace
+    const cr = (authUser.company_role || "").toLowerCase();
+    return cr === "owner" || cr === "admin"; // admin/owner da empresa
+  }
+
   async function loadWorkspaceProjects(workspaceId) {
     setWorkspaceProjectsLoading((prev) => ({ ...prev, [workspaceId]: true }));
     try {
@@ -179,7 +186,7 @@ export default function ProEmpresaWorkspaces() {
 
   async function handleAddMember(workspaceId) {
     const ws = items.find((x) => x.id === workspaceId);
-    if (ws && authUser?.id && ws.user_id !== authUser.id) {
+    if (ws && !canManageMembers(ws)) {
       toast.error(t("pro_empresa.workspaces.toast.only_owner_manage_members"));
       return;
     }
@@ -211,7 +218,7 @@ export default function ProEmpresaWorkspaces() {
 
   async function handleChangeMemberRole(workspaceId, memberUserId, nextRole) {
     const ws = items.find((x) => x.id === workspaceId);
-    if (ws && authUser?.id && ws.user_id !== authUser.id) {
+    if (ws && !canManageMembers(ws)) {
       toast.error(t("pro_empresa.workspaces.toast.only_owner_manage_members"));
       return;
     }
@@ -230,7 +237,7 @@ export default function ProEmpresaWorkspaces() {
 
   async function handleRemoveMember(workspaceId, memberUserId) {
     const ws = items.find((x) => x.id === workspaceId);
-    if (ws && authUser?.id && ws.user_id !== authUser.id) {
+    if (ws && !canManageMembers(ws)) {
       toast.error(t("pro_empresa.workspaces.toast.only_owner_manage_members"));
       return;
     }
@@ -380,7 +387,9 @@ export default function ProEmpresaWorkspaces() {
                             </button>
                             <button
                               onClick={() => handleDelete(w.id)}
+                              disabled={authUser?.id && w.user_id !== authUser.id}
                               className="text-xs px-2 py-1 rounded-md border border-red-200 text-red-700 hover:bg-red-50"
+                              title={authUser?.id && w.user_id !== authUser.id ? t("pro_empresa.workspaces.toast.only_owner_remove_workspace") : ""}
                             >
                               {t("pro_empresa.workspaces.remove")}
                             </button>
@@ -488,7 +497,7 @@ export default function ProEmpresaWorkspaces() {
                                     }
                                     className="flex-1 h-10 px-3 rounded-lg border border-gray-300 text-sm bg-white"
                                     placeholder={t("pro_empresa.workspaces.members.add.placeholder")}
-                                    disabled={authUser?.id && w.user_id !== authUser.id}
+                                    disabled={!canManageMembers(w)}
                                   />
                                   <select
                                     value={memberRoleByWorkspace[w.id] || "editor"}
@@ -499,7 +508,7 @@ export default function ProEmpresaWorkspaces() {
                                       }))
                                     }
                                     className="h-10 px-3 rounded-lg border border-gray-300 text-sm bg-white"
-                                    disabled={authUser?.id && w.user_id !== authUser.id}
+                                    disabled={!canManageMembers(w)}
                                   >
                                     <option value="admin">{t("pro_empresa.workspaces.members.roles.admin")}</option>
                                     <option value="editor">{t("pro_empresa.workspaces.members.roles.editor")}</option>
@@ -508,7 +517,7 @@ export default function ProEmpresaWorkspaces() {
                                   <button
                                     onClick={() => handleAddMember(w.id)}
                                     disabled={
-                                      (authUser?.id && w.user_id !== authUser.id) ||
+                                      !canManageMembers(w) ||
                                       !((memberIdentifierByWorkspace[w.id] || "").trim().length > 5)
                                     }
                                     className="h-10 px-3 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-50"
@@ -557,7 +566,7 @@ export default function ProEmpresaWorkspaces() {
                                               value={m.role}
                                               onChange={(e) => handleChangeMemberRole(w.id, m.user_id, e.target.value)}
                                               className="h-8 px-2 rounded-md border border-gray-300 text-xs bg-white"
-                                              disabled={authUser?.id && w.user_id !== authUser.id}
+                                              disabled={!canManageMembers(w)}
                                             >
                                               <option value="admin">
                                                 {t("pro_empresa.workspaces.members.roles.admin")}
@@ -574,7 +583,7 @@ export default function ProEmpresaWorkspaces() {
                                           {!m.is_owner && (
                                             <button
                                               onClick={() => handleRemoveMember(w.id, m.user_id)}
-                                              disabled={authUser?.id && w.user_id !== authUser.id}
+                                              disabled={!canManageMembers(w)}
                                               className="text-xs px-2 py-1 rounded-md border border-gray-200 hover:bg-gray-50"
                                             >
                                               {t("common.remove")}

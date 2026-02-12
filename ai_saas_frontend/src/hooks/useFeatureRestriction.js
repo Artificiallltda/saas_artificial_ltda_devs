@@ -205,10 +205,22 @@ export function useFeatureRestriction() {
       return backendValue.enabled;
     }
 
+    // B2B fallback: se o usuário pertence a uma company, habilita o módulo Pro Empresa e colaboração básica
+    // (o backend ainda valida permissões/feature flags efetivas por company owner).
+    const hasCompany = Boolean(user?.company_id);
+    if (
+      hasCompany &&
+      (backendKey === "pro_empresa" ||
+        backendKey === "collab_workspaces" ||
+        backendKey === "collab_approval_flow")
+    ) {
+      return true;
+    }
+
     // Fallback (legacy): mantém comportamento por plano no frontend
     const features = PLAN_FEATURES[userPlan];
     return features?.[feature] || false;
-  }, [backendFeatureMap, resolveBackendKey, userPlan]);
+  }, [backendFeatureMap, resolveBackendKey, user?.company_id, userPlan]);
 
   // Verificar se o usuário tem acesso a um modelo específico
   const hasModelAccess = useCallback((model) => {

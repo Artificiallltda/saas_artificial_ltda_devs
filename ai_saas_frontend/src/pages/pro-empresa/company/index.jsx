@@ -20,8 +20,11 @@ export default function ProEmpresaCompany() {
   const [myCompanyRole, setMyCompanyRole] = useState(null);
   const [users, setUsers] = useState([]);
   const [bootstrapName, setBootstrapName] = useState("");
+  const [addEmail, setAddEmail] = useState("");
 
   const isOwner = (myCompanyRole || "").toLowerCase() === "owner";
+  const isCompanyAdmin = (myCompanyRole || "").toLowerCase() === "admin";
+  const canManageCompany = isOwner || isCompanyAdmin;
 
   useEffect(() => {
     checkFeatureAccess("pro_empresa");
@@ -126,6 +129,27 @@ export default function ProEmpresaCompany() {
     }
   }
 
+  async function addUserToCompany() {
+    const email = (addEmail || "").trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      toast.error(t("pro_empresa.company.toast.invalid_email"));
+      return;
+    }
+
+    try {
+      await apiFetch(companyRoutes.addUser, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      toast.success(t("pro_empresa.company.toast.user_added"));
+      setAddEmail("");
+      await loadUsers();
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.company.toast.user_add_error"));
+    }
+  }
+
   return (
     <Layout>
       <div className="p-6">
@@ -208,6 +232,32 @@ export default function ProEmpresaCompany() {
               {!isOwner && (
                 <div className="mt-2 text-xs text-gray-500">
                   {t("pro_empresa.company.users.readonly_hint")}
+                </div>
+              )}
+
+              {canManageCompany && (
+                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <div className="text-xs font-semibold text-gray-700">
+                    {t("pro_empresa.company.users.add.title")}
+                  </div>
+                  <div className="mt-2 flex flex-col sm:flex-row gap-2">
+                    <input
+                      value={addEmail}
+                      onChange={(e) => setAddEmail(e.target.value)}
+                      placeholder={t("pro_empresa.company.users.add.placeholder")}
+                      className="flex-1 h-10 px-3 rounded-lg border border-gray-200 text-sm bg-white"
+                    />
+                    <button
+                      onClick={addUserToCompany}
+                      disabled={!addEmail.trim().includes("@")}
+                      className="h-10 px-3 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-50"
+                    >
+                      {t("pro_empresa.company.users.add.cta")}
+                    </button>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    {t("pro_empresa.company.users.add.hint")}
+                  </div>
                 </div>
               )}
 

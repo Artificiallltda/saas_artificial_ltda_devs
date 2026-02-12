@@ -8,14 +8,26 @@ workspace_api = Blueprint("workspace_api", __name__)
 
 
 ALLOWED_MEMBER_ROLES = {"admin", "editor", "reviewer"}
+ALLOWED_COMPANY_MANAGERS = {"owner", "admin"}
 
 
 def _require_user_and_feature():
     user = User.query.get(get_jwt_identity())
     if not user:
         return None, (jsonify({"error": "Usuário inválido"}), 403)
-    if not has_plan_feature(user, "collab_workspaces"):
-        return None, (jsonify({"error": "Recurso não disponível no seu plano"}), 403)
+
+    # Fonte da verdade preferida: o próprio plano do usuário
+    if has_plan_feature(user, "collab_workspaces"):
+        return user, None
+
+    # Fallback B2B: se o usuário pertence a uma company, herdamos a permissão do owner da company.
+    # Isso permite que membros/admins da empresa usem Workspaces mesmo que o plano individual não tenha a flag.
+    if getattr(user, "company_id", None):
+        owner = User.query.filter_by(company_id=user.company_id, company_role="owner").first()
+        if owner and has_plan_feature(owner, "collab_workspaces"):
+            return user, None
+
+    return None, (jsonify({"error": "Recurso não disponível no seu plano"}), 403)
     return user, None
 
 
@@ -34,6 +46,35 @@ def _is_workspace_member(user_id: str, workspace_id: str) -> bool:
     )
 
 
+def _is_company_manager_for_workspace(user: User, ws: Workspace) -> bool:
+    """
+    Pode "administrar" recursos do workspace (membros/roles):
+    - admin global do sistema, ou
+    - owner do workspace, ou
+    - company_role owner/admin na mesma company do owner do workspace
+    """
+    if not user or not ws:
+        return False
+
+    if (getattr(user, "role", "") or "").lower() == "admin":
+        return True
+
+    if ws.user_id == user.id:
+        return True
+
+    owner = User.query.get(ws.user_id)
+    if not owner:
+        return False
+
+    if not owner.company_id or not user.company_id:
+        return False
+
+    if owner.company_id != user.company_id:
+        return False
+
+    return (getattr(user, "company_role", "") or "").lower() in ALLOWED_COMPANY_MANAGERS
+
+
 @workspace_api.route("/", methods=["GET"])
 @jwt_required()
 def list_workspaces():
@@ -47,11 +88,14 @@ def list_workspaces():
         .filter_by(member_user_id=user.id, status="active")
         .subquery()
     )
-    items = (
-        Workspace.query.filter(or_(Workspace.user_id == user.id, Workspace.id.in_(member_ws_ids)))
-        .order_by(Workspace.created_at.desc())
-        .all()
-    )
+    base_filter = or_(Workspace.user_id == user.id, Workspace.id.in_(member_ws_ids))
+
+    # Company admin/owner: vê também todos os workspaces cujo owner está na mesma company
+    if getattr(user, "company_id", None) and (getattr(user, "company_role", "") or "").lower() in ALLOWED_COMPANY_MANAGERS:
+        company_user_ids = db.session.query(User.id).filter_by(company_id=user.company_id).subquery()
+        base_filter = or_(base_filter, Workspace.user_id.in_(company_user_ids))
+
+    items = Workspace.query.filter(base_filter).order_by(Workspace.created_at.desc()).distinct().all()
     return jsonify([w.to_dict() for w in items]), 200
 
 
@@ -137,7 +181,7 @@ def list_workspace_projects(workspace_id):
     if err:
         return err
 
-    if ws.user_id != user.id and not _is_workspace_member(user.id, ws.id):
+    if ws.user_id != user.id and not _is_workspace_member(user.id, ws.id) and not _is_company_manager_for_workspace(user, ws):
         return jsonify({"error": "Acesso negado"}), 403
 
     projects = Project.query.filter_by(workspace_id=ws.id).order_by(Project.updated_at.desc()).all()
@@ -161,7 +205,7 @@ def list_workspace_members(workspace_id):
         return err
 
     # qualquer membro (ou owner) pode ver a lista
-    if ws.user_id != user.id and not _is_workspace_member(user.id, ws.id):
+    if ws.user_id != user.id and not _is_workspace_member(user.id, ws.id) and not _is_company_manager_for_workspace(user, ws):
         return jsonify({"error": "Acesso negado"}), 403
 
     owner = User.query.get(ws.user_id)
@@ -194,11 +238,13 @@ def add_workspace_member(workspace_id):
     if err:
         return err
 
-    # apenas owner pode gerenciar membros no MVP
-    if ws.user_id != user.id:
+    # owner do workspace OU admin/owner da company do workspace
+    if not _is_company_manager_for_workspace(user, ws):
         return jsonify({"error": "Acesso negado"}), 403
 
-    owner = user  # ws.user_id == user.id aqui
+    owner = User.query.get(ws.user_id)
+    if not owner:
+        return jsonify({"error": "Owner do workspace não encontrado"}), 404
 
     data = request.get_json(silent=True) or {}
     identifier = (data.get("identifier") or "").strip()
@@ -254,7 +300,7 @@ def update_workspace_member_role(workspace_id, member_user_id):
     if err:
         return err
 
-    if ws.user_id != user.id:
+    if not _is_company_manager_for_workspace(user, ws):
         return jsonify({"error": "Acesso negado"}), 403
 
     data = request.get_json(silent=True) or {}
@@ -282,7 +328,7 @@ def remove_workspace_member(workspace_id, member_user_id):
     if err:
         return err
 
-    if ws.user_id != user.id:
+    if not _is_company_manager_for_workspace(user, ws):
         return jsonify({"error": "Acesso negado"}), 403
 
     m = WorkspaceMember.query.filter_by(workspace_id=ws.id, member_user_id=member_user_id).first()

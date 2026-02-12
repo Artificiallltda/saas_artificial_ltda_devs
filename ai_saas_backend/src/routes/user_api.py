@@ -182,6 +182,8 @@ def get_current_user():
         "username": user.username,
         "email": user.email,
         "role": user.role,
+        "company_id": getattr(user, "company_id", None),
+        "company_role": getattr(user, "company_role", None),
         "plan": plan_data,
         "perfil_photo": user.perfil_photo,
         "is_active": user.is_active,

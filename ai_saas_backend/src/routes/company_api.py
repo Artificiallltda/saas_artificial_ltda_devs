@@ -14,8 +14,18 @@ def _get_user():
     user = User.query.get(get_jwt_identity())
     if not user:
         return None, (jsonify({"error": "Usuário inválido"}), 403)
-    if not has_plan_feature(user, "pro_empresa"):
-        return None, (jsonify({"error": "Recurso não disponível no seu plano"}), 403)
+
+    # Fonte da verdade preferida: o próprio plano do usuário
+    if has_plan_feature(user, "pro_empresa"):
+        return user, None
+
+    # Fallback B2B: se o usuário pertence a uma company, herdamos a permissão do owner da company.
+    if getattr(user, "company_id", None):
+        owner = User.query.filter_by(company_id=user.company_id, company_role="owner").first()
+        if owner and has_plan_feature(owner, "pro_empresa"):
+            return user, None
+
+    return None, (jsonify({"error": "Recurso não disponível no seu plano"}), 403)
     return user, None
 
 
@@ -89,6 +99,59 @@ def list_company_users():
         }
         for u in items
     ]), 200
+
+
+@company_api.route("/users", methods=["POST"])
+@jwt_required()
+def add_company_user_by_email():
+    """
+    Associa um usuário existente à company do requester via email.
+
+    MVP (sem convites):
+    - Apenas company owner/admin (ou admin global) pode adicionar.
+    - Se usuário já estiver em outra company, bloqueia.
+    - Se usuário não existir, retorna 404 (sem convite automático).
+    """
+    user, err = _get_user()
+    if err:
+        return err
+
+    if not user.company_id:
+        return jsonify({"error": "Usuário não possui company_id"}), 400
+
+    is_global_admin = (user.role or "").lower() == "admin"
+    is_company_manager = (user.company_role or "").lower() in ALLOWED_COMPANY_ADMIN_ROLES
+    if not (is_company_manager or is_global_admin):
+        return jsonify({"error": "Acesso negado"}), 403
+
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+    if not email or "@" not in email:
+        return jsonify({"error": "email inválido"}), 400
+
+    target = User.query.filter(db.func.lower(User.email) == email).first()
+    if not target:
+        return jsonify({"error": "Usuário não encontrado"}), 404
+
+    # Se já estiver na mesma empresa, ok (idempotente)
+    if target.company_id == user.company_id:
+        return jsonify({
+            "message": "Usuário já pertence à empresa",
+            "user": {"id": target.id, "email": target.email, "company_role": target.company_role or "member"},
+        }), 200
+
+    # Se já estiver em outra empresa, bloqueia
+    if target.company_id and target.company_id != user.company_id:
+        return jsonify({"error": "Usuário pertence a outra empresa"}), 400
+
+    target.company_id = user.company_id
+    target.company_role = target.company_role or "member"
+    db.session.commit()
+
+    return jsonify({
+        "message": "Usuário adicionado à empresa",
+        "user": {"id": target.id, "email": target.email, "company_role": target.company_role or "member"},
+    }), 201
 
 
 @company_api.route("/users/<user_id>/role", methods=["PATCH"])
