@@ -7,6 +7,7 @@ export default function VoiceInput({ onTranscript }) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const recognitionRef = useRef(null);
+  const isListeningRef = useRef(false);
   const { t, currentLanguage } = useLanguage();
 
   useEffect(() => {
@@ -36,8 +37,21 @@ export default function VoiceInput({ onTranscript }) {
     // Definir idioma baseado no idioma da interface
     recognition.lang = currentLanguage === 'en-US' ? 'en-US' : 'pt-BR';
 
+    const setListeningState = (value) => {
+      isListeningRef.current = value;
+      setIsListening(value);
+    };
+
+    const stopRecognition = () => {
+      const recognitionInstance = recognitionRef.current;
+      if (!recognitionInstance) return;
+      // "abort" encerra imediatamente em alguns navegadores onde "stop" demora.
+      recognitionInstance.stop();
+      recognitionInstance.abort();
+    };
+
     recognition.onstart = () => {
-      setIsListening(true);
+      setListeningState(true);
     };
 
     recognition.onresult = (event) => {
@@ -48,12 +62,11 @@ export default function VoiceInput({ onTranscript }) {
 
       if (event.results[0].isFinal) {
         onTranscript(transcript);
-        setIsListening(false);
       }
     };
 
     recognition.onerror = (event) => {
-      setIsListening(false);
+      setListeningState(false);
       
       const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
       const isBrave = navigator.brave !== undefined;
@@ -93,15 +106,14 @@ export default function VoiceInput({ onTranscript }) {
     };
 
     recognition.onend = () => {
-      setIsListening(false);
+      setListeningState(false);
     };
 
     recognitionRef.current = recognition;
 
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
+      stopRecognition();
+      setListeningState(false);
     };
   }, [onTranscript, currentLanguage]);
 
@@ -111,12 +123,19 @@ export default function VoiceInput({ onTranscript }) {
       return;
     }
 
-    if (isListening) {
+    if (isListeningRef.current) {
+      isListeningRef.current = false;
+      setIsListening(false);
       recognitionRef.current?.stop();
+      recognitionRef.current?.abort();
     } else {
       try {
+        isListeningRef.current = true;
+        setIsListening(true);
         recognitionRef.current?.start();
       } catch (error) {
+        isListeningRef.current = false;
+        setIsListening(false);
         toast.error(t('voice_input.microphone_error'));
       }
     }
