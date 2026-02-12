@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import styles from './video.module.css';
 import Layout from "../../../components/layout/Layout";
 import { Download, Send, Loader2, Video as VideoIcon, Settings, ChevronDown, X, Paperclip } from 'lucide-react';
+import VoiceInput from "../../../components/common/VoiceInput";
 import { toast } from 'react-toastify';
 import { aiRoutes, generatedContentRoutes, userRoutes } from '../../../services/apiRoutes';
 import { apiFetch } from '../../../services/apiService';
@@ -362,6 +363,8 @@ function VideoGeneration() {
                   <span className="text-xs text-gray-400">{prompt.length}/1000</span>
                 </div>
               </div>
+              
+              <VoiceInput onTranscript={(transcript) => setPrompt(prev => prev + (prev ? ' ' : '') + transcript)} />
               
               <button
                 onClick={handleGenerate}

@@ -3,6 +3,7 @@ import styles from './image.module.css';
 import Layout from "../../../components/layout/Layout";
 import CustomSelect from "../../../components/common/CustomSelect";
 import { Download, Send, Loader2, Image as ImageIcon, Settings, ChevronDown, X, Paperclip } from 'lucide-react';
+import VoiceInput from "../../../components/common/VoiceInput";
 import { toast } from 'react-toastify';
 import { aiRoutes, generatedContentRoutes } from '../../../services/apiRoutes';
 import { apiFetch } from '../../../services/apiService';
@@ -406,6 +407,8 @@ function ImageGeneration() {
                   <span className="text-xs text-gray-400">{prompt.length}/1000</span>
                 </div>
               </div>
+              
+              <VoiceInput onTranscript={(transcript) => setPrompt(prev => prev + (prev ? ' ' : '') + transcript)} />
               
               <button
                 onClick={handleGenerate}
