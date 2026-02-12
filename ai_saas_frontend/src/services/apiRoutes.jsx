@@ -119,4 +119,5 @@ export const companyRoutes = {
   me: `${API_BASE}/company/me`,
   bootstrap: `${API_BASE}/company/bootstrap`,
   users: `${API_BASE}/company/users`,
+  updateUserRole: (userId) => `${API_BASE}/company/users/${userId}/role`,
 };

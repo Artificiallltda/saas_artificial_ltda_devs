@@ -46,6 +46,13 @@ class GeneratedContent(db.Model):
         return f"<GeneratedContent {self.content_type}>"
 
     def base_dict(self):
+        workspace_ids = []
+        try:
+            workspace_ids = sorted(
+                {p.workspace_id for p in (self.projects or []) if getattr(p, "workspace_id", None)}
+            )
+        except Exception:
+            workspace_ids = []
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -64,7 +71,8 @@ class GeneratedContent(db.Model):
                 "rejected_at": self.rejected_at.isoformat() if self.rejected_at else None,
                 "rejected_by": self.rejected_by,
             },
-            "projects": [p.id for p in self.projects]
+            "projects": [p.id for p in self.projects],
+            "workspace_ids": workspace_ids,
         }
 
 class GeneratedTextContent(GeneratedContent):

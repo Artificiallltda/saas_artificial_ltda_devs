@@ -6,7 +6,12 @@ import { formatDateTime } from "../../../utils/dateUtils";
 import { TEXT_MODELS } from "../../../utils/constants";
 import { useLanguage } from "../../../context/LanguageContext";
 
-export default function ContentDetailsModal({ content, onClose, showAddButton = false }) {
+export default function ContentDetailsModal({
+  content,
+  onClose,
+  onAdd,
+  showAddButton = false,
+}) {
   const { t, language } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [mediaUrl, setMediaUrl] = useState(null);
@@ -106,8 +111,15 @@ export default function ContentDetailsModal({ content, onClose, showAddButton = 
 
         {showAddButton && (
           <button
-            onClick={() => {}}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold transition"
+            onClick={() => {
+              if (typeof onAdd !== "function") {
+                toast.error(t("common.not_implemented"));
+                return;
+              }
+              onAdd();
+            }}
+            disabled={typeof onAdd !== "function"}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white py-2 rounded-md font-semibold transition"
           >
             {t("contents.modal.add_to_project")}
           </button>

@@ -697,11 +697,11 @@
   "pro_empresa.workspaces.toast.only_owner_manage_members": "Only the workspace owner can manage members in this MVP.",
 
   "pro_empresa.approvals.title": "Approvals",
-  "pro_empresa.approvals.subtitle": "MVP: your texts can be submitted for review. Admins can approve/reject.",
+  "pro_empresa.approvals.subtitle": "MVP: your texts can be submitted for review. Workspace reviewers (owner/admin/reviewer) can approve/reject.",
   "pro_empresa.approvals.my_texts": "My texts",
   "pro_empresa.approvals.to_review": "To review",
   "pro_empresa.approvals.refresh": "Refresh",
-  "pro_empresa.approvals.admin_only": "Only administrators can approve/reject.",
+  "pro_empresa.approvals.admin_only": "Only workspace reviewers (owner/admin/reviewer) can approve/reject.",
   "pro_empresa.approvals.section.draft": "Draft (submit for review)",
   "pro_empresa.approvals.section.rejected": "Rejected (edit and resubmit)",
   "pro_empresa.approvals.section.in_review": "In review",

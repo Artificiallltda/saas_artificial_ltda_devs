@@ -7,6 +7,7 @@ from utils.feature_flags import has_plan_feature
 company_api = Blueprint("company_api", __name__)
 
 ALLOWED_COMPANY_ADMIN_ROLES = {"owner", "admin"}
+ALLOWED_COMPANY_ROLES = {"owner", "admin", "member"}
 
 
 def _get_user():
@@ -88,4 +89,53 @@ def list_company_users():
         }
         for u in items
     ]), 200
+
+
+@company_api.route("/users/<user_id>/role", methods=["PATCH"])
+@jwt_required()
+def update_company_user_role(user_id):
+    """
+    Atualiza o company_role de um usuário da mesma empresa.
+
+    Regras (MVP):
+    - Apenas company owner (ou admin global) pode alterar roles.
+    - Só permite alternar entre: admin | member (não promove para owner via API).
+    - Usuário alvo deve pertencer à mesma company_id.
+    """
+    user, err = _get_user()
+    if err:
+        return err
+
+    if not user.company_id:
+        return jsonify({"error": "Usuário não possui company_id"}), 400
+
+    is_global_admin = (user.role or "").lower() == "admin"
+    is_company_owner = (user.company_role or "").lower() == "owner"
+    if not (is_company_owner or is_global_admin):
+        return jsonify({"error": "Acesso negado"}), 403
+
+    target = User.query.get(user_id)
+    if not target or target.company_id != user.company_id:
+        return jsonify({"error": "Usuário não encontrado"}), 404
+
+    data = request.get_json(silent=True) or {}
+    new_role = (data.get("role") or "").strip().lower()
+    if new_role not in ("admin", "member"):
+        return jsonify({"error": "role inválido. Use 'admin' ou 'member'."}), 400
+
+    # Evita perder o último owner: não permitimos editar owner via este endpoint
+    if (target.company_role or "").lower() == "owner":
+        return jsonify({"error": "Não é possível alterar o role do owner por este endpoint"}), 400
+
+    target.company_role = new_role
+    db.session.commit()
+
+    return jsonify({
+        "message": "Role atualizado",
+        "user": {
+            "id": target.id,
+            "email": target.email,
+            "company_role": target.company_role,
+        }
+    }), 200
 

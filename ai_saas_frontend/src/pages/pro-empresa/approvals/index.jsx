@@ -10,7 +10,6 @@ import { toast } from "react-toastify";
 export default function ProEmpresaApprovals() {
   const { checkFeatureAccess } = useFeatureRestriction();
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
   const { t } = useLanguage();
 
   const [loadingMine, setLoadingMine] = useState(true);
@@ -19,6 +18,7 @@ export default function ProEmpresaApprovals() {
   const [inboxInReview, setInboxInReview] = useState([]);
   const [inboxFinalized, setInboxFinalized] = useState([]);
   const [inboxTab, setInboxTab] = useState("in_review"); // in_review | finalized
+  const [canReviewInbox, setCanReviewInbox] = useState(true);
 
   useEffect(() => {
     checkFeatureAccess("collab_approval_flow");
@@ -39,8 +39,8 @@ export default function ProEmpresaApprovals() {
   }
 
   async function loadInbox() {
-    if (!isAdmin) return;
     setLoadingInbox(true);
+    setCanReviewInbox(true);
     try {
       // Carrega ambos para permitir contagem + UX melhor
       const [inReview, finalized] = await Promise.all([
@@ -58,7 +58,21 @@ export default function ProEmpresaApprovals() {
         setInboxTab("finalized");
       }
     } catch (e) {
-      toast.error(e?.message || t("pro_empresa.approvals.toast.inbox_error"));
+      const msg = (e?.message || "").toString().toLowerCase();
+      const looksLikePermissionError =
+        msg.includes("permiss") ||
+        msg.includes("acesso negado") ||
+        msg.includes("restricted") ||
+        msg.includes("administrador") ||
+        msg.includes("admin");
+
+      if (looksLikePermissionError) {
+        setCanReviewInbox(false);
+        setInboxInReview([]);
+        setInboxFinalized([]);
+      } else {
+        toast.error(e?.message || t("pro_empresa.approvals.toast.inbox_error"));
+      }
     } finally {
       setLoadingInbox(false);
     }
@@ -67,7 +81,7 @@ export default function ProEmpresaApprovals() {
   useEffect(() => {
     loadMine();
     loadInbox();
-  }, [isAdmin, inboxTab]);
+  }, [user?.id, inboxTab]);
 
   const mineDraft = useMemo(() => mine.filter((c) => c.status === "draft"), [mine]);
   const mineRejected = useMemo(() => mine.filter((c) => c.status === "rejected"), [mine]);
@@ -234,13 +248,13 @@ export default function ProEmpresaApprovals() {
                 <div className="text-sm font-semibold text-gray-900">{t("pro_empresa.approvals.to_review")}</div>
                 <button
                   onClick={loadInbox}
-                  disabled={!isAdmin}
+                  disabled={!canReviewInbox}
                   className="text-xs px-2 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   {t("pro_empresa.approvals.refresh")}
                 </button>
               </div>
-              {!isAdmin ? (
+              {!canReviewInbox ? (
                 <div className="mt-3 text-sm text-gray-500">
                   {t("pro_empresa.approvals.admin_only")}
                 </div>
