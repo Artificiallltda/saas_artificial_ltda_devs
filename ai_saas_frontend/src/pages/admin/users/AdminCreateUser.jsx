@@ -30,6 +30,30 @@ export default function AdminCreateUser() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W).{8,}$/;
 
+  // Função para mapear nomes de planos para chaves de tradução
+  const getPlanTranslationKey = (planName) => {
+    if (!planName) return planName;
+    
+    // Normalizar o nome do plano para lowercase e remover acentos
+    const normalizedName = planName.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+    
+    const planMappings = {
+      "gratuito": "subscription.plan.free",
+      "grátis": "subscription.plan.free", 
+      "free": "subscription.plan.free",
+      "basico": "subscription.plan.basic",
+      "básico": "subscription.plan.basic",
+      "basic": "subscription.plan.basic",
+      "freepik/envato": "subscription.plan.bot",
+      "bot": "subscription.plan.bot"
+    };
+    
+    return planMappings[normalizedName] || planName;
+  };
+
   // Carregar planos
   useEffect(() => {
     const fetchPlans = async () => {
@@ -238,7 +262,7 @@ export default function AdminCreateUser() {
               value={plans.find((p) => p.id === form.plan_id) || null}
               onChange={(selected) => setForm((prev) => ({ ...prev, plan_id: selected?.id || "" }))}
               options={plans}
-              getOptionLabel={(p) => p.name}
+              getOptionLabel={(p) => t(getPlanTranslationKey(p.name))}
               getOptionValue={(p) => p.id}
               placeholder={t("admin.create_user.plan.placeholder")}
               className="pl-10 text-sm"

@@ -59,12 +59,12 @@ export default function Header({
       }
     };
     fetchPhoto();
-  }, [user]);
+  }, [user?.perfil_photo, user?.id]);
 
   // debounce simples
   const debounce = (fn, delay) => {
     let timeout;
-    return (...args) => {
+    return function(...args) {
       clearTimeout(timeout);
       timeout = setTimeout(() => fn(...args), delay);
     };
@@ -142,7 +142,7 @@ export default function Header({
 
   return (
       <header
-        className="flex items-center justify-between px-6 py-4 bg-white w-full relative z-40 border-0 border-b-0 shadow-none outline-none"
+        className="flex items-center justify-between px-6 py-4 bg-white dark:bg-white w-full relative z-40 border-0 border-b-0 shadow-none outline-none"
         ref={menuRef}
       >
       {/* ESQUERDA */}
@@ -280,15 +280,15 @@ export default function Header({
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-sm border border-gray-200/60 rounded-xl shadow-xl shadow-black/5 ring-1 ring-black/5 text-sm z-40 overflow-hidden">
+          <div className="absolute right-0 top-full mt-2 w-56 bg-white backdrop-blur-sm border border-gray-200 rounded-xl shadow-xl shadow-black/5 ring-1 ring-black/5 text-sm z-40 overflow-hidden">
             <ul className="py-1">
               <li>
-                <Link to="/profile" className="flex gap-2 px-4 py-2 hover:bg-gray-50 focus:bg-gray-50 transition-colors outline-none">
+                <Link to="/profile" className="flex gap-2 px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 transition-colors outline-none">
                   <User className="w-4 h-4" /> {t("header.profile")}
                 </Link>
               </li>
               <li>
-                <Link to="/settings" className="flex gap-2 px-4 py-2 hover:bg-gray-50 focus:bg-gray-50 transition-colors outline-none">
+                <Link to="/settings" className="flex gap-2 px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 transition-colors outline-none">
                   <Settings className="w-4 h-4" /> {t("header.settings")}
                 </Link>
               </li>
@@ -298,7 +298,7 @@ export default function Header({
                     localStorage.removeItem('hasSeenTour');
                     window.location.reload();
                   }}
-                  className="w-full text-left flex gap-2 px-4 py-2 hover:bg-blue-50 text-blue-600 transition-colors outline-none"
+                  className="w-full text-left flex gap-2 px-4 py-2 hover:bg-blue-100 text-blue-600 transition-colors outline-none"
                 >
                   <PlayCircle className="w-4 h-4" /> {t('tour.restart_tour') || 'Tour Guiado'}
                 </button>
@@ -306,7 +306,7 @@ export default function Header({
               <li>
                 <button
                   onClick={logout}
-                  className="w-full text-left flex gap-2 px-4 py-2 hover:bg-red-50 text-red-600 transition-colors outline-none"
+                  className="w-full text-left flex gap-2 px-4 py-2 hover:bg-red-100 text-red-600 transition-colors outline-none"
                 >
                   <LogOut className="w-4 h-4" /> {t("header.logout")}
                 </button>

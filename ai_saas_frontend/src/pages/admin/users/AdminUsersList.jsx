@@ -23,6 +23,18 @@ export default function AdminUsersList() {
   const { selectionMode, selectedItems, toggleSelectionMode, toggleSelect, clearSelection } = useSelectionMode();
   const selectedIds = selectedItems.map((u) => u?.id);
 
+  // Função para mapear nomes de planos para chaves de tradução
+  const getPlanTranslationKey = (planName) => {
+    const planMappings = {
+      "Grátis": "subscription.plan.free",
+      "Básico": "subscription.plan.basic",
+      "Freepik/Envato": "subscription.plan.bot",
+      "Free": "subscription.plan.free",
+      "Basic": "subscription.plan.basic"
+    };
+    return planMappings[planName] || planName;
+  };
+
   useEffect(() => {
     fetchUsers().finally(() => setLoading(false));
   }, []);
@@ -149,7 +161,7 @@ export default function AdminUsersList() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 text-sm">{t("admin.users.fields.plan")}:</span>
-                      <span className="text-gray-700 text-sm font-medium">{user.plan?.name ?? t("common.placeholder")}</span>
+                      <span className="text-gray-700 text-sm font-medium">{user.plan?.name ? t(getPlanTranslationKey(user.plan.name)) : t("common.placeholder")}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500 text-sm">{t("admin.users.fields.status")}:</span>
@@ -183,7 +195,14 @@ export default function AdminUsersList() {
         </div>
       )}
 
-      <SelectionToolbar count={selectedItems.length} confirmLabel={t("admin.users.toolbar.delete_selected")} onConfirm={handleDeleteSelected} confirmColor="red" icon={<Trash className="w-4 h-4" />} />
+      <SelectionToolbar 
+        count={selectedItems.length} 
+        confirmLabel={t("admin.users.toolbar.delete_selected")} 
+        onConfirm={handleDeleteSelected} 
+        confirmColor="red" 
+        icon={<Trash className="w-4 h-4" />}
+        selectedText={selectedItems.length > 1 ? t("selection.count.many") : t("selection.count.one")}
+      />
 
       {modalUser && (
         <UserDetailsModal
