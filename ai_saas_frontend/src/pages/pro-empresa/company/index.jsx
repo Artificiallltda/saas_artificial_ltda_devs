@@ -19,8 +19,10 @@ export default function ProEmpresaCompany() {
   const [company, setCompany] = useState(null);
   const [myCompanyRole, setMyCompanyRole] = useState(null);
   const [users, setUsers] = useState([]);
+  const [invites, setInvites] = useState([]);
   const [bootstrapName, setBootstrapName] = useState("");
   const [addEmail, setAddEmail] = useState("");
+  const [loadingInvites, setLoadingInvites] = useState(true);
 
   const isOwner = (myCompanyRole || "").toLowerCase() === "owner";
   const isCompanyAdmin = (myCompanyRole || "").toLowerCase() === "admin";
@@ -61,6 +63,23 @@ export default function ProEmpresaCompany() {
     }
   }
 
+  async function loadInvites() {
+    if (!canManageCompany || !company?.id) {
+      setInvites([]);
+      setLoadingInvites(false);
+      return;
+    }
+    setLoadingInvites(true);
+    try {
+      const data = await apiFetch(`${companyRoutes.invites}?status=pending`);
+      setInvites(Array.isArray(data) ? data : []);
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.company.toast.load_invites_error"));
+    } finally {
+      setLoadingInvites(false);
+    }
+  }
+
   useEffect(() => {
     loadCompany();
   }, []);
@@ -70,6 +89,16 @@ export default function ProEmpresaCompany() {
     if (company?.id) loadUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [company?.id]);
+
+  useEffect(() => {
+    if (company?.id && canManageCompany) {
+      loadInvites();
+    } else {
+      setInvites([]);
+      setLoadingInvites(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [company?.id, canManageCompany]);
 
   const sortedUsers = useMemo(() => {
     const arr = Array.isArray(users) ? [...users] : [];
@@ -87,6 +116,8 @@ export default function ProEmpresaCompany() {
     });
     return arr;
   }, [users]);
+
+  const pendingInvitesCount = Array.isArray(invites) ? invites.length : 0;
 
   const companyRoleOptions = useMemo(() => {
     return [
@@ -146,8 +177,10 @@ export default function ProEmpresaCompany() {
       const action = (data?.action || "").toLowerCase();
       if (action === "invite_created") {
         toast.success(t("pro_empresa.company.toast.invite_created"));
+        await loadInvites();
       } else if (action === "invite_exists") {
         toast.info(t("pro_empresa.company.toast.invite_exists"));
+        await loadInvites();
       } else {
         toast.success(t("pro_empresa.company.toast.user_added"));
       }
@@ -156,6 +189,33 @@ export default function ProEmpresaCompany() {
       await loadUsers();
     } catch (e) {
       toast.error(e?.message || t("pro_empresa.company.toast.user_add_error"));
+    }
+  }
+
+  async function resendInvite(inviteId) {
+    try {
+      const data = await apiFetch(companyRoutes.resendInvite(inviteId), {
+        method: "POST",
+      });
+      if (data?.email_sent === false) {
+        toast.warning(t("pro_empresa.company.toast.invite_resend_partial"));
+      } else {
+        toast.success(t("pro_empresa.company.toast.invite_resent"));
+      }
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.company.toast.invite_resend_error"));
+    }
+  }
+
+  async function cancelInvite(inviteId) {
+    try {
+      await apiFetch(companyRoutes.cancelInvite(inviteId), {
+        method: "DELETE",
+      });
+      toast.success(t("pro_empresa.company.toast.invite_cancelled"));
+      setInvites((prev) => (Array.isArray(prev) ? prev.filter((i) => i?.id !== inviteId) : []));
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.company.toast.invite_cancel_error"));
     }
   }
 
@@ -195,7 +255,14 @@ export default function ProEmpresaCompany() {
             ) : (
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <div className="text-sm font-semibold text-gray-900">{company?.name}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-semibold text-gray-900">{company?.name}</div>
+                    {canManageCompany && pendingInvitesCount > 0 && (
+                      <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                        {pendingInvitesCount} {t("pro_empresa.company.badges.pending_invites")}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-gray-500">
                     {t("pro_empresa.company.my_role")}{" "}
                     <span className="font-medium text-gray-700">
@@ -267,6 +334,64 @@ export default function ProEmpresaCompany() {
                   <div className="mt-2 text-xs text-gray-500">
                     {t("pro_empresa.company.users.add.hint")}
                   </div>
+                </div>
+              )}
+
+              {canManageCompany && (
+                <div className="mt-4 rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
+                      <span>{t("pro_empresa.company.invites.title")}</span>
+                      <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-semibold text-gray-700">
+                        {pendingInvitesCount}
+                      </span>
+                    </div>
+                    <button
+                      onClick={loadInvites}
+                      className="text-xs px-2 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50"
+                    >
+                      {t("pro_empresa.company.refresh")}
+                    </button>
+                  </div>
+
+                  {loadingInvites ? (
+                    <div className="mt-2 text-xs text-gray-500">{t("common.loading")}</div>
+                  ) : invites.length === 0 ? (
+                    <div className="mt-2 text-xs text-gray-500">
+                      {t("pro_empresa.company.invites.empty")}
+                    </div>
+                  ) : (
+                    <div className="mt-2 space-y-2">
+                      {invites.map((invite) => (
+                        <div
+                          key={invite?.id}
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2"
+                        >
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{invite?.invited_email}</div>
+                            <div className="text-xs text-gray-500">
+                              {t("pro_empresa.company.invites.created_at")}{" "}
+                              {invite?.created_at ? new Date(invite.created_at).toLocaleString() : "—"}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => resendInvite(invite?.id)}
+                              className="h-8 px-3 rounded-md border border-blue-200 bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100"
+                            >
+                              {t("pro_empresa.company.invites.resend")}
+                            </button>
+                            <button
+                              onClick={() => cancelInvite(invite?.id)}
+                              className="h-8 px-3 rounded-md border border-red-200 bg-red-50 text-red-700 text-xs font-medium hover:bg-red-100"
+                            >
+                              {t("pro_empresa.company.invites.cancel")}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

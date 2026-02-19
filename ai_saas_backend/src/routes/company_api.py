@@ -31,6 +31,26 @@ def _get_user():
     return user, None
 
 
+def _is_company_manager(user):
+    if not user:
+        return False
+    is_global_admin = (user.role or "").lower() == "admin"
+    is_company_manager = (user.company_role or "").lower() in ALLOWED_COMPANY_ADMIN_ROLES
+    return bool(is_global_admin or is_company_manager)
+
+
+def _send_invite_email(company_id, inviter_user, to_email):
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+    signup_link = f"{frontend_url}/register"
+    company = Company.query.get(company_id)
+    return send_company_invite_email(
+        to_email=to_email,
+        company_name=company.name if company else "Sua empresa",
+        inviter_name=inviter_user.full_name or inviter_user.email,
+        signup_link=signup_link,
+    )
+
+
 @company_api.route("/me", methods=["GET"])
 @jwt_required()
 def get_my_company():
@@ -121,9 +141,7 @@ def add_company_user_by_email():
     if not user.company_id:
         return jsonify({"error": "Usuário não possui company_id"}), 400
 
-    is_global_admin = (user.role or "").lower() == "admin"
-    is_company_manager = (user.company_role or "").lower() in ALLOWED_COMPANY_ADMIN_ROLES
-    if not (is_company_manager or is_global_admin):
+    if not _is_company_manager(user):
         return jsonify({"error": "Acesso negado"}), 403
 
     data = request.get_json(silent=True) or {}
@@ -163,15 +181,7 @@ def add_company_user_by_email():
         db.session.add(invite)
         db.session.commit()
 
-        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
-        signup_link = f"{frontend_url}/register"
-        company = Company.query.get(user.company_id)
-        sent = send_company_invite_email(
-            to_email=email,
-            company_name=company.name if company else "Sua empresa",
-            inviter_name=user.full_name or user.email,
-            signup_link=signup_link,
-        )
+        sent = _send_invite_email(user.company_id, user, email)
 
         return jsonify({
             "message": "Convite enviado. Quando o usuário se cadastrar com este email, entrará automaticamente na empresa.",
@@ -200,6 +210,92 @@ def add_company_user_by_email():
         "action": "user_added",
         "user": {"id": target.id, "email": target.email, "company_role": target.company_role or "member"},
     }), 201
+
+
+@company_api.route("/invites", methods=["GET"])
+@jwt_required()
+def list_company_invites():
+    user, err = _get_user()
+    if err:
+        return err
+
+    if not user.company_id:
+        return jsonify({"error": "Usuário não possui company_id"}), 400
+
+    if not _is_company_manager(user):
+        return jsonify({"error": "Acesso negado"}), 403
+
+    status = (request.args.get("status") or "pending").strip().lower()
+    q = CompanyInvite.query.filter_by(company_id=user.company_id)
+    if status:
+        q = q.filter(CompanyInvite.status == status)
+
+    invites = q.order_by(CompanyInvite.created_at.desc()).all()
+    inviter_ids = [i.invited_by for i in invites if i.invited_by]
+    inviters = User.query.filter(User.id.in_(inviter_ids)).all() if inviter_ids else []
+    inviter_map = {u.id: {"id": u.id, "full_name": u.full_name, "email": u.email} for u in inviters}
+
+    return jsonify([
+        {
+            **invite.to_dict(),
+            "invited_by_user": inviter_map.get(invite.invited_by),
+        }
+        for invite in invites
+    ]), 200
+
+
+@company_api.route("/invites/<invite_id>/resend", methods=["POST"])
+@jwt_required()
+def resend_company_invite(invite_id):
+    user, err = _get_user()
+    if err:
+        return err
+
+    if not user.company_id:
+        return jsonify({"error": "Usuário não possui company_id"}), 400
+
+    if not _is_company_manager(user):
+        return jsonify({"error": "Acesso negado"}), 403
+
+    invite = CompanyInvite.query.get(invite_id)
+    if not invite or invite.company_id != user.company_id:
+        return jsonify({"error": "Convite não encontrado"}), 404
+    if invite.status != "pending":
+        return jsonify({"error": "Apenas convites pendentes podem ser reenviados"}), 400
+
+    sent = _send_invite_email(user.company_id, user, invite.invited_email)
+    return jsonify({
+        "message": "Convite reenviado",
+        "email_sent": bool(sent),
+        "invite": invite.to_dict(),
+    }), 200
+
+
+@company_api.route("/invites/<invite_id>", methods=["DELETE"])
+@jwt_required()
+def cancel_company_invite(invite_id):
+    user, err = _get_user()
+    if err:
+        return err
+
+    if not user.company_id:
+        return jsonify({"error": "Usuário não possui company_id"}), 400
+
+    if not _is_company_manager(user):
+        return jsonify({"error": "Acesso negado"}), 403
+
+    invite = CompanyInvite.query.get(invite_id)
+    if not invite or invite.company_id != user.company_id:
+        return jsonify({"error": "Convite não encontrado"}), 404
+    if invite.status != "pending":
+        return jsonify({"error": "Apenas convites pendentes podem ser cancelados"}), 400
+
+    invite.status = "cancelled"
+    db.session.commit()
+    return jsonify({
+        "message": "Convite cancelado",
+        "invite": invite.to_dict(),
+    }), 200
 
 
 @company_api.route("/users/<user_id>/role", methods=["PATCH"])

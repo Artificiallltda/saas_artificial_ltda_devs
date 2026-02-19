@@ -121,4 +121,7 @@ export const companyRoutes = {
   users: `${API_BASE}/company/users`,
   updateUserRole: (userId) => `${API_BASE}/company/users/${userId}/role`,
   addUser: `${API_BASE}/company/users`,
+  invites: `${API_BASE}/company/invites`,
+  resendInvite: (inviteId) => `${API_BASE}/company/invites/${inviteId}/resend`,
+  cancelInvite: (inviteId) => `${API_BASE}/company/invites/${inviteId}`,
 };
