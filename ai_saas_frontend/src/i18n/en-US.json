@@ -657,7 +657,7 @@
   "pro_empresa.company.users.add.title": "Add user to company",
   "pro_empresa.company.users.add.placeholder": "User email",
   "pro_empresa.company.users.add.cta": "Add",
-  "pro_empresa.company.users.add.hint": "MVP: the user must already exist in the system. Then adjust the company role or workspace roles.",
+  "pro_empresa.company.users.add.hint": "If the email already exists, the user joins the company immediately. If it does not exist yet, we will send an invite and the user will be added automatically after signing up with the same email.",
   "pro_empresa.company.toast.load_company_error": "Error loading company",
   "pro_empresa.company.toast.load_users_error": "Error loading company users",
   "pro_empresa.company.toast.bootstrapped": "Company created",
@@ -666,6 +666,8 @@
   "pro_empresa.company.toast.role_update_error": "Error updating role",
   "pro_empresa.company.toast.invalid_email": "Enter a valid email",
   "pro_empresa.company.toast.user_added": "User added to company",
+  "pro_empresa.company.toast.invite_created": "Invite sent by email. The user will join automatically after signup.",
+  "pro_empresa.company.toast.invite_exists": "There is already a pending invite for this email",
   "pro_empresa.company.toast.user_add_error": "Error adding user",
 
   "pro_empresa.status.draft": "Draft",

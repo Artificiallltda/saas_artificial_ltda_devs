@@ -4,15 +4,41 @@ from extensions import (
     jwt_required, create_access_token, set_access_cookies, get_jwt, get_jwt_identity
 )
 from utils import add_token_to_blacklist
-from models import User, Plan
+from models import CompanyInvite, User, Plan
 from dotenv import load_dotenv
 import uuid, re, os, secrets
-from datetime import timedelta
+from datetime import datetime, timedelta
 from routes.email_api import send_reset_password_email
 
 auth_api = Blueprint("auth_api", __name__)
 
 load_dotenv()
+
+
+def _apply_pending_company_invite(user):
+    if not user:
+        return False
+    if getattr(user, "company_id", None):
+        return False
+
+    email = (getattr(user, "email", "") or "").strip().lower()
+    if not email:
+        return False
+
+    invite = CompanyInvite.query.filter(
+        db.func.lower(CompanyInvite.invited_email) == email,
+        CompanyInvite.status == "pending",
+    ).order_by(CompanyInvite.created_at.desc()).first()
+
+    if not invite:
+        return False
+
+    user.company_id = invite.company_id
+    user.company_role = invite.invited_role or "member"
+    invite.status = "accepted"
+    invite.accepted_user_id = user.id
+    invite.accepted_at = datetime.utcnow()
+    return True
 
 # Cadastro
 @auth_api.route("/register", methods=["POST"])
@@ -77,6 +103,7 @@ def register():
     )
 
     db.session.add(new_user)
+    _apply_pending_company_invite(new_user)
     db.session.commit()
     redis_client.delete(f"email_verified:{email}")
 
@@ -99,6 +126,9 @@ def login():
         user = User.query.filter_by(username=identifier).first()
 
     if user and bcrypt.check_password_hash(user.password, password):
+        if _apply_pending_company_invite(user):
+            db.session.commit()
+
         access_token = create_access_token(
             identity=user.id,
             additional_claims={"role": user.role},
@@ -124,6 +154,8 @@ def login():
                 "username": user.username,
                 "email": user.email,
                 "role": user.role,
+                "company_id": getattr(user, "company_id", None),
+                "company_role": getattr(user, "company_role", None),
                 "plan": {
                     "id": user.plan.id if user.plan else None,
                     "name": user.plan.name if user.plan else None,

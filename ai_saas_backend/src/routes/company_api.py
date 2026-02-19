@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
 from extensions import db, jwt_required, get_jwt_identity
-from models import Company, User
+from models import Company, CompanyInvite, User
 from utils.feature_flags import has_plan_feature
+from routes.email_api import send_company_invite_email
+import os
 
 
 company_api = Blueprint("company_api", __name__)
@@ -107,10 +109,10 @@ def add_company_user_by_email():
     """
     Associa um usuário existente à company do requester via email.
 
-    MVP (sem convites):
+    MVP:
     - Apenas company owner/admin (ou admin global) pode adicionar.
     - Se usuário já estiver em outra company, bloqueia.
-    - Se usuário não existir, retorna 404 (sem convite automático).
+    - Se usuário não existir, cria convite pendente e envia email.
     """
     user, err = _get_user()
     if err:
@@ -131,7 +133,52 @@ def add_company_user_by_email():
 
     target = User.query.filter(db.func.lower(User.email) == email).first()
     if not target:
-        return jsonify({"error": "Usuário não encontrado"}), 404
+        pending_other_company = CompanyInvite.query.filter(
+            db.func.lower(CompanyInvite.invited_email) == email,
+            CompanyInvite.status == "pending",
+            CompanyInvite.company_id != user.company_id,
+        ).first()
+        if pending_other_company:
+            return jsonify({"error": "Já existe convite pendente para outra empresa"}), 400
+
+        existing_pending = CompanyInvite.query.filter(
+            CompanyInvite.company_id == user.company_id,
+            db.func.lower(CompanyInvite.invited_email) == email,
+            CompanyInvite.status == "pending",
+        ).first()
+        if existing_pending:
+            return jsonify({
+                "message": "Convite já enviado para este email",
+                "action": "invite_exists",
+                "invite": existing_pending.to_dict(),
+            }), 200
+
+        invite = CompanyInvite(
+            company_id=user.company_id,
+            invited_email=email,
+            invited_role="member",
+            invited_by=user.id,
+            status="pending",
+        )
+        db.session.add(invite)
+        db.session.commit()
+
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+        signup_link = f"{frontend_url}/register"
+        company = Company.query.get(user.company_id)
+        sent = send_company_invite_email(
+            to_email=email,
+            company_name=company.name if company else "Sua empresa",
+            inviter_name=user.full_name or user.email,
+            signup_link=signup_link,
+        )
+
+        return jsonify({
+            "message": "Convite enviado. Quando o usuário se cadastrar com este email, entrará automaticamente na empresa.",
+            "action": "invite_created",
+            "email_sent": bool(sent),
+            "invite": invite.to_dict(),
+        }), 201
 
     # Se já estiver na mesma empresa, ok (idempotente)
     if target.company_id == user.company_id:
@@ -150,6 +197,7 @@ def add_company_user_by_email():
 
     return jsonify({
         "message": "Usuário adicionado à empresa",
+        "action": "user_added",
         "user": {"id": target.id, "email": target.email, "company_role": target.company_role or "member"},
     }), 201
 

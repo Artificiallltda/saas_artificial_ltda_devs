@@ -138,3 +138,29 @@ def send_reset_password_email(to_email, link):
     except Exception as e:
         print(f"Erro ao enviar email de redefinição: {e}")
         return False
+
+
+def send_company_invite_email(to_email, company_name, inviter_name, signup_link):
+    if not EMAIL_USER or not EMAIL_PASS:
+        print("Erro ao enviar convite da empresa: credenciais SMTP não configuradas")
+        return False
+
+    msg = MIMEText(
+        "Olá,\n\n"
+        f"{inviter_name} convidou você para entrar na empresa \"{company_name}\" na plataforma Artificiall.\n\n"
+        f"Para aceitar, faça seu cadastro com este email: {to_email}\n"
+        f"Link de cadastro: {signup_link}\n\n"
+        "Após concluir o cadastro, você será adicionado automaticamente à empresa.\n"
+    )
+    msg["Subject"] = "Convite para empresa - Artificiall"
+    msg["From"] = EMAIL_USER
+    msg["To"] = to_email
+
+    try:
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+            server.login(EMAIL_USER, EMAIL_PASS)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"Erro ao enviar email de convite: {e}")
+        return False

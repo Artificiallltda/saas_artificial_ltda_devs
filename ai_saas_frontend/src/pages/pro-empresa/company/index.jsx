@@ -137,12 +137,21 @@ export default function ProEmpresaCompany() {
     }
 
     try {
-      await apiFetch(companyRoutes.addUser, {
+      const data = await apiFetch(companyRoutes.addUser, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      toast.success(t("pro_empresa.company.toast.user_added"));
+
+      const action = (data?.action || "").toLowerCase();
+      if (action === "invite_created") {
+        toast.success(t("pro_empresa.company.toast.invite_created"));
+      } else if (action === "invite_exists") {
+        toast.info(t("pro_empresa.company.toast.invite_exists"));
+      } else {
+        toast.success(t("pro_empresa.company.toast.user_added"));
+      }
+
       setAddEmail("");
       await loadUsers();
     } catch (e) {

@@ -672,7 +672,7 @@
   "pro_empresa.company.users.add.title": "Adicionar usuário na empresa",
   "pro_empresa.company.users.add.placeholder": "Email do usuário",
   "pro_empresa.company.users.add.cta": "Adicionar",
-  "pro_empresa.company.users.add.hint": "MVP: o usuário precisa já existir no sistema. Depois, ajuste o papel (empresa) ou roles de workspace.",
+  "pro_empresa.company.users.add.hint": "Se o email já existir, o usuário entra na empresa na hora. Se ainda não existir, enviaremos um convite e ele entrará automaticamente após se cadastrar com o mesmo email.",
   "pro_empresa.company.toast.load_company_error": "Erro ao carregar empresa",
   "pro_empresa.company.toast.load_users_error": "Erro ao carregar usuários da empresa",
   "pro_empresa.company.toast.bootstrapped": "Empresa criada",
@@ -681,6 +681,8 @@
   "pro_empresa.company.toast.role_update_error": "Erro ao atualizar papel",
   "pro_empresa.company.toast.invalid_email": "Informe um email válido",
   "pro_empresa.company.toast.user_added": "Usuário adicionado à empresa",
+  "pro_empresa.company.toast.invite_created": "Convite enviado por email. O usuário entrará automaticamente após o cadastro.",
+  "pro_empresa.company.toast.invite_exists": "Já existe um convite pendente para este email",
   "pro_empresa.company.toast.user_add_error": "Erro ao adicionar usuário",
 
   "pro_empresa.status.draft": "Rascunho",

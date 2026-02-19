@@ -1,5 +1,6 @@
 from .user import User
 from .company import Company
+from .company_invite import CompanyInvite
 from .project import Project
 from .generated_content import (
     GeneratedContent,
@@ -21,6 +22,7 @@ from .workspace_member import WorkspaceMember
 __all__ = [
     "User",
     "Company",
+    "CompanyInvite",
     "Plan",
     "Feature",
     "PlanFeature",
