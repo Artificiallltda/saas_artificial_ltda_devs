@@ -72,6 +72,37 @@ def run_schema_upgrades():
             _add_column_if_missing("users", "company_id", _type_string(), None)
             _add_column_if_missing("users", "company_role", "VARCHAR(20)", None)
 
+        # company_invites (convites de empresa)
+        if "company_invites" not in tables:
+            dt = _type_datetime()
+            db.session.execute(text(f"""
+                CREATE TABLE company_invites (
+                    id VARCHAR PRIMARY KEY,
+                    company_id VARCHAR NOT NULL,
+                    invited_email VARCHAR(255) NOT NULL,
+                    invited_role VARCHAR(20) NOT NULL DEFAULT 'member',
+                    invited_by VARCHAR NOT NULL,
+                    accepted_user_id VARCHAR NULL,
+                    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                    resend_count INTEGER NOT NULL DEFAULT 0,
+                    expires_at {dt} NULL,
+                    accepted_at {dt} NULL,
+                    created_at {dt} NULL,
+                    updated_at {dt} NULL
+                )
+            """))
+            db.session.execute(text(
+                "CREATE UNIQUE INDEX uq_company_invites_company_email_status "
+                "ON company_invites(company_id, invited_email, status)"
+            ))
+            db.session.execute(text("CREATE INDEX idx_company_invites_company_id ON company_invites(company_id)"))
+            db.session.execute(text("CREATE INDEX idx_company_invites_invited_email ON company_invites(invited_email)"))
+            db.session.execute(text("CREATE INDEX idx_company_invites_invited_by ON company_invites(invited_by)"))
+            db.session.execute(text("CREATE INDEX idx_company_invites_accepted_user_id ON company_invites(accepted_user_id)"))
+        else:
+            _add_column_if_missing("company_invites", "resend_count", "INTEGER", "0")
+            _add_column_if_missing("company_invites", "expires_at", _type_datetime(), None)
+
         db.session.commit()
     except Exception:
         db.session.rollback()

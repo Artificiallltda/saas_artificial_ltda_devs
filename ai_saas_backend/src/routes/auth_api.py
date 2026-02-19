@@ -17,28 +17,42 @@ load_dotenv()
 
 def _apply_pending_company_invite(user):
     if not user:
-        return False
+        return False, False
     if getattr(user, "company_id", None):
-        return False
+        return False, False
 
     email = (getattr(user, "email", "") or "").strip().lower()
     if not email:
-        return False
+        return False, False
+
+    changed = False
+    now = datetime.utcnow()
+    expired_items = CompanyInvite.query.filter(
+        db.func.lower(CompanyInvite.invited_email) == email,
+        CompanyInvite.status == "pending",
+        CompanyInvite.expires_at.isnot(None),
+        CompanyInvite.expires_at < now,
+    ).all()
+    for item in expired_items:
+        item.status = "expired"
+        changed = True
 
     invite = CompanyInvite.query.filter(
         db.func.lower(CompanyInvite.invited_email) == email,
         CompanyInvite.status == "pending",
+        db.or_(CompanyInvite.expires_at.is_(None), CompanyInvite.expires_at >= now),
     ).order_by(CompanyInvite.created_at.desc()).first()
 
     if not invite:
-        return False
+        return False, changed
 
     user.company_id = invite.company_id
     user.company_role = invite.invited_role or "member"
     invite.status = "accepted"
     invite.accepted_user_id = user.id
     invite.accepted_at = datetime.utcnow()
-    return True
+    changed = True
+    return True, changed
 
 # Cadastro
 @auth_api.route("/register", methods=["POST"])
@@ -126,7 +140,8 @@ def login():
         user = User.query.filter_by(username=identifier).first()
 
     if user and bcrypt.check_password_hash(user.password, password):
-        if _apply_pending_company_invite(user):
+        _, changed = _apply_pending_company_invite(user)
+        if changed:
             db.session.commit()
 
         access_token = create_access_token(

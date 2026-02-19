@@ -20,6 +20,8 @@ export default function ProEmpresaCompany() {
   const [myCompanyRole, setMyCompanyRole] = useState(null);
   const [users, setUsers] = useState([]);
   const [invites, setInvites] = useState([]);
+  const [pendingInvitesCount, setPendingInvitesCount] = useState(0);
+  const [inviteStatusFilter, setInviteStatusFilter] = useState("pending");
   const [bootstrapName, setBootstrapName] = useState("");
   const [addEmail, setAddEmail] = useState("");
   const [loadingInvites, setLoadingInvites] = useState(true);
@@ -63,16 +65,25 @@ export default function ProEmpresaCompany() {
     }
   }
 
-  async function loadInvites() {
+  async function loadInvites(statusArg = inviteStatusFilter) {
     if (!canManageCompany || !company?.id) {
       setInvites([]);
+      setPendingInvitesCount(0);
       setLoadingInvites(false);
       return;
     }
     setLoadingInvites(true);
     try {
-      const data = await apiFetch(`${companyRoutes.invites}?status=pending`);
-      setInvites(Array.isArray(data) ? data : []);
+      const safeStatus = (statusArg || "pending").toLowerCase();
+      const data = await apiFetch(`${companyRoutes.invites}?status=${encodeURIComponent(safeStatus)}`);
+      const list = Array.isArray(data) ? data : [];
+      setInvites(list);
+      if (safeStatus === "pending") {
+        setPendingInvitesCount(list.length);
+      } else {
+        const pending = await apiFetch(`${companyRoutes.invites}?status=pending`);
+        setPendingInvitesCount(Array.isArray(pending) ? pending.length : 0);
+      }
     } catch (e) {
       toast.error(e?.message || t("pro_empresa.company.toast.load_invites_error"));
     } finally {
@@ -92,13 +103,14 @@ export default function ProEmpresaCompany() {
 
   useEffect(() => {
     if (company?.id && canManageCompany) {
-      loadInvites();
+      loadInvites(inviteStatusFilter);
     } else {
       setInvites([]);
+      setPendingInvitesCount(0);
       setLoadingInvites(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [company?.id, canManageCompany]);
+  }, [company?.id, canManageCompany, inviteStatusFilter]);
 
   const sortedUsers = useMemo(() => {
     const arr = Array.isArray(users) ? [...users] : [];
@@ -117,14 +129,16 @@ export default function ProEmpresaCompany() {
     return arr;
   }, [users]);
 
-  const pendingInvitesCount = Array.isArray(invites) ? invites.length : 0;
-
   const companyRoleOptions = useMemo(() => {
     return [
       { value: "member", label: t("pro_empresa.company.role.member") },
       { value: "admin", label: t("pro_empresa.company.role.admin") },
     ];
   }, [t]);
+
+  const inviteFilterOptions = useMemo(() => {
+    return ["pending", "accepted", "cancelled", "expired"];
+  }, []);
 
   async function bootstrap() {
     try {
@@ -177,10 +191,10 @@ export default function ProEmpresaCompany() {
       const action = (data?.action || "").toLowerCase();
       if (action === "invite_created") {
         toast.success(t("pro_empresa.company.toast.invite_created"));
-        await loadInvites();
+        await loadInvites(inviteStatusFilter);
       } else if (action === "invite_exists") {
         toast.info(t("pro_empresa.company.toast.invite_exists"));
-        await loadInvites();
+        await loadInvites(inviteStatusFilter);
       } else {
         toast.success(t("pro_empresa.company.toast.user_added"));
       }
@@ -202,6 +216,7 @@ export default function ProEmpresaCompany() {
       } else {
         toast.success(t("pro_empresa.company.toast.invite_resent"));
       }
+      await loadInvites(inviteStatusFilter);
     } catch (e) {
       toast.error(e?.message || t("pro_empresa.company.toast.invite_resend_error"));
     }
@@ -213,7 +228,7 @@ export default function ProEmpresaCompany() {
         method: "DELETE",
       });
       toast.success(t("pro_empresa.company.toast.invite_cancelled"));
-      setInvites((prev) => (Array.isArray(prev) ? prev.filter((i) => i?.id !== inviteId) : []));
+      await loadInvites(inviteStatusFilter);
     } catch (e) {
       toast.error(e?.message || t("pro_empresa.company.toast.invite_cancel_error"));
     }
@@ -347,11 +362,30 @@ export default function ProEmpresaCompany() {
                       </span>
                     </div>
                     <button
-                      onClick={loadInvites}
+                      onClick={() => loadInvites(inviteStatusFilter)}
                       className="text-xs px-2 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50"
                     >
                       {t("pro_empresa.company.refresh")}
                     </button>
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {inviteFilterOptions.map((status) => {
+                      const active = inviteStatusFilter === status;
+                      return (
+                        <button
+                          key={status}
+                          onClick={() => setInviteStatusFilter(status)}
+                          className={`h-7 px-3 rounded-full text-xs border transition ${
+                            active
+                              ? "border-blue-300 bg-blue-50 text-blue-700"
+                              : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          {t(`pro_empresa.company.invites.filters.${status}`)}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {loadingInvites ? (
@@ -369,25 +403,41 @@ export default function ProEmpresaCompany() {
                         >
                           <div>
                             <div className="text-sm font-medium text-gray-900">{invite?.invited_email}</div>
-                            <div className="text-xs text-gray-500">
+                              <div className="mt-0.5 flex items-center gap-2 text-[11px]">
+                                <span className="inline-flex items-center rounded-full border border-gray-200 bg-white px-2 py-0.5 text-gray-700">
+                                  {t(`pro_empresa.company.invites.status.${invite?.status || "pending"}`)}
+                                </span>
+                                <span className="inline-flex items-center rounded-full border border-gray-200 bg-white px-2 py-0.5 text-gray-600">
+                                  {t("pro_empresa.company.invites.resend_count")} {invite?.resend_count || 0}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
                               {t("pro_empresa.company.invites.created_at")}{" "}
                               {invite?.created_at ? new Date(invite.created_at).toLocaleString() : "—"}
                             </div>
+                              <div className="text-xs text-gray-500">
+                                {t("pro_empresa.company.invites.expires_at")}{" "}
+                                {invite?.expires_at ? new Date(invite.expires_at).toLocaleString() : "—"}
+                              </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => resendInvite(invite?.id)}
-                              className="h-8 px-3 rounded-md border border-blue-200 bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100"
-                            >
-                              {t("pro_empresa.company.invites.resend")}
-                            </button>
-                            <button
-                              onClick={() => cancelInvite(invite?.id)}
-                              className="h-8 px-3 rounded-md border border-red-200 bg-red-50 text-red-700 text-xs font-medium hover:bg-red-100"
-                            >
-                              {t("pro_empresa.company.invites.cancel")}
-                            </button>
-                          </div>
+                          {invite?.status === "pending" ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => resendInvite(invite?.id)}
+                                className="h-8 px-3 rounded-md border border-blue-200 bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100"
+                              >
+                                {t("pro_empresa.company.invites.resend")}
+                              </button>
+                              <button
+                                onClick={() => cancelInvite(invite?.id)}
+                                className="h-8 px-3 rounded-md border border-red-200 bg-red-50 text-red-700 text-xs font-medium hover:bg-red-100"
+                              >
+                                {t("pro_empresa.company.invites.cancel")}
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
                         </div>
                       ))}
                     </div>

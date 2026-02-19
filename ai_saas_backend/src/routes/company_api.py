@@ -4,12 +4,15 @@ from models import Company, CompanyInvite, User
 from utils.feature_flags import has_plan_feature
 from routes.email_api import send_company_invite_email
 import os
+from datetime import datetime, timedelta
 
 
 company_api = Blueprint("company_api", __name__)
 
 ALLOWED_COMPANY_ADMIN_ROLES = {"owner", "admin"}
 ALLOWED_COMPANY_ROLES = {"owner", "admin", "member"}
+ALLOWED_INVITE_STATUSES = {"pending", "accepted", "cancelled", "expired"}
+INVITE_EXPIRATION_DAYS = 7
 
 
 def _get_user():
@@ -49,6 +52,26 @@ def _send_invite_email(company_id, inviter_user, to_email):
         inviter_name=inviter_user.full_name or inviter_user.email,
         signup_link=signup_link,
     )
+
+
+def _default_invite_expiration():
+    return datetime.utcnow() + timedelta(days=INVITE_EXPIRATION_DAYS)
+
+
+def _expire_pending_invites(company_id=None):
+    now = datetime.utcnow()
+    q = CompanyInvite.query.filter(
+        CompanyInvite.status == "pending",
+        CompanyInvite.expires_at.isnot(None),
+        CompanyInvite.expires_at < now,
+    )
+    if company_id:
+        q = q.filter(CompanyInvite.company_id == company_id)
+
+    items = q.all()
+    for invite in items:
+        invite.status = "expired"
+    return bool(items)
 
 
 @company_api.route("/me", methods=["GET"])
@@ -149,6 +172,10 @@ def add_company_user_by_email():
     if not email or "@" not in email:
         return jsonify({"error": "email inválido"}), 400
 
+    changed = _expire_pending_invites(user.company_id)
+    if changed:
+        db.session.commit()
+
     target = User.query.filter(db.func.lower(User.email) == email).first()
     if not target:
         pending_other_company = CompanyInvite.query.filter(
@@ -177,6 +204,8 @@ def add_company_user_by_email():
             invited_role="member",
             invited_by=user.id,
             status="pending",
+            resend_count=0,
+            expires_at=_default_invite_expiration(),
         )
         db.session.add(invite)
         db.session.commit()
@@ -226,8 +255,15 @@ def list_company_invites():
         return jsonify({"error": "Acesso negado"}), 403
 
     status = (request.args.get("status") or "pending").strip().lower()
+    if status not in ALLOWED_INVITE_STATUSES and status != "all":
+        return jsonify({"error": "status inválido. Use pending|accepted|cancelled|expired|all"}), 400
+
+    changed = _expire_pending_invites(user.company_id)
+    if changed:
+        db.session.commit()
+
     q = CompanyInvite.query.filter_by(company_id=user.company_id)
-    if status:
+    if status != "all":
         q = q.filter(CompanyInvite.status == status)
 
     invites = q.order_by(CompanyInvite.created_at.desc()).all()
@@ -260,10 +296,21 @@ def resend_company_invite(invite_id):
     invite = CompanyInvite.query.get(invite_id)
     if not invite or invite.company_id != user.company_id:
         return jsonify({"error": "Convite não encontrado"}), 404
+    if (
+        invite.status == "pending"
+        and invite.expires_at
+        and invite.expires_at < datetime.utcnow()
+    ):
+        invite.status = "expired"
+        db.session.commit()
+
     if invite.status != "pending":
         return jsonify({"error": "Apenas convites pendentes podem ser reenviados"}), 400
 
     sent = _send_invite_email(user.company_id, user, invite.invited_email)
+    invite.resend_count = (invite.resend_count or 0) + 1
+    invite.expires_at = _default_invite_expiration()
+    db.session.commit()
     return jsonify({
         "message": "Convite reenviado",
         "email_sent": bool(sent),
@@ -287,6 +334,14 @@ def cancel_company_invite(invite_id):
     invite = CompanyInvite.query.get(invite_id)
     if not invite or invite.company_id != user.company_id:
         return jsonify({"error": "Convite não encontrado"}), 404
+    if (
+        invite.status == "pending"
+        and invite.expires_at
+        and invite.expires_at < datetime.utcnow()
+    ):
+        invite.status = "expired"
+        db.session.commit()
+
     if invite.status != "pending":
         return jsonify({"error": "Apenas convites pendentes podem ser cancelados"}), 400
 
