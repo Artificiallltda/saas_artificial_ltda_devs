@@ -12,6 +12,7 @@ from models import (
     project_content_association,
 )
 from utils.feature_flags import has_plan_feature
+from utils.audit_logs import log_audit_event
 from datetime import datetime
 import os
 
@@ -329,6 +330,24 @@ def approve_content(content_id):
     content.rejected_at = None
     content.rejected_by = None
 
+    ws_ids = _content_workspace_ids(content)
+    for ws_id in ws_ids:
+        ws = Workspace.query.get(ws_id)
+        owner = User.query.get(ws.user_id) if ws else None
+        log_audit_event(
+            company_id=owner.company_id if owner else None,
+            event_type="approval.content.approved",
+            actor_user_id=current_user_id,
+            target_user_id=content.user_id,
+            workspace_id=ws_id,
+            message=f"Conteúdo aprovado em workspace {ws.name if ws else ws_id}",
+            metadata={
+                "content_id": content.id,
+                "prompt": content.prompt,
+                "workspace_name": ws.name if ws else None,
+            },
+        )
+
     db.session.commit()
     return jsonify({"message": "Aprovado", "content": content.to_dict()}), 200
 
@@ -360,6 +379,24 @@ def reject_content(content_id):
     content.rejected_by = current_user_id
     content.approved_at = None
     content.approved_by = None
+
+    ws_ids = _content_workspace_ids(content)
+    for ws_id in ws_ids:
+        ws = Workspace.query.get(ws_id)
+        owner = User.query.get(ws.user_id) if ws else None
+        log_audit_event(
+            company_id=owner.company_id if owner else None,
+            event_type="approval.content.rejected",
+            actor_user_id=current_user_id,
+            target_user_id=content.user_id,
+            workspace_id=ws_id,
+            message=f"Conteúdo rejeitado em workspace {ws.name if ws else ws_id}",
+            metadata={
+                "content_id": content.id,
+                "prompt": content.prompt,
+                "workspace_name": ws.name if ws else None,
+            },
+        )
 
     db.session.commit()
     return jsonify({"message": "Rejeitado", "content": content.to_dict()}), 200

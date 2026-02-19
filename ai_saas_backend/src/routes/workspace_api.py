@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from extensions import db, jwt_required, get_jwt_identity
 from models import Workspace, WorkspaceMember, User, Project
 from utils.feature_flags import has_plan_feature
+from utils.audit_logs import log_audit_event
 from sqlalchemy import or_
 
 workspace_api = Blueprint("workspace_api", __name__)
@@ -285,6 +286,16 @@ def add_workspace_member(workspace_id):
         member = WorkspaceMember(workspace_id=ws.id, member_user_id=target.id, role=role, status="active")
         db.session.add(member)
 
+    log_audit_event(
+        company_id=owner.company_id,
+        event_type="workspace.member.added",
+        actor_user_id=user.id,
+        target_user_id=target.id,
+        workspace_id=ws.id,
+        message=f"Membro {target.email} adicionado ao workspace {ws.name}",
+        metadata={"workspace_name": ws.name, "member_role": role, "target_email": target.email},
+    )
+
     db.session.commit()
     return jsonify({"message": "Membro adicionado", "member": {"user_id": target.id, "role": role}}), 201
 
@@ -312,7 +323,24 @@ def update_workspace_member_role(workspace_id, member_user_id):
     if not m:
         return jsonify({"error": "Membro não encontrado"}), 404
 
+    owner = User.query.get(ws.user_id)
+    target = User.query.get(member_user_id)
+    old_role = m.role
     m.role = role
+    log_audit_event(
+        company_id=owner.company_id if owner else None,
+        event_type="workspace.member.role.changed",
+        actor_user_id=user.id,
+        target_user_id=member_user_id,
+        workspace_id=ws.id,
+        message=f"Role de membro alterado em {ws.name}",
+        metadata={
+            "workspace_name": ws.name,
+            "old_role": old_role,
+            "new_role": role,
+            "target_email": target.email if target else None,
+        },
+    )
     db.session.commit()
     return jsonify({"message": "Papel atualizado", "member": m.to_dict()}), 200
 
@@ -335,7 +363,23 @@ def remove_workspace_member(workspace_id, member_user_id):
     if not m:
         return jsonify({"error": "Membro não encontrado"}), 404
 
+    owner = User.query.get(ws.user_id)
+    target = User.query.get(member_user_id)
+    removed_role = m.role
     db.session.delete(m)
+    log_audit_event(
+        company_id=owner.company_id if owner else None,
+        event_type="workspace.member.removed",
+        actor_user_id=user.id,
+        target_user_id=member_user_id,
+        workspace_id=ws.id,
+        message=f"Membro removido do workspace {ws.name}",
+        metadata={
+            "workspace_name": ws.name,
+            "removed_role": removed_role,
+            "target_email": target.email if target else None,
+        },
+    )
     db.session.commit()
     return jsonify({"message": "Membro removido"}), 200
 

@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
 from extensions import db, jwt_required, get_jwt_identity
-from models import Company, CompanyInvite, User
+from models import AuditLog, Company, CompanyInvite, User, Workspace
 from utils.feature_flags import has_plan_feature
+from utils.audit_logs import log_audit_event
 from routes.email_api import send_company_invite_email
 import os
 from datetime import datetime, timedelta
+import json
 
 
 company_api = Blueprint("company_api", __name__)
@@ -208,6 +210,19 @@ def add_company_user_by_email():
             expires_at=_default_invite_expiration(),
         )
         db.session.add(invite)
+        log_audit_event(
+            company_id=user.company_id,
+            event_type="company.invite.created",
+            actor_user_id=user.id,
+            target_user_id=None,
+            workspace_id=None,
+            message=f"Convite criado para {email}",
+            metadata={
+                "invite_id": invite.id,
+                "invited_email": email,
+                "expires_at": invite.expires_at.isoformat() if invite.expires_at else None,
+            },
+        )
         db.session.commit()
 
         sent = _send_invite_email(user.company_id, user, email)
@@ -232,6 +247,15 @@ def add_company_user_by_email():
 
     target.company_id = user.company_id
     target.company_role = target.company_role or "member"
+    log_audit_event(
+        company_id=user.company_id,
+        event_type="company.member.added",
+        actor_user_id=user.id,
+        target_user_id=target.id,
+        workspace_id=None,
+        message=f"Usuário {target.email} adicionado à empresa",
+        metadata={"target_email": target.email, "company_role": target.company_role},
+    )
     db.session.commit()
 
     return jsonify({
@@ -280,6 +304,122 @@ def list_company_invites():
     ]), 200
 
 
+@company_api.route("/activity", methods=["GET"])
+@jwt_required()
+def list_company_activity():
+    user, err = _get_user()
+    if err:
+        return err
+    if not user.company_id:
+        return jsonify({"error": "Usuário não possui company_id"}), 400
+    if not _is_company_manager(user):
+        return jsonify({"error": "Acesso negado"}), 403
+
+    page = max(int(request.args.get("page", 1) or 1), 1)
+    page_size = max(min(int(request.args.get("page_size", 30) or 30), 100), 1)
+    actor_id = (request.args.get("actor_id") or "").strip()
+    event_type = (request.args.get("event_type") or "").strip()
+    workspace_id = (request.args.get("workspace_id") or "").strip()
+    start_date = (request.args.get("start_date") or "").strip()
+    end_date = (request.args.get("end_date") or "").strip()
+
+    q = AuditLog.query.filter_by(company_id=user.company_id)
+    if actor_id:
+        q = q.filter(AuditLog.actor_user_id == actor_id)
+    if event_type:
+        q = q.filter(AuditLog.event_type == event_type)
+    if workspace_id:
+        q = q.filter(AuditLog.workspace_id == workspace_id)
+
+    try:
+        if start_date:
+            start_dt = datetime.fromisoformat(start_date)
+            q = q.filter(AuditLog.created_at >= start_dt)
+        if end_date:
+            end_dt = datetime.fromisoformat(end_date)
+            q = q.filter(AuditLog.created_at <= end_dt)
+    except Exception:
+        return jsonify({"error": "Período inválido. Use formato ISO (YYYY-MM-DD)."}), 400
+
+    total = q.count()
+    items = (
+        q.order_by(AuditLog.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    actor_ids = {i.actor_user_id for i in items if i.actor_user_id}
+    target_ids = {i.target_user_id for i in items if i.target_user_id}
+    user_ids = list(actor_ids.union(target_ids))
+    users = User.query.filter(User.id.in_(user_ids)).all() if user_ids else []
+    user_map = {
+        u.id: {"id": u.id, "full_name": u.full_name, "email": u.email, "username": u.username}
+        for u in users
+    }
+
+    ws_ids = [i.workspace_id for i in items if i.workspace_id]
+    wss = Workspace.query.filter(Workspace.id.in_(ws_ids)).all() if ws_ids else []
+    ws_map = {w.id: {"id": w.id, "name": w.name} for w in wss}
+
+    payload = []
+    for item in items:
+        raw = item.to_dict()
+        meta = None
+        try:
+            meta = json.loads(raw.get("metadata_json") or "{}")
+        except Exception:
+            meta = {"_raw": raw.get("metadata_json")}
+        payload.append({
+            **raw,
+            "metadata": meta,
+            "actor_user": user_map.get(item.actor_user_id),
+            "target_user": user_map.get(item.target_user_id),
+            "workspace": ws_map.get(item.workspace_id),
+        })
+
+    return jsonify({
+        "items": payload,
+        "pagination": {
+            "page": page,
+            "page_size": page_size,
+            "total": total,
+            "total_pages": (total + page_size - 1) // page_size,
+        },
+    }), 200
+
+
+@company_api.route("/activity/filters", methods=["GET"])
+@jwt_required()
+def list_company_activity_filters():
+    user, err = _get_user()
+    if err:
+        return err
+    if not user.company_id:
+        return jsonify({"error": "Usuário não possui company_id"}), 400
+    if not _is_company_manager(user):
+        return jsonify({"error": "Acesso negado"}), 403
+
+    actions = (
+        db.session.query(AuditLog.event_type)
+        .filter(AuditLog.company_id == user.company_id)
+        .distinct()
+        .all()
+    )
+    users = User.query.filter_by(company_id=user.company_id).order_by(User.full_name.asc()).all()
+    owner_ids = db.session.query(User.id).filter(User.company_id == user.company_id).subquery()
+    workspaces = Workspace.query.filter(Workspace.user_id.in_(owner_ids)).order_by(Workspace.name.asc()).all()
+
+    return jsonify({
+        "actions": [a[0] for a in actions if a and a[0]],
+        "actors": [
+            {"id": u.id, "full_name": u.full_name, "email": u.email, "username": u.username}
+            for u in users
+        ],
+        "workspaces": [{"id": w.id, "name": w.name} for w in workspaces],
+    }), 200
+
+
 @company_api.route("/invites/<invite_id>/resend", methods=["POST"])
 @jwt_required()
 def resend_company_invite(invite_id):
@@ -310,6 +450,20 @@ def resend_company_invite(invite_id):
     sent = _send_invite_email(user.company_id, user, invite.invited_email)
     invite.resend_count = (invite.resend_count or 0) + 1
     invite.expires_at = _default_invite_expiration()
+    log_audit_event(
+        company_id=user.company_id,
+        event_type="company.invite.resent",
+        actor_user_id=user.id,
+        target_user_id=None,
+        workspace_id=None,
+        message=f"Convite reenviado para {invite.invited_email}",
+        metadata={
+            "invite_id": invite.id,
+            "invited_email": invite.invited_email,
+            "resend_count": invite.resend_count,
+            "expires_at": invite.expires_at.isoformat() if invite.expires_at else None,
+        },
+    )
     db.session.commit()
     return jsonify({
         "message": "Convite reenviado",
@@ -346,6 +500,15 @@ def cancel_company_invite(invite_id):
         return jsonify({"error": "Apenas convites pendentes podem ser cancelados"}), 400
 
     invite.status = "cancelled"
+    log_audit_event(
+        company_id=user.company_id,
+        event_type="company.invite.cancelled",
+        actor_user_id=user.id,
+        target_user_id=None,
+        workspace_id=None,
+        message=f"Convite cancelado para {invite.invited_email}",
+        metadata={"invite_id": invite.id, "invited_email": invite.invited_email},
+    )
     db.session.commit()
     return jsonify({
         "message": "Convite cancelado",
@@ -389,7 +552,17 @@ def update_company_user_role(user_id):
     if (target.company_role or "").lower() == "owner":
         return jsonify({"error": "Não é possível alterar o role do owner por este endpoint"}), 400
 
+    old_role = target.company_role or "member"
     target.company_role = new_role
+    log_audit_event(
+        company_id=user.company_id,
+        event_type="company.role.changed",
+        actor_user_id=user.id,
+        target_user_id=target.id,
+        workspace_id=None,
+        message=f"Role alterado de {old_role} para {new_role} para {target.email}",
+        metadata={"old_role": old_role, "new_role": new_role, "target_email": target.email},
+    )
     db.session.commit()
 
     return jsonify({

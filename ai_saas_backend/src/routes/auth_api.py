@@ -4,6 +4,7 @@ from extensions import (
     jwt_required, create_access_token, set_access_cookies, get_jwt, get_jwt_identity
 )
 from utils import add_token_to_blacklist
+from utils.audit_logs import log_audit_event
 from models import CompanyInvite, User, Plan
 from dotenv import load_dotenv
 import uuid, re, os, secrets
@@ -51,6 +52,19 @@ def _apply_pending_company_invite(user):
     invite.status = "accepted"
     invite.accepted_user_id = user.id
     invite.accepted_at = datetime.utcnow()
+    log_audit_event(
+        company_id=invite.company_id,
+        event_type="company.invite.accepted",
+        actor_user_id=user.id,
+        target_user_id=user.id,
+        workspace_id=None,
+        message=f"Convite aceito por {user.email}",
+        metadata={
+            "invite_id": invite.id,
+            "invited_email": invite.invited_email,
+            "assigned_role": user.company_role,
+        },
+    )
     changed = True
     return True, changed
 

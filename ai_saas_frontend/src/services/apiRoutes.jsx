@@ -124,4 +124,6 @@ export const companyRoutes = {
   invites: `${API_BASE}/company/invites`,
   resendInvite: (inviteId) => `${API_BASE}/company/invites/${inviteId}/resend`,
   cancelInvite: (inviteId) => `${API_BASE}/company/invites/${inviteId}`,
+  activity: (qs = "") => `${API_BASE}/company/activity${qs ? `?${qs}` : ""}`,
+  activityFilters: `${API_BASE}/company/activity/filters`,
 };

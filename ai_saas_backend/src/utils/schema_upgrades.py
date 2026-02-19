@@ -103,6 +103,29 @@ def run_schema_upgrades():
             _add_column_if_missing("company_invites", "resend_count", "INTEGER", "0")
             _add_column_if_missing("company_invites", "expires_at", _type_datetime(), None)
 
+        # audit_logs (auditoria Pro Empresa)
+        if "audit_logs" not in tables:
+            dt = _type_datetime()
+            db.session.execute(text(f"""
+                CREATE TABLE audit_logs (
+                    id VARCHAR PRIMARY KEY,
+                    company_id VARCHAR NOT NULL,
+                    workspace_id VARCHAR NULL,
+                    actor_user_id VARCHAR NULL,
+                    target_user_id VARCHAR NULL,
+                    event_type VARCHAR(80) NOT NULL,
+                    message VARCHAR(255) NULL,
+                    metadata_json TEXT NULL,
+                    created_at {dt} NULL
+                )
+            """))
+            db.session.execute(text("CREATE INDEX idx_audit_logs_company_id ON audit_logs(company_id)"))
+            db.session.execute(text("CREATE INDEX idx_audit_logs_workspace_id ON audit_logs(workspace_id)"))
+            db.session.execute(text("CREATE INDEX idx_audit_logs_actor_user_id ON audit_logs(actor_user_id)"))
+            db.session.execute(text("CREATE INDEX idx_audit_logs_target_user_id ON audit_logs(target_user_id)"))
+            db.session.execute(text("CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type)"))
+            db.session.execute(text("CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at)"))
+
         db.session.commit()
     except Exception:
         db.session.rollback()

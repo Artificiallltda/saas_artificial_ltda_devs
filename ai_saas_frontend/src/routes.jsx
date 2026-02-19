@@ -42,6 +42,7 @@ import ProEmpresaWorkspaces from "./pages/pro-empresa/workspaces";
 import ProEmpresaApprovals from "./pages/pro-empresa/approvals";
 import ProEmpresaIntegrations from "./pages/pro-empresa/integrations";
 import ProEmpresaCompany from "./pages/pro-empresa/company";
+import ProEmpresaActivity from "./pages/pro-empresa/activity";
 
 function MainRoutes(){
   const { user, loading } = useAuth();
@@ -242,6 +243,14 @@ function MainRoutes(){
         element={
           <PrivateRoute>
             <ProEmpresaCompany />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/pro-empresa/activity"
+        element={
+          <PrivateRoute>
+            <ProEmpresaActivity />
           </PrivateRoute>
         }
       />

@@ -1,6 +1,7 @@
 from .user import User
 from .company import Company
 from .company_invite import CompanyInvite
+from .audit_log import AuditLog
 from .project import Project
 from .generated_content import (
     GeneratedContent,
@@ -23,6 +24,7 @@ __all__ = [
     "User",
     "Company",
     "CompanyInvite",
+    "AuditLog",
     "Plan",
     "Feature",
     "PlanFeature",
