@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { apiFetch } from "../../../services/apiService";
 import Layout from "../../../components/layout/Layout";
 import { useFeatureRestriction } from "../../../hooks/useFeatureRestriction";
 import { useAuth } from "../../../context/AuthContext";
 import { useLanguage } from "../../../context/LanguageContext";
-import { apiFetch } from "../../../services/apiService";
-import { generatedContentRoutes } from "../../../services/apiRoutes";
+import { generatedContentRoutes, integrationRoutes } from "../../../services/apiRoutes";
 import { toast } from "react-toastify";
 
 export default function ProEmpresaApprovals() {
@@ -233,7 +233,12 @@ export default function ProEmpresaApprovals() {
                           <ItemRow
                             key={c.id}
                             item={c}
-                            right={<span className="text-xs text-green-700">{t("pro_empresa.status.approved")}</span>}
+                            right={
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-green-700">{t("pro_empresa.status.approved")}</span>
+                                <PublishWordPressButton contentId={c.id} />
+                              </div>
+                            }
                           />
                         ))}
                       </div>
@@ -296,17 +301,22 @@ export default function ProEmpresaApprovals() {
                           item={c}
                           right={
                             inboxTab === "finalized" ? (
-                              <span
-                                className={`text-xs font-medium ${
-                                  c.status === "approved"
-                                    ? "text-green-700"
-                                    : "text-red-700"
-                                }`}
-                              >
-                                {c.status === "approved"
-                                  ? t("pro_empresa.status.approved")
-                                  : t("pro_empresa.status.rejected")}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`text-xs font-medium ${
+                                    c.status === "approved"
+                                      ? "text-green-700"
+                                      : "text-red-700"
+                                  }`}
+                                >
+                                  {c.status === "approved"
+                                    ? t("pro_empresa.status.approved")
+                                    : t("pro_empresa.status.rejected")}
+                                </span>
+                                {c.status === "approved" && (
+                                  <PublishWordPressButton contentId={c.id} />
+                                )}
+                              </div>
                             ) : (
                               <div className="flex gap-2">
                                 <button
@@ -354,5 +364,82 @@ function ItemRow({ item, right }) {
       </div>
       <div className="ml-3 flex-shrink-0">{right}</div>
     </div>
+  );
+}
+
+function PublishWordPressButton({ contentId }) {
+  const { t } = useLanguage();
+  const [publishing, setPublishing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [publishStatus, setPublishStatus] = useState("draft");
+
+  async function handlePublish() {
+    setPublishing(true);
+    try {
+      const data = await apiFetch(integrationRoutes.wordpress.publish, {
+        method: "POST",
+        body: JSON.stringify({
+          content_id: contentId,
+          publish_status: publishStatus,
+        }),
+      });
+      toast.success(t("pro_empresa.integrations.toast.published"));
+      setShowModal(false);
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.integrations.toast.publish_error"));
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => setShowModal(true)}
+        className="text-xs px-2 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+        title={t("pro_empresa.integrations.publish_wordpress")}
+      >
+        {t("pro_empresa.integrations.publish_wordpress")}
+      </button>
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-brightness-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {t("pro_empresa.integrations.publish_modal.title")}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("pro_empresa.integrations.publish_modal.status")}
+                </label>
+                <select
+                  value={publishStatus}
+                  onChange={(e) => setPublishStatus(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="draft">{t("pro_empresa.integrations.publish_modal.draft")}</option>
+                  <option value="publish">{t("pro_empresa.integrations.publish_modal.publish")}</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  onClick={handlePublish}
+                  disabled={publishing}
+                  className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {publishing ? t("common.publishing") : t("common.publish")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

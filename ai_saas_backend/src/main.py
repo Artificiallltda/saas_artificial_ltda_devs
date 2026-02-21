@@ -11,7 +11,8 @@ from utils.schema_upgrades import run_schema_upgrades
 from routes import (
     user_api, admin_api, auth_api, email_api, profile_api, project_api,
     generated_content_api, notification_api, plan_api, ai_generation_api,
-    ai_generation_video_api, chat_api, download_api, workspace_api, company_api
+    ai_generation_video_api, chat_api, download_api, workspace_api, company_api,
+    integration_api
 )
 from models import User, Plan
 import os, uuid
@@ -203,6 +204,7 @@ app.register_blueprint(chat_api, url_prefix="/api/chats")
 app.register_blueprint(download_api, url_prefix="/api/downloads")
 app.register_blueprint(workspace_api, url_prefix="/api/workspaces")
 app.register_blueprint(company_api, url_prefix="/api/company")
+app.register_blueprint(integration_api, url_prefix="/api/integrations")
 
 print("🚀 Ambiente:", "DESENVOLVIMENTO" if ENV == "dev" else "PRODUÇÃO")
 

@@ -127,3 +127,13 @@ export const companyRoutes = {
   activity: (qs = "") => `${API_BASE}/company/activity${qs ? `?${qs}` : ""}`,
   activityFilters: `${API_BASE}/company/activity/filters`,
 };
+
+export const integrationRoutes = {
+  list: `${API_BASE}/integrations`,
+  wordpress: {
+    get: `${API_BASE}/integrations/wordpress`,
+    save: `${API_BASE}/integrations/wordpress`,
+    test: `${API_BASE}/integrations/wordpress/test`,
+    publish: `${API_BASE}/integrations/wordpress/publish`,
+  },
+};

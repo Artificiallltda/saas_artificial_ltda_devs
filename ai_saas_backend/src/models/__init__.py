@@ -19,6 +19,7 @@ from .plan import (
 from .chat import Chat, ChatMessage, ChatAttachment
 from .workspace import Workspace
 from .workspace_member import WorkspaceMember
+from .integration import Integration
 
 __all__ = [
     "User",
@@ -40,4 +41,5 @@ __all__ = [
     "ChatAttachment",
     "Workspace",
     "WorkspaceMember",
+    "Integration",
 ]

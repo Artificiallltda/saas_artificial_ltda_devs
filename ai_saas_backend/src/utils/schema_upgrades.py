@@ -126,6 +126,27 @@ def run_schema_upgrades():
             db.session.execute(text("CREATE INDEX idx_audit_logs_event_type ON audit_logs(event_type)"))
             db.session.execute(text("CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at)"))
 
+        # integrations (integrações WordPress, webhook, etc.)
+        if "integrations" not in tables:
+            dt = _type_datetime()
+            db.session.execute(text(f"""
+                CREATE TABLE integrations (
+                    id VARCHAR PRIMARY KEY,
+                    company_id VARCHAR NOT NULL,
+                    integration_type VARCHAR(50) NOT NULL,
+                    config_encrypted TEXT NOT NULL,
+                    is_active BOOLEAN NOT NULL DEFAULT 1,
+                    last_tested_at {dt} NULL,
+                    last_tested_status VARCHAR(20) NULL,
+                    created_at {dt} NULL,
+                    updated_at {dt} NULL,
+                    FOREIGN KEY (company_id) REFERENCES companies (id)
+                )
+            """))
+            db.session.execute(text("CREATE UNIQUE INDEX uq_company_integration_type ON integrations(company_id, integration_type)"))
+            db.session.execute(text("CREATE INDEX idx_integrations_company_id ON integrations(company_id)"))
+            db.session.execute(text("CREATE INDEX idx_integrations_type ON integrations(integration_type)"))
+
         db.session.commit()
     except Exception:
         db.session.rollback()
