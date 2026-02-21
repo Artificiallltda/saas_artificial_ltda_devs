@@ -24,7 +24,7 @@ def register():
     def is_valid_email(email):
         return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
-    required_fields = ["full_name", "username", "email", "password"]
+    required_fields = ["full_name", "username", "email", "password", "whatsapp_number"]
     for field in required_fields:
         if not data.get(field):
             return jsonify({"error": f"Campo obrigatório: {field}"}), 400
@@ -50,6 +50,9 @@ def register():
         return jsonify({"error": "Senha fraca"}), 400
 
     perfil_filename = None
+    whatsapp_number = (data.get("whatsapp_number") or "").strip()
+    if not whatsapp_number:
+        return jsonify({"error": "Número de WhatsApp é obrigatório"}), 400
     if file:
         filename = f"{uuid.uuid4()}_{file.filename}"
         base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -71,6 +74,7 @@ def register():
         email=email,
         password=hashed_password,
         perfil_photo=perfil_filename,
+        whatsapp_number=whatsapp_number,
         plan=free_plan,
         role="user",
         is_active=True
@@ -124,6 +128,7 @@ def login():
                 "username": user.username,
                 "email": user.email,
                 "role": user.role,
+                "whatsapp_number": user.whatsapp_number,
                 "plan": {
                     "id": user.plan.id if user.plan else None,
                     "name": user.plan.name if user.plan else None,

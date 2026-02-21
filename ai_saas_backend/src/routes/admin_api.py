@@ -23,6 +23,7 @@ def list_all_users():
             "email": user.email,
             "role": user.role,
             "created_at": user.created_at.isoformat() if user.created_at else None,
+            "whatsapp_number": user.whatsapp_number,
             "plan": {
                 "id": user.plan.id,
                 "name": user.plan.name
@@ -44,7 +45,7 @@ def create_user():
     if not is_valid_email(data.get("email", "")):
         return jsonify({"error": "Email inválido"}), 400
 
-    required_fields = ["full_name", "username", "email", "password", "plan_id"]
+    required_fields = ["full_name", "username", "email", "password", "plan_id", "whatsapp_number"]
     for field in required_fields:
         if not data.get(field):
             return jsonify({"error": f"Campo obrigatório: {field}"}), 400
@@ -81,6 +82,7 @@ def create_user():
         email=data["email"],
         password=hashed_password,
         perfil_photo=perfil_path,
+        whatsapp_number=data.get("whatsapp_number"),
         #payment_method=data.get("payment_method"),
         plan=plan,
         role=data.get("role", "user")
