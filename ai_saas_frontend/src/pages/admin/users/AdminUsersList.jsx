@@ -69,6 +69,7 @@ export default function AdminUsersList() {
         full_name: u.full_name ?? t("common.placeholder"),
         username: u.username ?? t("common.placeholder"),
         email: u.email ?? t("common.placeholder"),
+        whatsapp_number: u.whatsapp_number ?? t("common.placeholder"),
         plan: u.plan ? { ...u.plan, id: String(u.plan.id) } : null,
         is_active: u.is_active ?? false,
         role: u.role ?? "user",
@@ -232,7 +233,12 @@ export default function AdminUsersList() {
                     </div>
                   </div>
                   <div className="text-gray-600 text-sm pt-1 border-t border-gray-100">
-                    {user.email ?? t("common.placeholder")}
+                    <div className="flex flex-col gap-1">
+                      <span>{user.email ?? t("common.placeholder")}</span>
+                      <span className="text-gray-500 text-xs">
+                        {t("admin.users.fields.whatsapp")}: {user.whatsapp_number ?? t("common.placeholder")}
+                      </span>
+                    </div>
                   </div>
                 </div>
 

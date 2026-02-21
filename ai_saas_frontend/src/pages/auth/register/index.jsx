@@ -16,6 +16,7 @@ function Register() {
     email: "",
     password: "",
     confirmPassword: "",
+    whatsapp_number: "",
   });
 
   const [photoFile, setPhotoFile] = useState(null); // imagem
@@ -57,6 +58,7 @@ function Register() {
     form.email &&
     form.password &&
     form.confirmPassword &&
+    form.whatsapp_number &&
     !emailError &&
     !passwordError &&
     form.password === form.confirmPassword;
@@ -160,6 +162,21 @@ function Register() {
               />
             </div>
             {emailError && <p className="text-sm text-red-500 mt-1">{emailError}</p>}
+          </div>
+
+          <div className="w-full my-4">
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="tel"
+                name="whatsapp_number"
+                placeholder={t("auth.register.whatsapp.placeholder")}
+                value={form.whatsapp_number}
+                onChange={handleChange}
+                className="w-full pl-10 py-2 rounded-lg border text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
+                required
+              />
+            </div>
           </div>
 
           <div className="w-full my-4">

@@ -13,6 +13,7 @@ from routes import (
     ai_generation_video_api, chat_api, download_api
 )
 from models import User, Plan
+from sqlalchemy import inspect, text
 import os, uuid
 
 load_dotenv()
@@ -154,6 +155,13 @@ def create_default_admin():
     print(f"👑 Admin criado: {admin_email}")
 
 with app.app_context():
+    inspector = inspect(db.engine)
+    existing_cols = {col.get("name") for col in inspector.get_columns("users")}
+    if "whatsapp_number" not in existing_cols:
+        with db.engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN whatsapp_number VARCHAR(30)"))
+            conn.commit()
+
     db.create_all()
     create_default_plans()
     create_default_admin()

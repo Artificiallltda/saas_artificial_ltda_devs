@@ -19,6 +19,7 @@ export default function AdminCreateUser() {
     password: "",
     confirmPassword: "",
     plan_id: "",
+    whatsapp_number: "",
   });
   const [plans, setPlans] = useState([]);
   const [emailError, setEmailError] = useState("");
@@ -84,6 +85,7 @@ export default function AdminCreateUser() {
     form.password &&
     form.confirmPassword &&
     form.plan_id &&
+    form.whatsapp_number &&
     !emailError &&
     !passwordError &&
     form.password === form.confirmPassword;
@@ -104,6 +106,7 @@ export default function AdminCreateUser() {
       formData.append("password", form.password);
       formData.append("role", "user");
       formData.append("plan_id", form.plan_id);
+      formData.append("whatsapp_number", form.whatsapp_number.trim());
 
       await apiFetch(adminRoutes.createUser(), {
         method: "POST",
@@ -189,6 +192,22 @@ export default function AdminCreateUser() {
               />
             </div>
             <p className="h-5 ml-10 text-xs text-red-500 mt-1">{emailError || "\u00A0"}</p>
+          </div>
+
+          {/* WhatsApp */}
+          <div className="relative mb-4">
+            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+              <User className="text-gray-400 w-4 h-4" />
+            </div>
+            <input
+              type="tel"
+              name="whatsapp_number"
+              placeholder={t("admin.create_user.whatsapp.placeholder")}
+              value={form.whatsapp_number}
+              onChange={handleChange}
+              className="w-full h-11 pl-10 pr-10 rounded-lg border border-gray-300 text-black text-sm shadow-sm focus:outline-none focus:shadow-md"
+              required
+            />
           </div>
 
           {/* Senha */}

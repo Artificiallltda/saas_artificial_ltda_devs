@@ -11,6 +11,7 @@ class User(db.Model):
     password = db.Column(db.String, nullable=False)
     role = db.Column(db.String, default="user")
     #payment_method = db.Column(db.String, nullable=True)
+    whatsapp_number = db.Column(db.String(30), nullable=True)
     perfil_photo = db.Column(db.String, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
