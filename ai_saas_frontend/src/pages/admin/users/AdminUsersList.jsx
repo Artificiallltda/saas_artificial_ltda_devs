@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Layout from "../../../components/layout/Layout";
 import { Trash, Edit, Search, ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
@@ -14,10 +14,11 @@ import { useLanguage } from "../../../context/LanguageContext";
 
 export default function AdminUsersList() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [planFilter, setPlanFilter] = useState("all");
   const [modalUser, setModalUser] = useState(null);
 
   const { selectionMode, selectedItems, toggleSelectionMode, toggleSelect, clearSelection } = useSelectionMode();
@@ -25,14 +26,35 @@ export default function AdminUsersList() {
 
   // Função para mapear nomes de planos para chaves de tradução
   const getPlanTranslationKey = (planName) => {
+    if (!planName) return planName;
+
+    const normalizedName = planName
+      .toString()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+
     const planMappings = {
-      "Grátis": "subscription.plan.free",
-      "Básico": "subscription.plan.basic",
-      "Freepik/Envato": "subscription.plan.bot",
-      "Free": "subscription.plan.free",
-      "Basic": "subscription.plan.basic"
+      gratuito: "subscription.plan.free",
+      gratis: "subscription.plan.free",
+      free: "subscription.plan.free",
+      basico: "subscription.plan.basic",
+      basic: "subscription.plan.basic",
+      "freepik/envato": "subscription.plan.bot",
+      bot: "subscription.plan.bot",
     };
-    return planMappings[planName] || planName;
+
+    return planMappings[normalizedName] || planName;
+  };
+
+  const formatDate = (value) => {
+    if (!value) return t("common.placeholder");
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return t("common.placeholder");
+
+    const locale = language === "en-US" ? "en-US" : "pt-BR";
+    return parsed.toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "numeric" });
   };
 
   useEffect(() => {
@@ -47,9 +69,10 @@ export default function AdminUsersList() {
         full_name: u.full_name ?? t("common.placeholder"),
         username: u.username ?? t("common.placeholder"),
         email: u.email ?? t("common.placeholder"),
-        plan: u.plan ?? null,
+        plan: u.plan ? { ...u.plan, id: String(u.plan.id) } : null,
         is_active: u.is_active ?? false,
         role: u.role ?? "user",
+        created_at: u.created_at ?? u.createdAt ?? null,
       }));
       setUsers(safeData);
     } catch {
@@ -83,10 +106,27 @@ export default function AdminUsersList() {
     }
   };
 
-  const filteredUsers = users.filter((u) =>
-    (u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
-    (u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
-  );
+  const planOptions = useMemo(() => {
+    const uniquePlans = new Map();
+    users.forEach((u) => {
+      const planId = u.plan?.id ? String(u.plan.id) : null;
+      if (planId && !uniquePlans.has(planId)) {
+        uniquePlans.set(planId, u.plan?.name ?? planId);
+      }
+    });
+    return Array.from(uniquePlans.entries()).map(([value, label]) => ({ value, label: t(getPlanTranslationKey(label)) }));
+  }, [users, t]);
+
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch =
+      (u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+      (u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+      (u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
+
+    const matchesPlan = planFilter === "all" || (u.plan?.id && String(u.plan.id) === planFilter);
+
+    return matchesSearch && matchesPlan;
+  });
 
   return (
     <Layout>
@@ -104,22 +144,35 @@ export default function AdminUsersList() {
         </div>
 
         <h1 className="text-xl font-semibold mb-4">{t("admin.users.title")}</h1>
-        <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-        <div className="relative max-w-md w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="search"
-            placeholder={t("admin.users.search.placeholder")}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 py-2 rounded-lg border bg-white text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
-            autoComplete="off"
-          />
+        <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
+          <div className="relative max-w-md w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="search"
+              placeholder={t("admin.users.search.placeholder")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 py-2 rounded-lg border bg-white text-black border-gray-300 text-sm shadow-sm focus:outline-none focus:shadow-md"
+              autoComplete="off"
+            />
+          </div>
+          <div className="flex gap-3 items-center w-full sm:w-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <label className="text-sm text-gray-600 whitespace-nowrap">{t("admin.users.filters.plan.label")}</label>
+              <select
+                value={planFilter}
+                onChange={(e) => setPlanFilter(e.target.value)}
+                className="min-w-[160px] rounded-lg border bg-white text-black border-gray-300 text-sm py-2 px-3 shadow-sm focus:outline-none focus:shadow-md"
+              >
+                <option value="all">{t("admin.users.filters.plan.all")}</option>
+                {planOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+            <SelectionToggleButton selectionMode={selectionMode} onToggle={toggleSelectionMode} />
+          </div>
         </div>
-        <div className="flex gap-3 items-center">
-          <SelectionToggleButton selectionMode={selectionMode} onToggle={toggleSelectionMode} />
-        </div>
-      </div>
 
       {loading ? (
         <p className="mt-6 text-sm text-gray-500">{t("admin.users.loading")}</p>
@@ -172,6 +225,10 @@ export default function AdminUsersList() {
                       }`}>
                         {user.is_active ? t("admin.users.status.active") : t("admin.users.status.inactive")}
                       </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 text-sm">{t("admin.users.fields.created_at")}:</span>
+                      <span className="text-gray-700 text-sm font-medium">{formatDate(user.created_at)}</span>
                     </div>
                   </div>
                   <div className="text-gray-600 text-sm pt-1 border-t border-gray-100">
