@@ -22,6 +22,7 @@ def list_all_users():
             "username": user.username,
             "email": user.email,
             "role": user.role,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
             "plan": {
                 "id": user.plan.id,
                 "name": user.plan.name
