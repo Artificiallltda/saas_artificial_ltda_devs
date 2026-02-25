@@ -741,6 +741,13 @@
   "pro_empresa.activity.actions.workspace.member.removed": "Membro removido do workspace",
   "pro_empresa.activity.actions.approval.content.approved": "Conteúdo aprovado",
   "pro_empresa.activity.actions.approval.content.rejected": "Conteúdo rejeitado",
+  "pro_empresa.activity.quick.all": "Todos",
+  "pro_empresa.activity.quick.invites": "Convites",
+  "pro_empresa.activity.quick.members": "Membros",
+  "pro_empresa.activity.quick.roles": "Papéis",
+  "pro_empresa.activity.quick.wordpress": "WordPress",
+  "pro_empresa.activity.quick.approvals": "Aprovações",
+  "pro_empresa.activity.export_csv": "Exportar CSV",
 
   "pro_empresa.status.draft": "Rascunho",
   "pro_empresa.status.in_review": "Em revisão",

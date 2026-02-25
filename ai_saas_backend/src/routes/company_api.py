@@ -419,6 +419,7 @@ def list_company_activity():
     workspace_id = (request.args.get("workspace_id") or "").strip()
     start_date = (request.args.get("start_date") or "").strip()
     end_date = (request.args.get("end_date") or "").strip()
+    event_group = (request.args.get("event_group") or "").strip()
 
     q = AuditLog.query.filter_by(company_id=user.company_id)
     if actor_id:
@@ -427,6 +428,34 @@ def list_company_activity():
         q = q.filter(AuditLog.event_type == event_type)
     if workspace_id:
         q = q.filter(AuditLog.workspace_id == workspace_id)
+
+    # Filtros rápidos por "grupo" de evento (invites, members, roles, wordpress, approvals)
+    if event_group:
+        if event_group == "invites":
+            q = q.filter(AuditLog.event_type.in_([
+                "company.invite.created",
+                "company.invite.resent",
+                "company.invite.cancelled",
+                "company.invite.accepted",
+            ]))
+        elif event_group == "members":
+            q = q.filter(AuditLog.event_type.in_([
+                "company.member.added",
+                "workspace.member.added",
+                "workspace.member.removed",
+            ]))
+        elif event_group == "roles":
+            q = q.filter(AuditLog.event_type.in_([
+                "company.role.changed",
+                "workspace.member.role.changed",
+            ]))
+        elif event_group == "wordpress":
+            q = q.filter(AuditLog.event_type.like("integration.wordpress.%"))
+        elif event_group == "approvals":
+            q = q.filter(AuditLog.event_type.in_([
+                "approval.content.approved",
+                "approval.content.rejected",
+            ]))
 
     try:
         if start_date:

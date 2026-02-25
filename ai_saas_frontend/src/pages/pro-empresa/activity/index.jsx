@@ -6,15 +6,16 @@ import { apiFetch } from "../../../services/apiService";
 import { companyRoutes } from "../../../services/apiRoutes";
 import { toast } from "react-toastify";
 
-function buildQuery(filters, page = 1) {
+function buildQuery(filters, page = 1, pageSize = 30) {
   const params = new URLSearchParams();
   params.set("page", String(page));
-  params.set("page_size", "30");
+  params.set("page_size", String(pageSize));
   if (filters.start_date) params.set("start_date", filters.start_date);
   if (filters.end_date) params.set("end_date", filters.end_date);
   if (filters.actor_id) params.set("actor_id", filters.actor_id);
   if (filters.event_type) params.set("event_type", filters.event_type);
   if (filters.workspace_id) params.set("workspace_id", filters.workspace_id);
+  if (filters.event_group) params.set("event_group", filters.event_group);
   return params.toString();
 }
 
@@ -32,7 +33,9 @@ export default function ProEmpresaActivity() {
     actor_id: "",
     event_type: "",
     workspace_id: "",
+    event_group: "",
   });
+  const [quickFilter, setQuickFilter] = useState("all");
 
   useEffect(() => {
     checkFeatureAccess("pro_empresa");
@@ -83,6 +86,50 @@ export default function ProEmpresaActivity() {
   const canPrev = (pagination?.page || 1) > 1;
   const canNext = (pagination?.page || 1) < (pagination?.total_pages || 1);
 
+  async function handleExportCsv() {
+    try {
+      const qs = buildQuery(filters, 1, 500);
+      const data = await apiFetch(companyRoutes.activity(qs));
+      const items = Array.isArray(data?.items) ? data.items : [];
+
+      if (!items.length) {
+        toast.info(t("pro_empresa.activity.empty"));
+        return;
+      }
+
+      const header = ["created_at", "actor", "event_type", "workspace", "message"];
+      const lines = [header.join(",")];
+
+      items.forEach((r) => {
+        const createdAt = r?.created_at || "";
+        const actor =
+          (r?.actor_user?.full_name || r?.actor_user?.email || "").replace(/"/g, '""');
+        const workspace = (r?.workspace?.name || "").replace(/"/g, '""');
+        const message = (r?.message || "").replace(/"/g, '""');
+        const row = [
+          `"${createdAt}"`,
+          `"${actor}"`,
+          `"${r?.event_type || ""}"`,
+          `"${workspace}"`,
+          `"${message}"`,
+        ].join(",");
+        lines.push(row);
+      });
+
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "activity_export.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(e?.message || t("pro_empresa.activity.toast.load_error"));
+    }
+  }
+
   const mappedRows = useMemo(() => {
     return rows.map((r) => {
       const actor = r?.actor_user?.full_name || r?.actor_user?.email || t("common.not_informed");
@@ -105,6 +152,40 @@ export default function ProEmpresaActivity() {
           <p className="mt-1 text-sm text-gray-600">{t("pro_empresa.activity.subtitle")}</p>
 
           <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+            <div className="mb-3 flex flex-wrap gap-2">
+              {[
+                { id: "all", group: "", label: t("pro_empresa.activity.quick.all") },
+                { id: "invites", group: "invites", label: t("pro_empresa.activity.quick.invites") },
+                { id: "members", group: "members", label: t("pro_empresa.activity.quick.members") },
+                { id: "roles", group: "roles", label: t("pro_empresa.activity.quick.roles") },
+                { id: "wordpress", group: "wordpress", label: t("pro_empresa.activity.quick.wordpress") },
+                { id: "approvals", group: "approvals", label: t("pro_empresa.activity.quick.approvals") },
+              ].map((qf) => {
+                const active = quickFilter === qf.id;
+                return (
+                  <button
+                    key={qf.id}
+                    onClick={() => {
+                      setQuickFilter(qf.id);
+                      const nextFilters = {
+                        ...filters,
+                        event_group: qf.group,
+                        event_type: qf.group ? "" : filters.event_type,
+                      };
+                      setFilters(nextFilters);
+                      loadActivity(1, nextFilters);
+                    }}
+                    className={`h-8 px-3 rounded-full text-xs border transition ${
+                      active
+                        ? "border-blue-300 bg-blue-50 text-blue-700"
+                        : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {qf.label}
+                  </button>
+                );
+              })}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
               <input
                 type="date"
@@ -170,8 +251,10 @@ export default function ProEmpresaActivity() {
                     actor_id: "",
                     event_type: "",
                     workspace_id: "",
+                    event_group: "",
                   };
                   setFilters(clear);
+                  setQuickFilter("all");
                   loadActivity(1, clear);
                 }}
                 className="h-9 px-3 rounded-lg border border-gray-200 bg-white text-sm hover:bg-gray-50"
@@ -222,6 +305,12 @@ export default function ProEmpresaActivity() {
                 {t("pro_empresa.activity.pagination.total")} {pagination?.total || 0}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportCsv}
+                  className="h-8 px-3 rounded-md border border-gray-200 bg-white text-xs hover:bg-gray-50"
+                >
+                  {t("pro_empresa.activity.export_csv")}
+                </button>
                 <button
                   disabled={!canPrev}
                   onClick={() => loadActivity((pagination?.page || 1) - 1)}
