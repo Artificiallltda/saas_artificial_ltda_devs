@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from extensions import db, jwt_required, get_jwt_identity
+from extensions import db, jwt_required, get_jwt_identity, redis_client
 from models import AuditLog, Company, CompanyInvite, User, Workspace
 from utils.feature_flags import has_plan_feature
 from utils.audit_logs import log_audit_event
@@ -15,6 +15,8 @@ ALLOWED_COMPANY_ADMIN_ROLES = {"owner", "admin"}
 ALLOWED_COMPANY_ROLES = {"owner", "admin", "member"}
 ALLOWED_INVITE_STATUSES = {"pending", "accepted", "cancelled", "expired"}
 INVITE_EXPIRATION_DAYS = 7
+INVITE_COMPANY_HOURLY_LIMIT = 20
+INVITE_RESEND_COOLDOWN_MINUTES = 15
 
 
 def _get_user():
@@ -76,6 +78,76 @@ def _expire_pending_invites(company_id=None):
     return bool(items)
 
 
+def _check_invite_rate_limit(company_id):
+    """
+    Limite simples de convites por empresa em janela de 1 hora.
+    Usa Redis, mas falha em modo 'fail-open' se o Redis não estiver disponível.
+    """
+    if not company_id:
+        return None
+
+    now = datetime.utcnow()
+    bucket = now.strftime("%Y%m%d%H")
+    key = f"company_invites:{company_id}:{bucket}"
+
+    try:
+        current_raw = redis_client.get(key)
+        current = int(current_raw) if current_raw is not None else 0
+
+        if current >= INVITE_COMPANY_HOURLY_LIMIT:
+            # 429 Too Many Requests
+            return (
+                jsonify(
+                    {
+                        "error": "Limite de convites atingido",
+                        "message": "Você atingiu o limite de convites por hora para esta empresa. Tente novamente em alguns minutos.",
+                        "code": "invite_rate_limited",
+                    }
+                ),
+                429,
+            )
+
+        pipe = redis_client.pipeline()
+        pipe.incr(key, 1)
+        if current == 0:
+            pipe.expire(key, 3600)
+        pipe.execute()
+    except Exception:
+        # Se Redis falhar, não bloqueamos o fluxo de convites.
+        return None
+
+    return None
+
+
+def _check_resend_cooldown(invite):
+    """
+    Impede reenvio muito frequente do mesmo convite.
+    Usa o campo updated_at do próprio invite como referência.
+    """
+    if not invite or not invite.updated_at:
+        return None
+
+    now = datetime.utcnow()
+    min_interval = timedelta(minutes=INVITE_RESEND_COOLDOWN_MINUTES)
+    delta = now - invite.updated_at
+    if delta < min_interval:
+        remaining_seconds = int((min_interval - delta).total_seconds())
+        minutes = max(1, remaining_seconds // 60)
+        return (
+            jsonify(
+                {
+                    "error": "Reenvio muito frequente",
+                    "message": f"Você reenviou este convite há pouco tempo. Aguarde cerca de {minutes} minuto(s) para tentar novamente.",
+                    "code": "invite_resend_cooldown",
+                    "retry_after_seconds": remaining_seconds,
+                }
+            ),
+            429,
+        )
+
+    return None
+
+
 @company_api.route("/me", methods=["GET"])
 @jwt_required()
 def get_my_company():
@@ -133,7 +205,12 @@ def list_company_users():
 
     # Apenas admins da company (ou admin global) podem listar todos
     if (user.company_role or "").lower() not in ALLOWED_COMPANY_ADMIN_ROLES and (user.role or "").lower() != "admin":
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner/admin da empresa (ou admin global) pode listar usuários da empresa.",
+            }
+        ), 403
 
     items = User.query.filter_by(company_id=user.company_id).order_by(User.created_at.asc()).all()
     return jsonify([
@@ -167,7 +244,12 @@ def add_company_user_by_email():
         return jsonify({"error": "Usuário não possui company_id"}), 400
 
     if not _is_company_manager(user):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner/admin da empresa (ou admin global) pode adicionar usuários na empresa.",
+            }
+        ), 403
 
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
@@ -199,6 +281,11 @@ def add_company_user_by_email():
                 "action": "invite_exists",
                 "invite": existing_pending.to_dict(),
             }), 200
+
+        # Rate limiting por empresa para novos convites
+        limit_err = _check_invite_rate_limit(user.company_id)
+        if limit_err:
+            return limit_err
 
         invite = CompanyInvite(
             company_id=user.company_id,
@@ -276,7 +363,12 @@ def list_company_invites():
         return jsonify({"error": "Usuário não possui company_id"}), 400
 
     if not _is_company_manager(user):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner/admin da empresa (ou admin global) pode gerenciar convites da empresa.",
+            }
+        ), 403
 
     status = (request.args.get("status") or "pending").strip().lower()
     if status not in ALLOWED_INVITE_STATUSES and status != "all":
@@ -313,7 +405,12 @@ def list_company_activity():
     if not user.company_id:
         return jsonify({"error": "Usuário não possui company_id"}), 400
     if not _is_company_manager(user):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner/admin da empresa (ou admin global) pode visualizar a atividade da empresa.",
+            }
+        ), 403
 
     page = max(int(request.args.get("page", 1) or 1), 1)
     page_size = max(min(int(request.args.get("page_size", 30) or 30), 100), 1)
@@ -398,7 +495,12 @@ def list_company_activity_filters():
     if not user.company_id:
         return jsonify({"error": "Usuário não possui company_id"}), 400
     if not _is_company_manager(user):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner/admin da empresa (ou admin global) pode acessar os filtros de atividade.",
+            }
+        ), 403
 
     actions = (
         db.session.query(AuditLog.event_type)
@@ -431,7 +533,12 @@ def resend_company_invite(invite_id):
         return jsonify({"error": "Usuário não possui company_id"}), 400
 
     if not _is_company_manager(user):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner/admin da empresa (ou admin global) pode reenviar convites.",
+            }
+        ), 403
 
     invite = CompanyInvite.query.get(invite_id)
     if not invite or invite.company_id != user.company_id:
@@ -446,6 +553,14 @@ def resend_company_invite(invite_id):
 
     if invite.status != "pending":
         return jsonify({"error": "Apenas convites pendentes podem ser reenviados"}), 400
+
+    cooldown_err = _check_resend_cooldown(invite)
+    if cooldown_err:
+        return cooldown_err
+
+    limit_err = _check_invite_rate_limit(user.company_id)
+    if limit_err:
+        return limit_err
 
     sent = _send_invite_email(user.company_id, user, invite.invited_email)
     invite.resend_count = (invite.resend_count or 0) + 1
@@ -483,7 +598,12 @@ def cancel_company_invite(invite_id):
         return jsonify({"error": "Usuário não possui company_id"}), 400
 
     if not _is_company_manager(user):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner/admin da empresa (ou admin global) pode cancelar convites.",
+            }
+        ), 403
 
     invite = CompanyInvite.query.get(invite_id)
     if not invite or invite.company_id != user.company_id:
@@ -537,7 +657,12 @@ def update_company_user_role(user_id):
     is_global_admin = (user.role or "").lower() == "admin"
     is_company_owner = (user.company_role or "").lower() == "owner"
     if not (is_company_owner or is_global_admin):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner da empresa (ou admin global) pode alterar papéis de usuários da empresa.",
+            }
+        ), 403
 
     target = User.query.get(user_id)
     if not target or target.company_id != user.company_id:

@@ -132,7 +132,12 @@ def update_workspace(workspace_id):
     if err:
         return err
     if ws.user_id != user.id:
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner do workspace pode atualizar este workspace.",
+            }
+        ), 403
 
     data = request.get_json(silent=True) or {}
     if "name" in data:
@@ -161,7 +166,12 @@ def delete_workspace(workspace_id):
     if err:
         return err
     if ws.user_id != user.id:
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner do workspace pode remover este workspace.",
+            }
+        ), 403
 
     # desvincula projetos
     for p in Project.query.filter_by(workspace_id=ws.id).all():
@@ -183,7 +193,12 @@ def list_workspace_projects(workspace_id):
         return err
 
     if ws.user_id != user.id and not _is_workspace_member(user.id, ws.id) and not _is_company_manager_for_workspace(user, ws):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner, membros do workspace ou admin/owner da empresa podem ver os projetos deste workspace.",
+            }
+        ), 403
 
     projects = Project.query.filter_by(workspace_id=ws.id).order_by(Project.updated_at.desc()).all()
     return jsonify([p.to_dict() for p in projects]), 200
@@ -207,7 +222,12 @@ def list_workspace_members(workspace_id):
 
     # qualquer membro (ou owner) pode ver a lista
     if ws.user_id != user.id and not _is_workspace_member(user.id, ws.id) and not _is_company_manager_for_workspace(user, ws):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner, membros do workspace ou admin/owner da empresa podem ver os membros deste workspace.",
+            }
+        ), 403
 
     owner = User.query.get(ws.user_id)
     members = WorkspaceMember.query.filter_by(workspace_id=ws.id, status="active").order_by(WorkspaceMember.created_at.asc()).all()
@@ -241,7 +261,12 @@ def add_workspace_member(workspace_id):
 
     # owner do workspace OU admin/owner da company do workspace
     if not _is_company_manager_for_workspace(user, ws):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner do workspace ou admin/owner da empresa do owner pode gerenciar membros deste workspace.",
+            }
+        ), 403
 
     owner = User.query.get(ws.user_id)
     if not owner:
@@ -312,7 +337,12 @@ def update_workspace_member_role(workspace_id, member_user_id):
         return err
 
     if not _is_company_manager_for_workspace(user, ws):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner do workspace ou admin/owner da empresa do owner pode gerenciar membros deste workspace.",
+            }
+        ), 403
 
     data = request.get_json(silent=True) or {}
     role = (data.get("role") or "").strip().lower()
@@ -357,7 +387,12 @@ def remove_workspace_member(workspace_id, member_user_id):
         return err
 
     if not _is_company_manager_for_workspace(user, ws):
-        return jsonify({"error": "Acesso negado"}), 403
+        return jsonify(
+            {
+                "error": "Permissão insuficiente",
+                "message": "Apenas o owner do workspace ou admin/owner da empresa do owner pode gerenciar membros deste workspace.",
+            }
+        ), 403
 
     m = WorkspaceMember.query.filter_by(workspace_id=ws.id, member_user_id=member_user_id).first()
     if not m:
