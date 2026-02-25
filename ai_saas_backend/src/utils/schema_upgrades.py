@@ -91,10 +91,6 @@ def run_schema_upgrades():
                     updated_at {dt} NULL
                 )
             """))
-            db.session.execute(text(
-                "CREATE UNIQUE INDEX uq_company_invites_company_email_status "
-                "ON company_invites(company_id, invited_email, status)"
-            ))
             db.session.execute(text("CREATE INDEX idx_company_invites_company_id ON company_invites(company_id)"))
             db.session.execute(text("CREATE INDEX idx_company_invites_invited_email ON company_invites(invited_email)"))
             db.session.execute(text("CREATE INDEX idx_company_invites_invited_by ON company_invites(invited_by)"))
@@ -102,6 +98,17 @@ def run_schema_upgrades():
         else:
             _add_column_if_missing("company_invites", "resend_count", "INTEGER", "0")
             _add_column_if_missing("company_invites", "expires_at", _type_datetime(), None)
+            # Remove restrição única que impedia vários cancelados por mesmo email (corrige 500 ao cancelar convite)
+            dialect = _dialect_name()
+            try:
+                if dialect in ("postgresql", "postgres"):
+                    db.session.execute(text(
+                        "ALTER TABLE company_invites DROP CONSTRAINT IF EXISTS uq_company_invites_company_email_status"
+                    ))
+                else:
+                    db.session.execute(text("DROP INDEX IF EXISTS uq_company_invites_company_email_status"))
+            except Exception:
+                pass
 
         # audit_logs (auditoria Pro Empresa)
         if "audit_logs" not in tables:

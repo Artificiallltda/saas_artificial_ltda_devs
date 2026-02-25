@@ -6,6 +6,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useLanguage } from "../../../context/LanguageContext";
 import { generatedContentRoutes, integrationRoutes } from "../../../services/apiRoutes";
 import { toast } from "react-toastify";
+import ConfirmModal from "../../../components/modals/ConfirmModal";
 
 export default function ProEmpresaApprovals() {
   const { checkFeatureAccess } = useFeatureRestriction();
@@ -19,6 +20,9 @@ export default function ProEmpresaApprovals() {
   const [inboxFinalized, setInboxFinalized] = useState([]);
   const [inboxTab, setInboxTab] = useState("in_review"); // in_review | finalized
   const [canReviewInbox, setCanReviewInbox] = useState(true);
+  const [reviewFilterWorkspaceId, setReviewFilterWorkspaceId] = useState("");
+  const [confirmAction, setConfirmAction] = useState({ isOpen: false, type: null, contentId: null });
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   useEffect(() => {
     checkFeatureAccess("collab_approval_flow");
@@ -100,6 +104,32 @@ export default function ProEmpresaApprovals() {
     return inboxTab === "finalized" ? inboxFinalized : inboxInReview;
   }, [inboxFinalized, inboxInReview, inboxTab]);
 
+  const workspacesWithCount = useMemo(() => {
+    const map = new Map();
+    (inboxInReview || []).forEach((c) => {
+      const infos = c?.workspace_infos || [];
+      infos.forEach((w) => {
+        if (w?.id && w?.name) {
+          map.set(w.id, { id: w.id, name: w.name, count: (map.get(w.id)?.count || 0) + 1 });
+        }
+      });
+      if (infos.length === 0 && (c?.workspace_ids || []).length > 0) {
+        (c.workspace_ids || []).forEach((wid) => {
+          map.set(wid, { id: wid, name: wid, count: (map.get(wid)?.count || 0) + 1 });
+        });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  }, [inboxInReview]);
+
+  const inboxFiltered = useMemo(() => {
+    if (!reviewFilterWorkspaceId || inboxTab === "finalized") return inbox;
+    return inbox.filter((c) => {
+      const ids = c?.workspace_infos?.map((w) => w.id) || c?.workspace_ids || [];
+      return ids.includes(reviewFilterWorkspaceId);
+    });
+  }, [inbox, inboxTab, reviewFilterWorkspaceId]);
+
   async function submit(contentId) {
     try {
       await apiFetch(generatedContentRoutes.submitReview(contentId), { method: "POST" });
@@ -111,23 +141,33 @@ export default function ProEmpresaApprovals() {
     }
   }
 
-  async function approve(contentId) {
-    try {
-      await apiFetch(generatedContentRoutes.approve(contentId), { method: "POST" });
-      await loadInbox();
-      toast.success(t("pro_empresa.approvals.toast.approved"));
-    } catch (e) {
-      toast.error(e?.message || t("pro_empresa.approvals.toast.approve_error"));
-    }
+  function openApproveConfirm(contentId) {
+    setConfirmAction({ isOpen: true, type: "approve", contentId });
   }
 
-  async function reject(contentId) {
+  function openRejectConfirm(contentId) {
+    setConfirmAction({ isOpen: true, type: "reject", contentId });
+  }
+
+  async function runConfirmAction() {
+    const { type, contentId } = confirmAction;
+    if (!contentId) return;
+    setConfirmLoading(true);
     try {
-      await apiFetch(generatedContentRoutes.reject(contentId), { method: "POST" });
+      if (type === "approve") {
+        await apiFetch(generatedContentRoutes.approve(contentId), { method: "POST" });
+        toast.success(t("pro_empresa.approvals.toast.approved"));
+      } else {
+        await apiFetch(generatedContentRoutes.reject(contentId), { method: "POST" });
+        toast.success(t("pro_empresa.approvals.toast.rejected"));
+      }
       await loadInbox();
-      toast.success(t("pro_empresa.approvals.toast.rejected"));
+      setConfirmAction({ isOpen: false, type: null, contentId: null });
     } catch (e) {
-      toast.error(e?.message || t("pro_empresa.approvals.toast.reject_error"));
+      const msg = e?.message || (type === "approve" ? t("pro_empresa.approvals.toast.approve_error") : t("pro_empresa.approvals.toast.reject_error"));
+      toast.error(msg);
+    } finally {
+      setConfirmLoading(false);
     }
   }
 
@@ -265,6 +305,39 @@ export default function ProEmpresaApprovals() {
                 </div>
               ) : (
                 <div className="mt-3">
+                  {inboxTab === "in_review" && workspacesWithCount.length > 0 && (
+                    <div className="mb-3">
+                      <div className="text-xs text-gray-500 mb-1">{t("pro_empresa.approvals.filter.workspace")}</div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setReviewFilterWorkspaceId("")}
+                          className={`text-xs px-2 py-1 rounded-full border ${
+                            !reviewFilterWorkspaceId
+                              ? "border-blue-300 bg-blue-50 text-blue-800"
+                              : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          {t("pro_empresa.approvals.filter.all")}{" "}
+                          <span className="font-medium">({inboxInReview?.length || 0})</span>
+                        </button>
+                        {workspacesWithCount.map((w) => (
+                          <button
+                            key={w.id}
+                            type="button"
+                            onClick={() => setReviewFilterWorkspaceId(w.id)}
+                            className={`text-xs px-2 py-1 rounded-full border ${
+                              reviewFilterWorkspaceId === w.id
+                                ? "border-blue-300 bg-blue-50 text-blue-800"
+                                : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                            }`}
+                          >
+                            {w.name} <span className="font-medium">({w.count})</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-2 mb-3">
                     <button
                       type="button"
@@ -291,14 +364,19 @@ export default function ProEmpresaApprovals() {
                   </div>
                   {loadingInbox ? (
                     <div className="text-sm text-gray-500">{t("common.loading")}</div>
-                  ) : inbox.length === 0 ? (
-                    <div className="text-sm text-gray-500">{t("pro_empresa.approvals.empty.inbox")}</div>
+                  ) : inboxFiltered.length === 0 ? (
+                    <div className="text-sm text-gray-500">
+                      {reviewFilterWorkspaceId
+                        ? t("pro_empresa.approvals.empty.inbox_filtered")
+                        : t("pro_empresa.approvals.empty.inbox")}
+                    </div>
                   ) : (
                     <div className="space-y-2">
-                      {inbox.map((c) => (
+                      {inboxFiltered.map((c) => (
                         <ItemRow
                           key={c.id}
                           item={c}
+                          workspaceInfos={c?.workspace_infos}
                           right={
                             inboxTab === "finalized" ? (
                               <div className="flex items-center gap-2">
@@ -320,13 +398,13 @@ export default function ProEmpresaApprovals() {
                             ) : (
                               <div className="flex gap-2">
                                 <button
-                                  onClick={() => approve(c.id)}
+                                  onClick={() => openApproveConfirm(c.id)}
                                   className="text-xs px-2 py-1 rounded-md bg-green-600 text-white hover:bg-green-700"
                                 >
                                   {t("pro_empresa.approvals.action.approve")}
                                 </button>
                                 <button
-                                  onClick={() => reject(c.id)}
+                                  onClick={() => openRejectConfirm(c.id)}
                                   className="text-xs px-2 py-1 rounded-md border border-red-200 text-red-700 hover:bg-red-50"
                                 >
                                   {t("pro_empresa.approvals.action.reject")}
@@ -344,13 +422,36 @@ export default function ProEmpresaApprovals() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmAction.isOpen}
+        onClose={() => {
+          if (!confirmLoading) setConfirmAction({ isOpen: false, type: null, contentId: null });
+        }}
+        title={
+          confirmAction.type === "approve"
+            ? t("pro_empresa.approvals.confirm.approve_title")
+            : t("pro_empresa.approvals.confirm.reject_title")
+        }
+        description={
+          confirmAction.type === "approve"
+            ? t("pro_empresa.approvals.confirm.approve_description")
+            : t("pro_empresa.approvals.confirm.reject_description")
+        }
+        confirmText={confirmAction.type === "approve" ? t("pro_empresa.approvals.action.approve") : t("pro_empresa.approvals.action.reject")}
+        cancelText={t("common.cancel")}
+        variant={confirmAction.type === "reject" ? "danger" : "primary"}
+        loading={confirmLoading}
+        onConfirm={runConfirmAction}
+      />
     </Layout>
   );
 }
 
-function ItemRow({ item, right }) {
+function ItemRow({ item, right, workspaceInfos }) {
   const { t } = useLanguage();
   const statusKey = `pro_empresa.status.${item.status || "draft"}`;
+  const workspaceNames = (workspaceInfos || []).map((w) => w.name).filter(Boolean).join(", ");
   return (
     <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
       <div className="min-w-0">
@@ -361,6 +462,11 @@ function ItemRow({ item, right }) {
           {t("pro_empresa.status.label")}{" "}
           <span className="font-medium">{t(statusKey)}</span>
         </div>
+        {workspaceNames && (
+          <div className="text-xs text-gray-400 mt-0.5">
+            {t("pro_empresa.approvals.workspace_label")}: {workspaceNames}
+          </div>
+        )}
       </div>
       <div className="ml-3 flex-shrink-0">{right}</div>
     </div>

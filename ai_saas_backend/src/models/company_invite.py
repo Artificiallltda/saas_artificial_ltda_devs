@@ -23,14 +23,9 @@ class CompanyInvite(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    __table_args__ = (
-        db.UniqueConstraint(
-            "company_id",
-            "invited_email",
-            "status",
-            name="uq_company_invites_company_email_status",
-        ),
-    )
+    # Sem unique em (company_id, invited_email, status): permite histórico de vários
+    # cancelados/expirados por email. Um único pendente por (company_id, invited_email)
+    # é garantido na aplicação (company_api.add_company_user_by_email).
 
     def to_dict(self):
         return {

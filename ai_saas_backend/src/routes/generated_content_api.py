@@ -248,7 +248,22 @@ def review_inbox():
         ).all()
     else:
         items = base.order_by(GeneratedContent.created_at.desc()).all()
-    return jsonify([c.to_dict() for c in items]), 200
+
+    # Enriquecer com workspace_infos (id, name) para filtro/agrupamento no frontend
+    ws_ids = set()
+    for c in items:
+        ws_ids.update(_content_workspace_ids(c))
+    workspaces = Workspace.query.filter(Workspace.id.in_(ws_ids)).all() if ws_ids else []
+    ws_map = {w.id: {"id": w.id, "name": w.name} for w in workspaces}
+
+    payload = []
+    for c in items:
+        d = c.to_dict()
+        c_ws_ids = _content_workspace_ids(c)
+        d["workspace_infos"] = [ws_map[wid] for wid in c_ws_ids if wid in ws_map]
+        payload.append(d)
+
+    return jsonify(payload), 200
 
 
 @generated_content_api.route("/<content_id>/submit-review", methods=["POST"])
