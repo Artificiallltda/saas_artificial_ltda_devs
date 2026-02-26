@@ -28,16 +28,17 @@ def _type_string() -> str:
     return "VARCHAR"
 
 
-def _add_column_if_missing(table: str, column: str, ddl_type: str, default_sql: str | None = None):
-    insp = inspect(db.engine)
-    cols = {c["name"] for c in insp.get_columns(table)}
-    if column in cols:
+def _add_column_if_missing(table: str, column: str, ddl_type: str, default_sql: str | None = None, cols_cache: set | None = None):
+    if cols_cache is None:
+        insp = inspect(db.engine)
+        cols_cache = {c["name"] for c in insp.get_columns(table)}
+    if column in cols_cache:
         return
 
     default_clause = f" DEFAULT {default_sql}" if default_sql is not None else ""
-    # SQLite: ALTER TABLE ADD COLUMN supports adding nullable columns (and default)
     sql = f"ALTER TABLE {table} ADD COLUMN {column} {ddl_type}{default_clause}"
     db.session.execute(text(sql))
+    cols_cache.add(column)
 
 
 def run_schema_upgrades():
@@ -47,6 +48,9 @@ def run_schema_upgrades():
     - Este helper adiciona colunas novas necessárias para o MVP de colaboração.
     """
     try:
+        dialect = _dialect_name()
+        if dialect in ("postgresql", "postgres"):
+            db.session.execute(text("SET lock_timeout = '5s'"))
         insp = inspect(db.engine)
         tables = set(insp.get_table_names())
 
@@ -54,17 +58,21 @@ def run_schema_upgrades():
         if "projects" in tables:
             _add_column_if_missing("projects", "workspace_id", _type_string(), None)
 
-        # generated_contents approval fields
+        # generated_contents: uma única leitura de colunas para evitar vários get_columns (que travava no Postgres)
         if "generated_contents" in tables:
-            _add_column_if_missing("generated_contents", "status", "VARCHAR(20)", "'draft'")
-            _add_column_if_missing("generated_contents", "submitted_at", _type_datetime(), None)
-            _add_column_if_missing("generated_contents", "submitted_by", _type_string(), None)
-            _add_column_if_missing("generated_contents", "approved_at", _type_datetime(), None)
-            _add_column_if_missing("generated_contents", "approved_by", _type_string(), None)
-            _add_column_if_missing("generated_contents", "rejected_at", _type_datetime(), None)
-            _add_column_if_missing("generated_contents", "rejected_by", _type_string(), None)
-
-            # backfill null status
+            insp = inspect(db.engine)
+            gc_cols = {c["name"] for c in insp.get_columns("generated_contents")}
+            _add_column_if_missing("generated_contents", "status", "VARCHAR(20)", "'draft'", gc_cols)
+            _add_column_if_missing("generated_contents", "submitted_at", _type_datetime(), None, gc_cols)
+            _add_column_if_missing("generated_contents", "submitted_by", _type_string(), None, gc_cols)
+            _add_column_if_missing("generated_contents", "approved_at", _type_datetime(), None, gc_cols)
+            _add_column_if_missing("generated_contents", "approved_by", _type_string(), None, gc_cols)
+            _add_column_if_missing("generated_contents", "rejected_at", _type_datetime(), None, gc_cols)
+            _add_column_if_missing("generated_contents", "rejected_by", _type_string(), None, gc_cols)
+            _add_column_if_missing("generated_contents", "wordpress_post_id", "INTEGER", None, gc_cols)
+            _add_column_if_missing("generated_contents", "wordpress_post_url", "VARCHAR(500)", None, gc_cols)
+            _add_column_if_missing("generated_contents", "wordpress_publish_status", "VARCHAR(20)", None, gc_cols)
+            _add_column_if_missing("generated_contents", "wordpress_published_at", _type_datetime(), None, gc_cols)
             db.session.execute(text("UPDATE generated_contents SET status='draft' WHERE status IS NULL"))
 
         # users.company_id + users.company_role (B2B MVP)

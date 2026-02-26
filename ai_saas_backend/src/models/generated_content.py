@@ -29,6 +29,12 @@ class GeneratedContent(db.Model):
     rejected_at = db.Column(db.DateTime, nullable=True)
     rejected_by = db.Column(db.String, nullable=True)
 
+    # Publicação WordPress (preenchido após publicar via integração)
+    wordpress_post_id = db.Column(db.Integer, nullable=True)
+    wordpress_post_url = db.Column(db.String(500), nullable=True)
+    wordpress_publish_status = db.Column(db.String(20), nullable=True)  # draft | publish
+    wordpress_published_at = db.Column(db.DateTime, nullable=True)
+
     user = db.relationship("User", backref=db.backref("generated_contents", lazy=True))
     projects = db.relationship(
         "Project",
@@ -73,6 +79,12 @@ class GeneratedContent(db.Model):
             },
             "projects": [p.id for p in self.projects],
             "workspace_ids": workspace_ids,
+            "wordpress": {
+                "post_id": self.wordpress_post_id,
+                "post_url": self.wordpress_post_url,
+                "publish_status": self.wordpress_publish_status,
+                "published_at": self.wordpress_published_at.isoformat() if self.wordpress_published_at else None,
+            } if (self.wordpress_post_id or self.wordpress_post_url) else None,
         }
 
 class GeneratedTextContent(GeneratedContent):

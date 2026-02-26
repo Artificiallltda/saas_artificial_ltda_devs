@@ -882,6 +882,9 @@
   "pro_empresa.integrations.publish_modal.publish": "Publish",
   "pro_empresa.integrations.toast.published": "Content published to WordPress successfully",
   "pro_empresa.integrations.toast.publish_error": "Error publishing to WordPress",
+  "pro_empresa.integrations.published_draft": "Published (draft)",
+  "pro_empresa.integrations.published_live": "Published",
+  "pro_empresa.integrations.view_on_wordpress": "View on WordPress",
   "pro_empresa.integrations.webhook.title": "Webhook/CRM",
   "pro_empresa.integrations.webhook.desc": "Endpoint + secret + “Send test” button."
 }

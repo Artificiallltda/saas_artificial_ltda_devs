@@ -206,7 +206,7 @@ app.register_blueprint(workspace_api, url_prefix="/api/workspaces")
 app.register_blueprint(company_api, url_prefix="/api/company")
 app.register_blueprint(integration_api, url_prefix="/api/integrations")
 
-print("🚀 Ambiente:", "DESENVOLVIMENTO" if ENV == "dev" else "PRODUÇÃO")
+print("🚀 Ambiente:", "DESENVOLVIMENTO" if ENV == "dev" else "PRODUÇÃO", flush=True)
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8000, debug=True)

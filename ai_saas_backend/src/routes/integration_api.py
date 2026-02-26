@@ -6,9 +6,28 @@ from utils.audit_logs import log_audit_event
 from datetime import datetime
 import requests
 from requests.auth import HTTPBasicAuth
+from urllib.parse import urlparse
+from urllib3.exceptions import InsecureRequestWarning
 import json
 
+# Suprime aviso ao desabilitar SSL apenas para hosts locais
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+
 integration_api = Blueprint("integration_api", __name__)
+
+
+def _wordpress_verify_ssl(site_url):
+    """Desabilita verificação SSL apenas para hosts locais (certificado autoassinado)."""
+    try:
+        host = urlparse(site_url).hostname or ""
+        host_lower = host.lower()
+        if host_lower in ("localhost", "127.0.0.1"):
+            return False
+        if host_lower.endswith(".local") or host_lower.endswith(".test") or host_lower.endswith(".localhost"):
+            return False
+        return True
+    except Exception:
+        return True
 
 ALLOWED_COMPANY_ADMIN_ROLES = {"owner", "admin"}
 
@@ -44,10 +63,12 @@ def _test_wordpress_connection(site_url, username, password):
         site_url = site_url.rstrip("/")
         api_url = f"{site_url}/wp-json/wp/v2/users/me"
         
+        verify = _wordpress_verify_ssl(site_url)
         response = requests.get(
             api_url,
             auth=HTTPBasicAuth(username, password),
             timeout=10,
+            verify=verify,
         )
         
         if response.status_code == 200:
@@ -85,11 +106,13 @@ def _publish_to_wordpress(site_url, username, password, content_data, publish_st
         if content_data.get("excerpt"):
             post_data["excerpt"] = content_data["excerpt"]
         
+        verify = _wordpress_verify_ssl(site_url)
         response = requests.post(
             api_url,
             json=post_data,
             auth=HTTPBasicAuth(username, password),
             timeout=30,
+            verify=verify,
         )
         
         if response.status_code in (200, 201):
@@ -338,6 +361,13 @@ def publish_to_wordpress():
 
     # Publicar no WordPress
     success, result = _publish_to_wordpress(site_url, username, password, content_data, publish_status)
+
+    if success:
+        content.wordpress_post_id = result.get("post_id")
+        content.wordpress_post_url = result.get("post_url")
+        content.wordpress_publish_status = publish_status
+        content.wordpress_published_at = datetime.utcnow()
+        db.session.commit()
 
     # Registrar na auditoria
     event_type = "integration.wordpress.publish.success" if success else "integration.wordpress.publish.failed"

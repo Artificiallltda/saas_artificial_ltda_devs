@@ -276,7 +276,14 @@ export default function ProEmpresaApprovals() {
                             right={
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-green-700">{t("pro_empresa.status.approved")}</span>
-                                <PublishWordPressButton contentId={c.id} />
+                                <PublishWordPressButton
+                                  contentId={c.id}
+                                  wordpress={c.wordpress}
+                                  onPublished={() => {
+                                    loadMine();
+                                    loadInbox();
+                                  }}
+                                />
                               </div>
                             }
                           />
@@ -392,7 +399,14 @@ export default function ProEmpresaApprovals() {
                                     : t("pro_empresa.status.rejected")}
                                 </span>
                                 {c.status === "approved" && (
-                                  <PublishWordPressButton contentId={c.id} />
+                                  <PublishWordPressButton
+                                    contentId={c.id}
+                                    wordpress={c.wordpress}
+                                    onPublished={() => {
+                                      loadMine();
+                                      loadInbox();
+                                    }}
+                                  />
                                 )}
                               </div>
                             ) : (
@@ -473,17 +487,20 @@ function ItemRow({ item, right, workspaceInfos }) {
   );
 }
 
-function PublishWordPressButton({ contentId }) {
+function PublishWordPressButton({ contentId, wordpress, onPublished }) {
   const { t } = useLanguage();
   const [publishing, setPublishing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [publishStatus, setPublishStatus] = useState("draft");
 
+  const alreadyPublished = wordpress?.post_url;
+
   async function handlePublish() {
     setPublishing(true);
     try {
-      const data = await apiFetch(integrationRoutes.wordpress.publish, {
+      await apiFetch(integrationRoutes.wordpress.publish, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content_id: contentId,
           publish_status: publishStatus,
@@ -491,11 +508,31 @@ function PublishWordPressButton({ contentId }) {
       });
       toast.success(t("pro_empresa.integrations.toast.published"));
       setShowModal(false);
+      onPublished?.();
     } catch (e) {
       toast.error(e?.message || t("pro_empresa.integrations.toast.publish_error"));
     } finally {
       setPublishing(false);
     }
+  }
+
+  if (alreadyPublished) {
+    const statusKey = wordpress.publish_status === "publish"
+      ? "pro_empresa.integrations.published_live"
+      : "pro_empresa.integrations.published_draft";
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-600">{t(statusKey)}</span>
+        <a
+          href={wordpress.post_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs px-2 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+        >
+          {t("pro_empresa.integrations.view_on_wordpress")}
+        </a>
+      </div>
+    );
   }
 
   return (

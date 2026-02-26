@@ -73,6 +73,7 @@ export default function ProEmpresaIntegrations() {
     try {
       await apiFetch(integrationRoutes.wordpress.save, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
       toast.success(t("pro_empresa.integrations.toast.saved"));
@@ -96,6 +97,7 @@ export default function ProEmpresaIntegrations() {
     try {
       const data = await apiFetch(integrationRoutes.wordpress.test, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
       setTestResult({
